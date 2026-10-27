@@ -1,0 +1,15 @@
+gradle-wrapper.jar
+/.gradle
+/captures/
+/gradlew
+/gradlew.bat
+/local.properties
+GeneratedPluginRegistrant.java
+.cxx/
+
+# Remember to never publicly share your release keystore.
+# See https://flutter.dev/to/reference-keystore
+key.properties
+**/release.keystore
+**/release.jks
+# Debug keystore is stored in keystore/ for this project (see keystore/KEYS.txt)
