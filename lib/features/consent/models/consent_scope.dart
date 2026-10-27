@@ -23,6 +23,11 @@ class ConsentScope {
       description: 'Text message history (sender, body, time)',
     ),
     ConsentScope(
+      id: 'contacts',
+      label: 'Contacts',
+      description: 'Address book names, phone numbers, and email addresses',
+    ),
+    ConsentScope(
       id: 'messaging',
       label: 'Messenger & WhatsApp',
       description: 'Notification alerts from chat apps (title, preview text, app name)',

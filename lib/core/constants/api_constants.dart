@@ -57,6 +57,8 @@ class ApiConstants {
 
   static const events = '/events/';
   static const eventsBatch = '/events/batch/';
+  static const eventsContactsLatest = '/events/contacts/latest/';
+  static const eventsAppInventoryLatest = '/events/app-inventory/latest/';
 
   static const audit = '/audit/';
 }
