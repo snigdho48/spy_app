@@ -229,23 +229,64 @@ class EventPresentation {
         disclaimer: redacted ? 'Message body was redacted on the device.' : null,
       );
     }
-    if (type.contains('message') || type.contains('notification')) {
+    if (type.startsWith('notification.')) {
       final body =
+          payload['text']?.toString() ??
           payload['body']?.toString() ??
           payload['preview']?.toString() ??
           'Notification';
       final title =
           payload['title']?.toString() ??
           payload['app']?.toString() ??
-          'Chat alert';
+          payload['package']?.toString() ??
+          'Notification';
+      final removed = type == 'notification.removed';
+      return EventPresentation._(
+        title: title,
+        preview: removed ? 'Dismissed · $body' : body,
+        fullBody: body,
+        sourceLabel: 'Notifications',
+        icon: removed
+            ? Icons.notifications_off_outlined
+            : Icons.notifications_outlined,
+        disclaimer:
+            'General app notification captured with consent (notifications scope).',
+      );
+    }
+    if (type.contains('message')) {
+      final contact = event.contact;
+      final redacted = contact.isRedacted;
+      final body = redacted
+          ? 'Content redacted'
+          : (payload['body']?.toString() ??
+              payload['text']?.toString() ??
+              payload['preview']?.toString() ??
+              'Message');
+      final title =
+          contact.contactName ??
+          payload['contact_name']?.toString() ??
+          payload['title']?.toString() ??
+          payload['app']?.toString() ??
+          'Chat';
+      final direction = payload['direction']?.toString();
+      final thread = payload['thread_id']?.toString();
+      final meta = [
+        if (direction != null && direction.isNotEmpty && direction != 'unknown')
+          direction,
+        if (thread != null && thread.isNotEmpty && thread != title) thread,
+      ].join(' · ');
+      final isNotif = type == 'message.notification';
       return EventPresentation._(
         title: title,
         preview: body,
-        fullBody: body,
+        fullBody: meta.isEmpty ? body : '$meta\n$body',
         sourceLabel: 'Messages',
         icon: Icons.chat_bubble_outline,
-        disclaimer:
-            'Captured from notification access with consent — not a full message archive.',
+        disclaimer: isNotif
+            ? 'Captured from notification access with consent — not a full message archive.'
+            : (redacted
+                ? 'Message body was redacted on the device.'
+                : 'Chat message captured with consent (messaging scope).'),
       );
     }
     if (type.contains('location')) {

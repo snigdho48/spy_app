@@ -86,4 +86,38 @@ class EventRepository {
     if (result.isLeft) return Left(result.left);
     return Right(result.right);
   }
+
+  /// Latest address-book snapshot for a device via GET /events/contacts/latest/.
+  /// Returns the raw snapshot map ({contacts, contact_count, ...}) on success,
+  /// or null when none exists yet (404) / on error.
+  Future<Map<String, dynamic>?> latestContacts({
+    required String deviceId,
+    bool loader = false,
+  }) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.eventsContactsLatest,
+      method: HttpMethod.get,
+      queryParameters: {'device_id': deviceId},
+      loader: loader,
+      resultOverlay: false,
+    );
+    return result.isLeft ? result.left : null;
+  }
+
+  /// Latest installed-app inventory for a device via
+  /// GET /events/app-inventory/latest/. Returns the raw snapshot map
+  /// ({apps, app_count, include_system, ...}) or null when none/on error.
+  Future<Map<String, dynamic>?> latestAppInventory({
+    required String deviceId,
+    bool loader = false,
+  }) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.eventsAppInventoryLatest,
+      method: HttpMethod.get,
+      queryParameters: {'device_id': deviceId},
+      loader: loader,
+      resultOverlay: false,
+    );
+    return result.isLeft ? result.left : null;
+  }
 }

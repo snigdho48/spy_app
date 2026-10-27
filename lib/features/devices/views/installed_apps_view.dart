@@ -8,9 +8,10 @@ import 'package:spy_love/shared/widgets/app_states.dart';
 /// On-device inventory of ALL installed apps (name, icon, package) available to
 /// the monitor. Searchable; toggles system apps.
 ///
-/// NOTE: this lists apps on the *current* device. Showing a monitored device's
-/// installed apps remotely needs an `app_inventory.*` collector + backend event
-/// (see the PR notes); this screen is the on-device source for that collector.
+/// NOTE: this lists apps on the *current* device. The monitor sees a remote
+/// device's installed apps in [RemoteAppsTab], which reads
+/// `app_inventory.snapshot` uploaded by the device-side collector; this screen
+/// is the on-device source for that collector.
 class InstalledAppsView extends StatefulWidget {
   const InstalledAppsView({super.key});
 

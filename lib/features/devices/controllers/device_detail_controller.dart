@@ -42,6 +42,9 @@ class DeviceDetailController extends ChangeNotifier {
   List<DeviceEventModel> networkEvents = <DeviceEventModel>[];
   List<DeviceEventModel> appUsageEvents = <DeviceEventModel>[];
   List<DeviceEventModel> deviceInfoEvents = <DeviceEventModel>[];
+  List<DeviceEventModel> notifications = <DeviceEventModel>[];
+  Map<String, dynamic>? contactsSnapshot;
+  Map<String, dynamic>? appInventorySnapshot;
   List<Map<String, dynamic>> currentSims = <Map<String, dynamic>>[];
   List<DeviceEventModel> allEvents = <DeviceEventModel>[];
   List<LocationPoint> locations = <LocationPoint>[];
@@ -167,6 +170,9 @@ class DeviceDetailController extends ChangeNotifier {
         _loadPrefix('network', (items) => networkEvents = items),
         _loadPrefix('app_usage', (items) => appUsageEvents = items),
         _loadPrefix('device_info', (items) => deviceInfoEvents = items),
+        _loadPrefix('notification', (items) => notifications = items),
+        _loadContactsSnapshot(),
+        _loadAppInventorySnapshot(),
         refreshLocations(silent: true),
         refreshSimEvents(),
         _loadPrefix(null, (items) => allEvents = items),
@@ -184,6 +190,9 @@ class DeviceDetailController extends ChangeNotifier {
       _loadPrefix('network', (items) => networkEvents = items),
       _loadPrefix('app_usage', (items) => appUsageEvents = items),
       _loadPrefix('device_info', (items) => deviceInfoEvents = items),
+      _loadPrefix('notification', (items) => notifications = items),
+      _loadContactsSnapshot(),
+      _loadAppInventorySnapshot(),
       refreshLocations(),
       refreshSimEvents(),
       _loadPrefix(null, (items) => allEvents = items),
@@ -293,6 +302,16 @@ class DeviceDetailController extends ChangeNotifier {
         mapController.move(LatLng(points.first.lat, points.first.lng), 15);
       }
     });
+  }
+
+  Future<void> _loadContactsSnapshot() async {
+    final snap = await _events.latestContacts(deviceId: device.id);
+    if (snap != null) contactsSnapshot = snap;
+  }
+
+  Future<void> _loadAppInventorySnapshot() async {
+    final snap = await _events.latestAppInventory(deviceId: device.id);
+    if (snap != null) appInventorySnapshot = snap;
   }
 
   Future<void> _loadPrefix(

