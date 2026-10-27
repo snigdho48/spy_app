@@ -72,6 +72,6 @@ abstract final class AppConfig {
   static const String googleWebClientId = String.fromEnvironment(
     'GOOGLE_WEB_CLIENT_ID',
     defaultValue:
-        '1098260301010-vifp1hi2vohcjfd30no1uj75h1t2hpu1.apps.googleusercontent.com',
+        '812706609654-gpjc0h45pa7o8vuva977v9gl75ig1n71.apps.googleusercontent.com',
   );
 }

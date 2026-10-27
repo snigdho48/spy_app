@@ -41,51 +41,48 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBD4Xm64cJc_2cGLnHKvKGoy-TlfslHTYc',
-    appId: '1:1098260301010:web:85dbe41e5293de8b35990b',
-    messagingSenderId: '1098260301010',
-    projectId: 'prapp-e3458',
-    authDomain: 'prapp-e3458.firebaseapp.com',
-    databaseURL: 'https://prapp-e3458-default-rtdb.firebaseio.com',
-    storageBucket: 'prapp-e3458.firebasestorage.app',
+    apiKey: 'AIzaSyD4ea5kcoIisLs5M7liM1V7a_UNf8I2jAQ',
+    appId: '1:812706609654:web:86091f2bfff9aa65c06fd7',
+    messagingSenderId: '812706609654',
+    projectId: 'spy-app-6225a',
+    authDomain: 'spy-app-6225a.firebaseapp.com',
+    storageBucket: 'spy-app-6225a.firebasestorage.app',
+    measurementId: 'G-VF0X9KEY94',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBB-i77Jc5J20IFOEIDDH-WecVax7qPOBs',
-    appId: '1:1098260301010:android:2b6d442558fb956335990b',
-    messagingSenderId: '1098260301010',
-    projectId: 'prapp-e3458',
-    databaseURL: 'https://prapp-e3458-default-rtdb.firebaseio.com',
-    storageBucket: 'prapp-e3458.firebasestorage.app',
+    apiKey: 'AIzaSyA90ZtSxL72mbb61gOvL2lnI7Pw_4CyGZo',
+    appId: '1:812706609654:android:acfba44f20db2a5bc06fd7',
+    messagingSenderId: '812706609654',
+    projectId: 'spy-app-6225a',
+    storageBucket: 'spy-app-6225a.firebasestorage.app',
   );
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyB-_TeMvvfW-TD0lpevRVZsJxHKVA29MDQ',
-    appId: '1:1098260301010:ios:0145b7a93969dc8a35990b',
-    messagingSenderId: '1098260301010',
-    projectId: 'prapp-e3458',
-    databaseURL: 'https://prapp-e3458-default-rtdb.firebaseio.com',
-    storageBucket: 'prapp-e3458.firebasestorage.app',
-    iosClientId: '1098260301010-r2ovf1495vl5bqhtv7ptmlj7gnlsnvb7.apps.googleusercontent.com',
+    apiKey: 'AIzaSyA6LYw6-sstTmfpTFZsq4PHD5u4zGdPvSU',
+    appId: '1:812706609654:ios:5a17d947b86227f9c06fd7',
+    messagingSenderId: '812706609654',
+    projectId: 'spy-app-6225a',
+    storageBucket: 'spy-app-6225a.firebasestorage.app',
+    iosClientId: '812706609654-28jsj6c9710omcn9s4qp060snh0i2dos.apps.googleusercontent.com',
     iosBundleId: 'org.hmg.spyLove',
   );
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyB-_TeMvvfW-TD0lpevRVZsJxHKVA29MDQ',
-    appId: '1:1098260301010:ios:0145b7a93969dc8a35990b',
-    messagingSenderId: '1098260301010',
-    projectId: 'prapp-e3458',
-    databaseURL: 'https://prapp-e3458-default-rtdb.firebaseio.com',
-    storageBucket: 'prapp-e3458.firebasestorage.app',
-    iosClientId: '1098260301010-r2ovf1495vl5bqhtv7ptmlj7gnlsnvb7.apps.googleusercontent.com',
+    apiKey: 'AIzaSyA6LYw6-sstTmfpTFZsq4PHD5u4zGdPvSU',
+    appId: '1:812706609654:ios:5a17d947b86227f9c06fd7',
+    messagingSenderId: '812706609654',
+    projectId: 'spy-app-6225a',
+    storageBucket: 'spy-app-6225a.firebasestorage.app',
+    iosClientId: '812706609654-28jsj6c9710omcn9s4qp060snh0i2dos.apps.googleusercontent.com',
     iosBundleId: 'org.hmg.spyLove',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBD4Xm64cJc_2cGLnHKvKGoy-TlfslHTYc',
-    appId: '1:1098260301010:web:85dbe41e5293de8b35990b',
-    messagingSenderId: '1098260301010',
-    projectId: 'prapp-e3458',
-    authDomain: 'prapp-e3458.firebaseapp.com',
-    databaseURL: 'https://prapp-e3458-default-rtdb.firebaseio.com',
-    storageBucket: 'prapp-e3458.firebasestorage.app',
+    apiKey: 'AIzaSyD4ea5kcoIisLs5M7liM1V7a_UNf8I2jAQ',
+    appId: '1:812706609654:web:5f6e18560e502815c06fd7',
+    messagingSenderId: '812706609654',
+    projectId: 'spy-app-6225a',
+    authDomain: 'spy-app-6225a.firebaseapp.com',
+    storageBucket: 'spy-app-6225a.firebasestorage.app',
+    measurementId: 'G-DYYN91YTXV',
   );
 }
