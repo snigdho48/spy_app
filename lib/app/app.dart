@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:one_request/one_request.dart';
 import 'package:provider/provider.dart';
 import 'package:spy_love/app/app_providers.dart';
-import 'package:spy_love/app/core/config/app_config.dart';
-import 'package:spy_love/app/core/monitoring/screen_sharing_indicator.dart';
-import 'package:spy_love/app/core/network/spy_request_chrome.dart';
-import 'package:spy_love/app/core/navigation/app_navigator.dart';
-import 'package:spy_love/app/core/theme/app_theme.dart';
-import 'package:spy_love/app/core/theme/theme_mode_controller.dart';
-import 'package:spy_love/app/core/widgets/responsive_scaffold.dart';
-import 'package:spy_love/app/routes/app_routes.dart';
+import 'package:spy_love/core/config/app_config.dart';
+import 'package:spy_love/features/monitoring/screen_share/screen_sharing_indicator.dart';
+import 'package:spy_love/core/network/spy_request_chrome.dart';
+import 'package:spy_love/core/navigation/app_navigator.dart';
+import 'package:spy_love/core/theme/app_theme.dart';
+import 'package:spy_love/core/theme/theme_mode_controller.dart';
+import 'package:spy_love/shared/widgets/responsive_scaffold.dart';
+import 'package:spy_love/app/routes.dart';
 
 class SpyLoveApp extends StatelessWidget {
   const SpyLoveApp({super.key});
