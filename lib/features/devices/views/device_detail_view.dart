@@ -14,6 +14,7 @@ import 'package:spy_love/shared/widgets/timestamp_label.dart';
 import 'package:spy_love/features/devices/controllers/device_detail_controller.dart';
 import 'package:spy_love/features/devices/models/device_event_model.dart';
 import 'package:spy_love/features/devices/views/activity_feed_tab.dart';
+import 'package:spy_love/features/devices/views/app_usage_tab.dart';
 import 'package:spy_love/features/devices/views/device_care_tab.dart';
 import 'package:spy_love/features/devices/views/event_detail_view.dart';
 import 'package:spy_love/features/monitoring/screen_share/live_screen_tab.dart';
@@ -34,7 +35,7 @@ class DeviceDetailView extends StatelessWidget {
     final tokens = context.tokens;
 
     return DefaultTabController(
-      length: 8,
+      length: 9,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 72,
@@ -60,6 +61,7 @@ class DeviceDetailView extends StatelessWidget {
               const Tab(text: 'Calls'),
               const Tab(text: 'SMS'),
               const Tab(text: 'Messages'),
+              const Tab(text: 'Apps'),
               const Tab(text: 'Live screen'),
             ],
           ),
@@ -151,6 +153,10 @@ class DeviceDetailView extends StatelessWidget {
                   isLoading: controller.isLoadingEvents,
                   companionCount: controller.uniqueMessageApps,
                   onOpen: (event) => _openEvent(controller, event),
+                ),
+                AppUsageTab(
+                  events: controller.appUsageEvents,
+                  isLoading: controller.isLoadingEvents,
                 ),
                 LiveScreenTab(deviceId: controller.device.id),
               ],
