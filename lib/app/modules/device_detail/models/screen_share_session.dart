@@ -13,6 +13,7 @@ class ScreenShareSession {
     this.requestedByEmail,
     this.startedAt,
     this.endedAt,
+    this.consentScopes = const [],
   });
 
   final String id;
@@ -24,10 +25,25 @@ class ScreenShareSession {
   final DateTime? startedAt;
   final DateTime? endedAt;
 
+  /// Active consent scopes for the device, when the backend includes them in
+  /// the session payload. Used for a local, defence-in-depth `screen` check
+  /// before capture (the server also enforces this on request/start/WS).
+  final List<String> consentScopes;
+
   bool get isActive => status == 'active';
   bool get isOpen => status == 'requested' || status == 'active';
 
+  /// Whether the payload carried the device's active consent scopes at all.
+  bool get hasConsentInfo => consentScopes.isNotEmpty;
+
+  /// Whether `screen` is among the reported active consent scopes.
+  bool get localScreenConsentActive => consentScopes.contains('screen');
+
   factory ScreenShareSession.fromJson(Map<String, dynamic> json) {
+    final rawScopes = json['consent_scopes'] ?? json['scopes'];
+    final scopes = rawScopes is List
+        ? rawScopes.map((e) => e.toString()).toList()
+        : const <String>[];
     return ScreenShareSession(
       id: json['id'].toString(),
       deviceId: json['device_id'].toString(),
@@ -41,6 +57,7 @@ class ScreenShareSession {
       endedAt: json['ended_at'] != null
           ? DateTime.tryParse(json['ended_at'].toString())
           : null,
+      consentScopes: scopes,
     );
   }
 }

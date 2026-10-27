@@ -28,6 +28,7 @@ void main() {
         'app_usage',
         'device_info',
         'notifications',
+        'screen',
       },
     );
     expect(ConsentScope.consentVersion, '1.0.0');
