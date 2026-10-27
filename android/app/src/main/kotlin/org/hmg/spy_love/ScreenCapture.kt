@@ -93,8 +93,12 @@ object ScreenCaptureController {
             result.success(false)
             return
         }
-        // Only one pending request at a time.
-        pendingResult?.success(false)
+        // A consent dialog is already showing. Fail this caller only — completing
+        // the original result as false would deny the session the user is deciding.
+        if (pendingResult != null) {
+            result.success(false)
+            return
+        }
         pendingResult = result
         pendingParams = CaptureParams(
             fps = fps.coerceIn(1, 30),
@@ -315,7 +319,9 @@ class ScreenCaptureService : Service() {
         handlerThread?.quitSafely()
         handlerThread = null
         handler = null
-        ScreenFrameEventSink.sink?.endOfStream()
+        // Do not end the EventChannel. Dart keeps one stream for the process;
+        // endOfStream would close it and the next share would emit no frames
+        // until the app restarted. Stopping the service is enough.
         super.onDestroy()
     }
 

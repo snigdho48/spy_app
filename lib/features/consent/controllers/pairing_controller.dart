@@ -28,6 +28,7 @@ class PairingController extends ChangeNotifier {
   ) {
     deviceName = defaultDeviceName;
     deviceNameController = TextEditingController(text: defaultDeviceName);
+    _auth.addListener(_onAuthChanged);
     unawaited(_resumePendingWatch());
   }
 
@@ -62,6 +63,10 @@ class PairingController extends ChangeNotifier {
   bool _pollInFlight = false;
   String? _watchedDeviceId;
 
+  /// Bumped when the signed-in user is cleared so an in-flight approval poll
+  /// cannot mark the device linked or start collectors after logout.
+  int _watchGeneration = 0;
+
   late final TextEditingController deviceNameController;
 
   String get defaultDeviceName {
@@ -78,9 +83,32 @@ class PairingController extends ChangeNotifier {
     return 'other';
   }
 
+  void _onAuthChanged() {
+    if (_auth.user != null) return;
+    _watchGeneration++;
+    _activationHandled = false;
+    activePairing = null;
+    _stopActivationWatch();
+  }
+
   Future<void> _resumePendingWatch() async {
-    final deviceId = await MonitoredDeviceStorage.getDeviceId();
+    final generation = _watchGeneration;
+    if (await MonitoredDeviceStorage.isMarkedLinked()) return;
+
+    var deviceId = await MonitoredDeviceStorage.getPendingDeviceId();
+    if (deviceId == null || deviceId.isEmpty) {
+      // Older builds stored the not-yet-approved id in device_id. Keep watching
+      // it, but do not treat it as an approved device.
+      final legacyId = await MonitoredDeviceStorage.getDeviceId();
+      if (legacyId != null && legacyId.isNotEmpty) {
+        deviceId = legacyId;
+        await MonitoredDeviceStorage.savePendingDeviceId(legacyId);
+      }
+    }
+    if (generation != _watchGeneration) return;
     if (deviceId == null || deviceId.isEmpty) return;
+    if (await MonitoredDeviceStorage.isMarkedLinked()) return;
+    if (generation != _watchGeneration) return;
     startActivationWatch(deviceId);
   }
 
@@ -157,15 +185,17 @@ class PairingController extends ChangeNotifier {
   }
 
   Future<void> _pollActivationOnce(String deviceId) async {
-    if (_activationHandled || _pollInFlight) return;
+    if (_activationHandled || _pollInFlight || _auth.user == null) return;
     _pollInFlight = true;
+    final generation = _watchGeneration;
 
     try {
       final result = await _repository.getOwnedDeviceStatus(deviceId);
+      if (generation != _watchGeneration || _auth.user == null) return;
       result.fold(
         (status) {
           if (status.isLinked) {
-            unawaited(_handlePairingActivated(status));
+            unawaited(_handlePairingActivated(status, generation));
           }
         },
         (_) {},
@@ -175,18 +205,32 @@ class PairingController extends ChangeNotifier {
     }
   }
 
-  Future<void> _handlePairingActivated(OwnedDeviceStatus status) async {
-    if (_activationHandled) return;
+  Future<void> _handlePairingActivated(
+    OwnedDeviceStatus status,
+    int generation,
+  ) async {
+    if (_activationHandled || generation != _watchGeneration || _auth.user == null) {
+      return;
+    }
     _activationHandled = true;
     _stopActivationWatch(keepHandledFlag: true);
 
     activePairing = null;
     notifyListeners();
 
+    if (generation != _watchGeneration || _auth.user == null) return;
+    await MonitoredDeviceStorage.markLinked(status.deviceId);
+    if (generation != _watchGeneration || _auth.user == null) return;
     await _monitoring.start(status.deviceId);
+    if (generation != _watchGeneration || _auth.user == null) {
+      await _monitoring.stop();
+      return;
+    }
+    if (generation != _watchGeneration || _auth.user == null) return;
     AppNavigator.popUntilHome();
 
     await Future<void>.delayed(const Duration(milliseconds: 350));
+    if (generation != _watchGeneration || _auth.user == null) return;
     AppNavigator.snackbar(
       'Connected',
       'This device is now linked to ${status.tenantName}.',
@@ -288,12 +332,14 @@ class PairingController extends ChangeNotifier {
   }
 
   Future<void> _onPairingCreated(String deviceId) async {
-    await MonitoredDeviceStorage.saveDeviceId(deviceId);
+    await MonitoredDeviceStorage.savePendingDeviceId(deviceId);
+    if (_auth.user == null) return;
     startActivationWatch(deviceId);
   }
 
   @override
   void dispose() {
+    _auth.removeListener(_onAuthChanged);
     _stopActivationWatch();
     deviceNameController.dispose();
     super.dispose();

@@ -61,7 +61,7 @@ Contract paths live in `lib/core/constants/api_constants.dart` and must match th
 
 ## Configure API
 
-Defaults are dart-defines in `lib/core/config/app_config.dart`:
+Compiled defaults in `lib/core/config/app_config.dart` are `https://spy.way2points.com/api/v1` and `wss://spy.way2points.com/ws/v1/events/`. Override them with `--dart-define`:
 
 ```bash
 flutter run \

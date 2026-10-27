@@ -65,12 +65,12 @@ The workflow passes:
 --dart-define=WS_BASE_URL=wss://spy.way2points.com/ws/v1/events/
 ```
 
-Override either URL with a repository **variable** of the same name (`API_BASE_URL`, `WS_BASE_URL`). Those are not secrets. Without the defines, `lib/core/config/app_config.dart` still defaults to an ngrok host.
+Override either URL with a repository **variable** of the same name (`API_BASE_URL`, `WS_BASE_URL`). Those are not secrets. The same production URLs are the defaults in `lib/core/config/app_config.dart`, so a local build without `--dart-define` talks to `spy.way2points.com`. A define that points the API host at ngrok still sends `ngrok-skip-browser-warning`; production traffic does not.
 
 ## Toolchain
 
 - Java Temurin 17
 - Flutter 3.47.8 (Dart 3.13.7), which satisfies `pubspec.yaml` `sdk: ^3.12.1`
-- `compileSdk` 37. The published SDK directory is `android-37.0`; the workflow symlinks `platforms/android-37` so AGP can find it
+- `compileSdk` follows the Flutter toolchain (`flutter.compileSdkVersion`, 36 on Flutter 3.47.8) so the build uses `platforms/android-36`
 - NDK `28.2.13676358` (`flutter.ndkVersion` on Flutter 3.47.8)
 - R8 minify and resource shrinking stay off, matching `android/app/build.gradle.kts`

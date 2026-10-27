@@ -28,7 +28,9 @@ val hasReleaseKeystore = listOf(
 
 android {
     namespace = "org.hmg.spy_love"
-    compileSdk = 37
+    // Follow the Flutter toolchain (36 on Flutter 3.47.x). A hardcoded 37
+    // looks up platforms/android-37, which the SDK publishes as android-37.0.
+    compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
