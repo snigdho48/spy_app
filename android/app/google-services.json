@@ -1,42 +1,34 @@
 {
   "project_info": {
-    "project_number": "1098260301010",
-    "firebase_url": "https://prapp-e3458-default-rtdb.firebaseio.com",
-    "project_id": "prapp-e3458",
-    "storage_bucket": "prapp-e3458.firebasestorage.app"
+    "project_number": "812706609654",
+    "project_id": "spy-app-6225a",
+    "storage_bucket": "spy-app-6225a.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1098260301010:android:2b6d442558fb956335990b",
+        "mobilesdk_app_id": "1:812706609654:android:acfba44f20db2a5bc06fd7",
         "android_client_info": {
           "package_name": "org.hmg.spy_love"
         }
       },
       "oauth_client": [
         {
-          "client_id": "1098260301010-vifp1hi2vohcjfd30no1uj75h1t2hpu1.apps.googleusercontent.com",
+          "client_id": "812706609654-gpjc0h45pa7o8vuva977v9gl75ig1n71.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBB-i77Jc5J20IFOEIDDH-WecVax7qPOBs"
+          "current_key": "AIzaSyA90ZtSxL72mbb61gOvL2lnI7Pw_4CyGZo"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "1098260301010-vifp1hi2vohcjfd30no1uj75h1t2hpu1.apps.googleusercontent.com",
+              "client_id": "812706609654-gpjc0h45pa7o8vuva977v9gl75ig1n71.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "1098260301010-r2ovf1495vl5bqhtv7ptmlj7gnlsnvb7.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "org.hmg.spyLove"
-              }
             }
           ]
         }
