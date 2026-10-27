@@ -81,4 +81,5 @@ flutter run
 ```
 
 Visual / Stitch notes: `.cursor/stitch-phase1/COMPARISON.md`.  
-Release steps: [../docs/RELEASE_CHECKLIST.md](../docs/RELEASE_CHECKLIST.md).
+Release steps: [../docs/RELEASE_CHECKLIST.md](../docs/RELEASE_CHECKLIST.md).  
+Signed Android APKs: [docs/RELEASE_APK.md](docs/RELEASE_APK.md).

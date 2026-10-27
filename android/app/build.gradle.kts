@@ -12,6 +12,20 @@ if (keyPropertiesFile.exists()) {
     keyProperties.load(keyPropertiesFile.inputStream())
 }
 
+fun keyProperty(name: String): String? =
+    keyProperties.getProperty(name)?.trim()?.takeIf { it.isNotEmpty() }
+
+val releaseStoreFile = keyProperty("storeFile")
+val releaseStorePassword = keyProperty("storePassword")
+val releaseKeyAlias = keyProperty("keyAlias")
+val releaseKeyPassword = keyProperty("keyPassword")
+val hasReleaseKeystore = listOf(
+    releaseStoreFile,
+    releaseStorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+).all { it != null }
+
 android {
     namespace = "org.hmg.spy_love"
     compileSdk = 37
@@ -24,12 +38,13 @@ android {
     }
 
     signingConfigs {
-        create("project") {
-            if (keyPropertiesFile.exists()) {
-                storeFile = rootProject.file(keyProperties["storeFile"] as String)
-                storePassword = keyProperties["storePassword"] as String
-                keyAlias = keyProperties["keyAlias"] as String
-                keyPassword = keyProperties["keyPassword"] as String
+        if (hasReleaseKeystore) {
+            create("release") {
+                // storeFile is resolved from the android/ directory (rootProject).
+                storeFile = rootProject.file(checkNotNull(releaseStoreFile))
+                storePassword = checkNotNull(releaseStorePassword)
+                keyAlias = checkNotNull(releaseKeyAlias)
+                keyPassword = checkNotNull(releaseKeyPassword)
             }
         }
     }
@@ -44,10 +59,20 @@ android {
 
     buildTypes {
         debug {
-            signingConfig = signingConfigs.getByName("project")
+            // With a keystore, debug matches the release cert (Google Sign-In SHA-1).
+            // Without one, the default debug keystore is left in place so local
+            // builds do not fail on an empty signing config.
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
         release {
-            signingConfig = signingConfigs.getByName("project")
+            signingConfig = if (hasReleaseKeystore) {
+                signingConfigs.getByName("release")
+            } else {
+                // Local release builds stay runnable. CI refuses this fallback below.
+                signingConfigs.getByName("debug")
+            }
             isMinifyEnabled = false
             isShrinkResources = false
         }
@@ -72,4 +97,16 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+
+gradle.taskGraph.whenReady {
+    val assemblingRelease = allTasks.any { task ->
+        task.project == project && task.name.contains("Release")
+    }
+    if (System.getenv("CI") == "true" && assemblingRelease && !hasReleaseKeystore) {
+        throw org.gradle.api.GradleException(
+            "Release signing requires android/key.properties with storeFile, " +
+                "storePassword, keyAlias, and keyPassword.",
+        )
+    }
 }

@@ -1,4 +1,6 @@
-# Copy to key.properties (gitignored if you change passwords)
+# Copy to android/key.properties (gitignored). Do not commit real passwords.
+# CI writes this same file from GitHub Actions secrets. See docs/RELEASE_APK.md.
+# storeFile is relative to the android/ directory unless it is an absolute path.
 
 storeFile=keystore/your-keystore.jks
 storePassword=your-store-password
