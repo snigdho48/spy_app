@@ -1,4 +1,4 @@
-﻿import Flutter
+import Flutter
 import UIKit
 import ReplayKit
 import ImageIO
@@ -14,18 +14,24 @@ import ImageIO
 ///     - stopScreenCapture                    -> void
 ///   EventChannel  `org.hmg.spy_love/screen_frames`
 ///     emits { image: <base64 jpeg>, w: Int, h: Int } for every frame the
-///     ScreenBroadcast upload extension writes into the shared App Group.
+///     ScreenBroadcast upload extension writes into the shared App Group, plus a
+///     control event { event: "broadcastStarted" } once the broadcast actually
+///     begins.
 ///
 /// Consent: no frame can flow until the user grants the OS broadcast sheet
 /// (ReplayKit shows a persistent red recording indicator for the whole
 /// session). The Dart ScreenShareService additionally requires an active
-/// backend `screen` scope and drives the global red in-app sharing banner, so
-/// the behaviour matches Android exactly. There is deliberately no covert path.
+/// backend `screen` scope + an explicit in-app Allow, and drives the global red
+/// in-app sharing banner, so the behaviour matches Android. There is
+/// deliberately no covert path.
 ///
-/// NOTE: ReplayKit cannot report the user''s picker choice synchronously, so
-/// `startScreenCapture` returns true once the consent sheet has been presented;
-/// actual frames begin only after the extension starts (i.e. after the OS
-/// grant). If the user cancels, no frames are emitted.
+/// IMPORTANT (M1): ReplayKit cannot report the user's picker choice
+/// synchronously, so `startScreenCapture` returns true once the consent sheet
+/// has merely been *presented* — it does NOT mean sharing is active. The active
+/// / "sharing" state is driven instead by the `broadcastStarted` Darwin
+/// notification (surfaced to Dart as the `broadcastStarted` control event) and
+/// cleared on `broadcastFinished` (surfaced as end-of-stream). If the user
+/// cancels the picker, no `broadcastStarted` fires and no frames are emitted.
 public class ScreenCapturePlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     private var eventSink: FlutterEventSink?
@@ -74,6 +80,8 @@ public class ScreenCapturePlugin: NSObject, FlutterPlugin, FlutterStreamHandler 
                     button.sendActions(for: .touchUpInside)
                 }
             }
+            // NOTE: true == "sheet presented", NOT "sharing active". The active
+            // state is driven by the broadcastStarted notification below.
             result(true)
         }
     }
@@ -107,6 +115,17 @@ public class ScreenCapturePlugin: NSObject, FlutterPlugin, FlutterStreamHandler 
 
     private func addObservers() {
         let center = CFNotificationCenterGetDarwinNotifyCenter()
+        // Broadcast actually started: surface a control event so the Dart layer
+        // can flip to the ACTIVE / red-banner state (M1). Presentation alone is
+        // never enough.
+        CFNotificationCenterAddObserver(
+            center, Unmanaged.passUnretained(self).toOpaque(),
+            { _, observer, _, _, _ in
+                guard let observer = observer else { return }
+                let plugin = Unmanaged<ScreenCapturePlugin>.fromOpaque(observer).takeUnretainedValue()
+                DispatchQueue.main.async { plugin.eventSink?(["event": "broadcastStarted"]) }
+            },
+            SpyLoveBroadcast.startedNotification as CFString, nil, .deliverImmediately)
         CFNotificationCenterAddObserver(
             center, Unmanaged.passUnretained(self).toOpaque(),
             { _, observer, _, _, _ in
@@ -115,6 +134,8 @@ public class ScreenCapturePlugin: NSObject, FlutterPlugin, FlutterStreamHandler 
                     .takeUnretainedValue().emitLatestFrame()
             },
             SpyLoveBroadcast.frameReadyNotification as CFString, nil, .deliverImmediately)
+        // Broadcast finished (user cancelled / stopped): end the stream so the
+        // Dart layer clears the ACTIVE state.
         CFNotificationCenterAddObserver(
             center, Unmanaged.passUnretained(self).toOpaque(),
             { _, observer, _, _, _ in

@@ -22,7 +22,10 @@ class ScreenStreamClient {
   /// Connects to the session socket.
   ///
   /// [onFrame] receives decoded `screen.frame` payloads (base64 JPEG + size).
-  /// [onSignal] receives `screen.signal` control messages (e.g. ended/paused).
+  /// [onSignal] receives the full `screen.signal` control message. The control
+  /// payload is nested under `data` (e.g. `data.signal == 'ended' | 'paused'`)
+  /// because the backend consumer relays only `{type, session_id, data}` and
+  /// drops any top-level fields.
   Future<bool> connect(
     String sessionWsPath, {
     void Function(Map<String, dynamic> frame)? onFrame,
@@ -73,13 +76,17 @@ class ScreenStreamClient {
     });
   }
 
+  /// Sends a `screen.signal` control message (e.g. ended/paused).
+  ///
+  /// The signal and any extras are nested under `data` so they survive the
+  /// backend consumer relay, which preserves only `{type, session_id, data}`.
   void sendSignal(String signal, [Map<String, dynamic>? extra]) {
-    final payload = <String, dynamic>{
+    final data = <String, dynamic>{'signal': signal};
+    if (extra != null) data.addAll(extra);
+    _socket?.send({
       'type': 'screen.signal',
-      'signal': signal,
-    };
-    if (extra != null) payload['data'] = extra;
-    _socket?.send(payload);
+      'data': data,
+    });
   }
 
   Future<void> close() async {
