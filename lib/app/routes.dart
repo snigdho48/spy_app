@@ -11,6 +11,7 @@ import 'package:spy_love/features/devices/controllers/device_detail_controller.d
 import 'package:spy_love/features/devices/repositories/event_repository.dart';
 import 'package:spy_love/features/devices/views/device_detail_view.dart';
 import 'package:spy_love/features/devices/views/event_detail_view.dart';
+import 'package:spy_love/features/devices/views/installed_apps_view.dart';
 import 'package:spy_love/features/consent/views/pairing_complete_view.dart';
 import 'package:spy_love/features/consent/views/pairing_initiate_view.dart';
 import 'package:spy_love/features/consent/views/pairing_start_view.dart';
@@ -28,6 +29,7 @@ abstract final class AppRoutes {
   static const deviceDetail = '/devices/detail';
   static const eventDetail = '/events/detail';
   static const audit = '/audit';
+  static const installedApps = '/apps/installed';
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -60,6 +62,11 @@ abstract final class AppRoutes {
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => const AuditLogView(),
+        );
+      case installedApps:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const InstalledAppsView(),
         );
       case deviceDetail:
         final device = settings.arguments as DeviceModel;

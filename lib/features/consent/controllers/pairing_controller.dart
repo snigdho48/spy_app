@@ -69,6 +69,15 @@ class PairingController extends ChangeNotifier {
 
   late final TextEditingController deviceNameController;
 
+  /// Controller backing the manual "Pairing code" field. Kept in sync with
+  /// [pairingCodeInput] so a scanned QR auto-fills the visible text field.
+  final TextEditingController codeController = TextEditingController();
+
+  /// True when the current input normalises to a valid `XXX-XXX` pairing code.
+  bool get isPairingCodeValid =>
+      RegExp(r'^[A-Z0-9]{3}-[A-Z0-9]{3}$')
+          .hasMatch(_normalizePairingCode(pairingCodeInput));
+
   String get defaultDeviceName {
     if (kIsWeb) return 'Web browser';
     if (!kIsWeb && Platform.isAndroid) return 'Android phone';
@@ -289,23 +298,30 @@ class PairingController extends ChangeNotifier {
     );
   }
 
+  /// Applies a scanned QR payload: auto-fills the pairing code field and, when
+  /// the scanned value is a valid code, auto-continues the pairing flow so the
+  /// monitor never has to retype it.
   void applyScannedPayload(String raw) {
+    String candidate = raw;
     final uri = Uri.tryParse(raw);
     if (uri != null && uri.scheme == 'spylove' && uri.host == 'pair') {
       final code = uri.queryParameters['code'];
       if (code != null && code.isNotEmpty) {
-        pairingCodeInput = _normalizePairingCode(code);
-        useScanner = false;
-        notifyListeners();
-        return;
+        candidate = code;
       }
     }
 
-    pairingCodeInput = _normalizePairingCode(raw);
+    pairingCodeInput = _normalizePairingCode(candidate);
+    codeController.text = pairingCodeInput;
     if (pairingCodeInput.isNotEmpty) {
       useScanner = false;
     }
     notifyListeners();
+
+    // Auto-continue once a valid code is scanned (no manual retype / tap).
+    if (isPairingCodeValid && !isLoading) {
+      unawaited(completePairing());
+    }
   }
 
   void setUseScanner(bool value) {
@@ -342,6 +358,7 @@ class PairingController extends ChangeNotifier {
     _auth.removeListener(_onAuthChanged);
     _stopActivationWatch();
     deviceNameController.dispose();
+    codeController.dispose();
     super.dispose();
   }
 }

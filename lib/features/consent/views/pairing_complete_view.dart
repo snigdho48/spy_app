@@ -32,9 +32,43 @@ class PairingCompleteView extends StatelessWidget {
           ],
         ),
       ),
+      // Floating (overlay) Continue action instead of a docked bottom button.
+      // Hidden while the camera scanner is open so it doesn't cover the frame.
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: controller.useScanner
+          ? null
+          : _ContinueFab(controller: controller),
       body: controller.useScanner
           ? _ScannerPane(controller: controller)
           : _ApprovalForm(controller: controller),
+    );
+  }
+}
+
+class _ContinueFab extends StatelessWidget {
+  const _ContinueFab({required this.controller});
+
+  final PairingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = controller.isPairingCodeValid &&
+        controller.selectedScopes.isNotEmpty &&
+        !controller.isLoading;
+    return FloatingActionButton.extended(
+      heroTag: 'pairing-continue',
+      backgroundColor: enabled
+          ? Theme.of(context).colorScheme.primary
+          : Theme.of(context).disabledColor,
+      onPressed: enabled ? () => controller.completePairing() : null,
+      icon: controller.isLoading
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            )
+          : const Icon(Icons.verified_outlined),
+      label: Text(controller.isLoading ? 'Sending…' : 'Confirm & continue'),
     );
   }
 }
@@ -53,21 +87,58 @@ class _ScannerPaneState extends State<_ScannerPane> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       children: [
         Expanded(
-          child: MobileScanner(
-            onDetect: (capture) {
-              if (_handled) return;
-              final barcodes = capture.barcodes;
-              for (final barcode in barcodes) {
-                final raw = barcode.rawValue;
-                if (raw == null || raw.isEmpty) continue;
-                _handled = true;
-                widget.controller.applyScannedPayload(raw);
-                break;
-              }
-            },
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              MobileScanner(
+                onDetect: (capture) {
+                  if (_handled) return;
+                  for (final barcode in capture.barcodes) {
+                    final raw = barcode.rawValue;
+                    if (raw == null || raw.isEmpty) continue;
+                    _handled = true;
+                    // Auto-fills the code and auto-continues when valid.
+                    widget.controller.applyScannedPayload(raw);
+                    break;
+                  }
+                },
+              ),
+              // Framing + scan hint overlay.
+              IgnorePointer(
+                child: Center(
+                  child: Container(
+                    width: 240,
+                    height: 240,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white70, width: 2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 24,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'Point the camera at the monitored phone\'s pairing QR. '
+                    'The code fills in and pairing continues automatically.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         Padding(
@@ -93,7 +164,9 @@ class _ApprovalForm extends StatelessWidget {
     final tokens = context.tokens;
     final theme = Theme.of(context);
     return ListView(
-      padding: context.pagePadding,
+      // Extra bottom padding so the floating Continue button never covers the
+      // last controls.
+      padding: context.pagePadding.add(const EdgeInsets.only(bottom: 96)),
       children: [
         AppCard(
           color: tokens.primarySoft,
@@ -121,6 +194,7 @@ class _ApprovalForm extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.md),
         AppTextField(
+          controller: controller.codeController,
           label: 'Pairing code',
           hint: 'ABC-123',
           textCapitalization: TextCapitalization.characters,
@@ -202,16 +276,7 @@ class _ApprovalForm extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: AppSpacing.lg),
-        AppButton(
-          label: 'Confirm & send consent agreement',
-          icon: Icons.send_outlined,
-          loading: controller.isLoading,
-          onPressed: controller.isLoading
-              ? null
-              : () => controller.completePairing(),
-        ),
-        const SizedBox(height: AppSpacing.sm),
+        const SizedBox(height: AppSpacing.md),
         AppButton(
           label: 'Cancel & abort pairing',
           icon: Icons.close,

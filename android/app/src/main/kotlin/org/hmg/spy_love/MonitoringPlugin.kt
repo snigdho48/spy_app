@@ -114,6 +114,18 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
                 ScreenCaptureController.stopCapture(context)
                 result.success(null)
             }
+            "openSettingsPage" -> {
+                val page = call.argument<String>("page") ?: "appDetails"
+                result.success(openSettingsPage(page))
+            }
+            "getSettingsPermissionState" -> {
+                val page = call.argument<String>("page") ?: ""
+                result.success(getSettingsPermissionState(page))
+            }
+            "getInstalledApps" -> {
+                val includeSystem = call.argument<Boolean>("includeSystem") ?: true
+                result.success(readInstalledApps(includeSystem))
+            }
             else -> result.notImplemented()
         }
     }
@@ -399,6 +411,143 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
         ) ?: return false
         val component = ComponentName(context, SpyLoveNotificationListenerService::class.java)
         return flat.contains(component.flattenToString())
+    }
+
+    /**
+     * Deep-links to the exact system settings page for a settings-only
+     * permission. Returns true when an intent was fired.
+     */
+    private fun openSettingsPage(page: String): Boolean {
+        val intent: Intent = when (page) {
+            "accessibility" -> Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+            "usageAccess", "usage_access" ->
+                Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+            "notificationListener", "notification_listener" ->
+                Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
+            "overlay" -> Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                android.net.Uri.parse("package:" + context.packageName),
+            )
+            "batteryOptimization", "battery" ->
+                Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+            "deviceAdmin", "device_admin" ->
+                Intent(Settings.ACTION_SECURITY_SETTINGS)
+            else -> Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                android.net.Uri.parse("package:" + context.packageName),
+            )
+        }
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return try {
+            context.startActivity(intent)
+            true
+        } catch (_: Throwable) {
+            try {
+                val fallback = Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    android.net.Uri.parse("package:" + context.packageName),
+                ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(fallback)
+                true
+            } catch (_: Throwable) {
+                false
+            }
+        }
+    }
+
+    /** Best-effort live state for settings-only permissions. */
+    private fun getSettingsPermissionState(page: String): Boolean? {
+        return when (page) {
+            "usage_access", "usageAccess" -> isUsageAccessEnabled()
+            "notification_listener", "notificationListener" ->
+                isNotificationAccessEnabled()
+            "overlay" -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Settings.canDrawOverlays(context)
+            } else {
+                true
+            }
+            "accessibility" -> isAccessibilityEnabled()
+            else -> null
+        }
+    }
+
+    private fun isAccessibilityEnabled(): Boolean {
+        val enabled = Settings.Secure.getString(
+            context.contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+        ) ?: return false
+        return enabled.contains(context.packageName)
+    }
+
+    /**
+     * Lists installed apps available to the monitor: label, package, system
+     * flag, and a base64 PNG icon. Requires QUERY_ALL_PACKAGES to see apps the
+     * caller has not been granted visibility to on Android 11+.
+     */
+    private fun readInstalledApps(includeSystem: Boolean): List<Map<String, Any?>> {
+        val pm = context.packageManager
+        val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+        val apps = mutableListOf<Map<String, Any?>>()
+        for (info in packages) {
+            val isSystem =
+                (info.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+            if (isSystem && !includeSystem) continue
+            val label = try {
+                pm.getApplicationLabel(info).toString()
+            } catch (_: Throwable) {
+                info.packageName
+            }
+            var iconB64: String? = null
+            try {
+                val drawable = pm.getApplicationIcon(info.packageName)
+                val bmp = drawableToBitmap(drawable)
+                if (bmp != null) {
+                    val stream = java.io.ByteArrayOutputStream()
+                    bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, stream)
+                    iconB64 = android.util.Base64.encodeToString(
+                        stream.toByteArray(), android.util.Base64.NO_WRAP,
+                    )
+                    bmp.recycle()
+                }
+            } catch (_: Throwable) {
+                iconB64 = null
+            }
+            apps.add(
+                mapOf(
+                    "package" to info.packageName,
+                    "name" to label,
+                    "system" to isSystem,
+                    "icon" to iconB64,
+                ),
+            )
+        }
+        apps.sortBy { (it["name"] as? String)?.lowercase() ?: "" }
+        return apps
+    }
+
+    private fun drawableToBitmap(drawable: android.graphics.drawable.Drawable): android.graphics.Bitmap? {
+        if (drawable is android.graphics.drawable.BitmapDrawable && drawable.bitmap != null) {
+            // Downscale large launcher icons to keep payloads small.
+            val src = drawable.bitmap
+            val size = 96
+            return android.graphics.Bitmap.createScaledBitmap(src, size, size, true)
+        }
+        val size = 96
+        val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else size
+        val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else size
+        val bitmap = android.graphics.Bitmap.createBitmap(
+            width, height, android.graphics.Bitmap.Config.ARGB_8888,
+        )
+        val canvas = android.graphics.Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
+        return if (width != size || height != size) {
+            val scaled = android.graphics.Bitmap.createScaledBitmap(bitmap, size, size, true)
+            bitmap.recycle()
+            scaled
+        } else {
+            bitmap
+        }
     }
 
     companion object {
