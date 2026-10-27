@@ -185,11 +185,60 @@ jobs:
           test -s "release-apks/SpyLove-${VERSION}-x86_64.apk"
           test -s "release-apks/SpyLove-${VERSION}-universal.apk"
 
+      # Fixed title and description. generate_release_notes appends the
+      # commit list after the "Changes since last release" heading.
+      - name: Write GitHub Release description
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Escaped backticks stay literal in this unquoted heredoc.
+          cat > release-notes.md << EOF
+          Spy Love ${VERSION} is a consent-based monitoring app. The person being monitored can see that monitoring is on and can pause sharing. This build is compiled for the production API at https://spy.way2points.com.
+
+          ## What's included
+
+          - Signed release APKs for 64-bit ARM, 32-bit ARM, 64-bit x86, and a universal package
+          - Consent Horizon screens for pairing, home, devices, activity, location, and account
+          - Pairing that the other phone must accept before monitoring starts
+          - Location, safe zones, and activity limited to the consent scopes that were accepted
+          - Production API and live events on https://spy.way2points.com
+
+          ## Which APK to install
+
+          Most phones should use the arm64 build. Use the universal APK only when the CPU is unknown.
+
+          | File | Device |
+          | --- | --- |
+          | \`SpyLove-${VERSION}-arm64-v8a.apk\` | Current phones (64-bit ARM) |
+          | \`SpyLove-${VERSION}-armeabi-v7a.apk\` | Older 32-bit ARM phones |
+          | \`SpyLove-${VERSION}-x86_64.apk\` | 64-bit x86 phones and emulators |
+          | \`SpyLove-${VERSION}-universal.apk\` | All three ABIs in one larger file |
+
+          ## Install
+
+          1. Download one APK from the assets on this release.
+          2. Open it on the Android device. If the system blocks the install, allow this source to install unknown apps, then open the file again.
+          3. Confirm the install. The app id is \`org.hmg.spy_love\`.
+          4. Open Spy Love and sign in. Monitoring of another phone starts only after that person accepts the pairing request on their device.
+
+          ## Notes
+
+          - **Android:** 7.0 or newer (API 24, \`minSdk\` 24).
+          - **Backend:** https://spy.way2points.com (API \`/api/v1\`, events WebSocket \`/ws/v1/events/\`).
+          - **Firebase:** initialized from the Firebase Android config shipped in this build, including Google Sign-In.
+
+          ## Changes since last release
+
+          Commits and pull requests since the previous tag are listed below.
+          EOF
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: Spy Love ${{ steps.version.outputs.version }}
+          name: "Spy Love ${{ steps.version.outputs.version }} — Consent Horizon"
+          body_path: release-notes.md
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: release-apks/*.apk

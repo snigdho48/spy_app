@@ -15,6 +15,10 @@ This project does not set `abiFilters`. Flutter's release APK targets are `andro
 
 `<version>` is the git tag with the leading `v` removed (`v1.0.0` → `1.0.0`). The APK `versionName` / `versionCode` still come from `pubspec.yaml` (`1.0.0+1` → name `1.0.0`, code `1`). Bump `pubspec.yaml` before you tag so those match.
 
+## GitHub Release page
+
+The workflow titles the release `Spy Love <version> — Consent Horizon`. Before publish it writes a fixed description (intro, what is included, the APK table, install steps, and notes for Android 7.0 / API 24, https://spy.way2points.com, and Firebase) and passes that file as `body_path`. Commits since the previous tag are appended under **Changes since last release**. APK filenames stay the same.
+
 ## Cut a release
 
 1. Bump `version:` in `pubspec.yaml` and commit that on `master`.
