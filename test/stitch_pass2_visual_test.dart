@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:spy_love/app/core/theme/app_theme.dart';
-import 'package:spy_love/app/core/theme/app_tokens.dart';
-import 'package:spy_love/app/core/types/either.dart';
-import 'package:spy_love/app/core/widgets/app_button.dart';
-import 'package:spy_love/app/core/widgets/app_card.dart';
-import 'package:spy_love/app/core/widgets/app_page.dart';
-import 'package:spy_love/app/core/widgets/app_text_field.dart';
-import 'package:spy_love/app/core/widgets/confirm_device_action_sheet.dart';
-import 'package:spy_love/app/core/widgets/status_badge.dart';
-import 'package:spy_love/app/modules/audit/models/audit_log_model.dart';
-import 'package:spy_love/app/modules/audit/repositories/audit_repository.dart';
-import 'package:spy_love/app/modules/audit/views/audit_log_view.dart';
-import 'package:spy_love/app/modules/device_detail/models/device_event_model.dart';
-import 'package:spy_love/app/modules/device_detail/views/event_detail_view.dart';
-import 'package:spy_love/app/modules/pairing/views/pairing_start_view.dart';
-import 'package:spy_love/app/modules/pairing/views/pairing_success_view.dart';
-import 'package:spy_love/app/modules/subscription/controllers/subscription_controller.dart';
-import 'package:spy_love/app/modules/subscription/models/subscription_models.dart';
-import 'package:spy_love/app/modules/subscription/views/subscription_plans_view.dart';
+import 'package:spy_love/core/theme/app_theme.dart';
+import 'package:spy_love/core/theme/app_tokens.dart';
+import 'package:spy_love/core/types/either.dart';
+import 'package:spy_love/shared/widgets/app_button.dart';
+import 'package:spy_love/shared/widgets/app_card.dart';
+import 'package:spy_love/shared/widgets/app_page.dart';
+import 'package:spy_love/shared/widgets/app_text_field.dart';
+import 'package:spy_love/shared/widgets/confirm_device_action_sheet.dart';
+import 'package:spy_love/shared/widgets/status_badge.dart';
+import 'package:spy_love/features/audit/models/audit_log_model.dart';
+import 'package:spy_love/features/audit/repositories/audit_repository.dart';
+import 'package:spy_love/features/audit/views/audit_log_view.dart';
+import 'package:spy_love/features/devices/models/device_event_model.dart';
+import 'package:spy_love/features/devices/views/event_detail_view.dart';
+import 'package:spy_love/features/consent/views/pairing_start_view.dart';
+import 'package:spy_love/features/consent/views/pairing_success_view.dart';
+import 'package:spy_love/features/subscription/controllers/subscription_controller.dart';
+import 'package:spy_love/features/subscription/models/subscription_models.dart';
+import 'package:spy_love/features/subscription/views/subscription_plans_view.dart';
 
 /// Second Stitch pass — goldens at 412×915 and 800×1280, light + dark.
 void main() {

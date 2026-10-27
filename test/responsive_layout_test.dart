@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spy_love/app/core/theme/app_theme.dart';
-import 'package:spy_love/app/core/widgets/adaptive_metric_row.dart';
-import 'package:spy_love/app/core/widgets/app_states.dart';
-import 'package:spy_love/app/core/widgets/device_list_tile.dart';
-import 'package:spy_love/app/core/widgets/metric_card.dart';
-import 'package:spy_love/app/core/widgets/responsive_scaffold.dart';
-import 'package:spy_love/app/modules/dashboard/models/device_home_snapshot.dart';
-import 'package:spy_love/app/modules/dashboard/models/device_model.dart';
+import 'package:spy_love/core/theme/app_theme.dart';
+import 'package:spy_love/shared/widgets/adaptive_metric_row.dart';
+import 'package:spy_love/shared/widgets/app_states.dart';
+import 'package:spy_love/features/devices/widgets/device_list_tile.dart';
+import 'package:spy_love/shared/widgets/metric_card.dart';
+import 'package:spy_love/shared/widgets/responsive_scaffold.dart';
+import 'package:spy_love/features/devices/models/device_home_snapshot.dart';
+import 'package:spy_love/features/devices/models/device_model.dart';
 
 const _sizes = <Size>[
   Size(360, 640),
