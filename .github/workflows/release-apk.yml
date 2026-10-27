@@ -1,0 +1,200 @@
+name: Release APK
+
+# Push a tag such as v1.0.0, or run this workflow by hand.
+# Required repo secrets: KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD.
+# See docs/RELEASE_APK.md.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish (for example v1.0.0). Empty uses v<pubspec version>."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-apk-${{ github.ref }}-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  release-apk:
+    name: Build and publish APKs
+    runs-on: ubuntu-latest
+    env:
+      # Optional repository variables. Unset values keep the production host
+      # instead of the ngrok default compiled into app_config.dart.
+      API_BASE_URL: ${{ vars.API_BASE_URL != '' && vars.API_BASE_URL || 'https://spy.way2points.com/api/v1' }}
+      WS_BASE_URL: ${{ vars.WS_BASE_URL != '' && vars.WS_BASE_URL || 'wss://spy.way2points.com/ws/v1/events/' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          # pubspec.yaml requires Dart >= 3.12.1. 3.47.8 ships Dart 3.13.7.
+          flutter-version: "3.47.8"
+          channel: stable
+          cache: true
+
+      - name: Resolve release version
+        id: version
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          elif [[ -n "${INPUT_TAG}" ]]; then
+            TAG="$INPUT_TAG"
+            [[ "$TAG" == v* ]] || TAG="v${TAG}"
+          else
+            RAW="$(awk '/^version:/{print $2; exit}' pubspec.yaml)"
+            TAG="v${RAW%%+*}"
+          fi
+          VERSION="${TAG#v}"
+          if [[ -z "$VERSION" || "$VERSION" == "$TAG" ]]; then
+            echo "Could not derive a version from tag '${TAG}'."
+            exit 1
+          fi
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Publishing ${TAG} (filename version ${VERSION})"
+
+      - name: Install Android SDK pieces this project compiles against
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/android-sdk}}"
+          mkdir -p "$SDK"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          if [[ ! -x "$SDK/cmdline-tools/latest/bin/sdkmanager" ]]; then
+            TMP="$(mktemp -d)"
+            curl -fsSL -o "$TMP/cmdtools.zip" \
+              https://dl.google.com/android/repository/commandlinetools-linux-13114758_latest.zip
+            unzip -q "$TMP/cmdtools.zip" -d "$TMP"
+            mkdir -p "$SDK/cmdline-tools/latest"
+            mv "$TMP/cmdline-tools/"* "$SDK/cmdline-tools/latest/"
+            rm -rf "$TMP"
+          fi
+          export ANDROID_HOME="$SDK"
+          export ANDROID_SDK_ROOT="$SDK"
+          # `yes` exits 141 (SIGPIPE) once sdkmanager closes stdin. Don't fail the step on that.
+          yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK" --licenses >/dev/null || true
+          # compileSdk = 37 looks up platforms/android-37. The published package
+          # is platforms;android-37.0 (directory android-37.0). NDK matches
+          # Flutter 3.47.8's flutter.ndkVersion.
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK" \
+            "platform-tools" \
+            "platforms;android-37.0" \
+            "platforms;android-36" \
+            "platforms;android-35" \
+            "platforms;android-34" \
+            "build-tools;37.0.0" \
+            "build-tools;36.0.0" \
+            "ndk;28.2.13676358"
+          if [[ ! -e "$SDK/platforms/android-37" ]]; then
+            ln -s android-37.0 "$SDK/platforms/android-37"
+          fi
+          flutter config --android-sdk "$SDK"
+
+      - name: Write release keystore from secrets
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [[ -n "${KEYSTORE_BASE64}" ]] || missing+=("KEYSTORE_BASE64")
+          [[ -n "${KEYSTORE_PASSWORD}" ]] || missing+=("KEYSTORE_PASSWORD")
+          [[ -n "${KEY_ALIAS}" ]] || missing+=("KEY_ALIAS")
+          [[ -n "${KEY_PASSWORD}" ]] || missing+=("KEY_PASSWORD")
+          if (( ${#missing[@]} > 0 )); then
+            echo "Missing GitHub Actions secrets: ${missing[*]}"
+            echo "Add them under Settings → Secrets and variables → Actions. See docs/RELEASE_APK.md."
+            exit 1
+          fi
+          python3 - << 'PY'
+          import base64
+          import os
+          from pathlib import Path
+
+          raw = "".join(os.environ["KEYSTORE_BASE64"].split())
+          keystore = base64.b64decode(raw)
+          if not keystore:
+              raise SystemExit("KEYSTORE_BASE64 decoded to an empty file.")
+          path = Path("android/keystore/release.jks")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_bytes(keystore)
+          # First '=' separates the key from the value. Passwords must not contain newlines.
+          Path("android/key.properties").write_text(
+              "storeFile=keystore/release.jks\n"
+              f"storePassword={os.environ['KEYSTORE_PASSWORD']}\n"
+              f"keyAlias={os.environ['KEY_ALIAS']}\n"
+              f"keyPassword={os.environ['KEY_PASSWORD']}\n",
+              encoding="utf-8",
+          )
+          print(f"Wrote {path} ({len(keystore)} bytes) and android/key.properties.")
+          PY
+
+      - name: Download Dart packages
+        run: flutter pub get
+
+      - name: Build split-per-ABI release APKs
+        run: |
+          set -euo pipefail
+          # Project has no abiFilters. Flutter's release APK targets are
+          # android-arm, android-arm64, and android-x64 (not 32-bit x86).
+          flutter build apk --release --split-per-abi \
+            --target-platform android-arm,android-arm64,android-x64 \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=WS_BASE_URL="$WS_BASE_URL"
+          VERSION="${{ steps.version.outputs.version }}"
+          SRC="build/app/outputs/flutter-apk"
+          mkdir -p release-apks
+          cp "$SRC/app-arm64-v8a-release.apk" "release-apks/SpyLove-${VERSION}-arm64-v8a.apk"
+          cp "$SRC/app-armeabi-v7a-release.apk" "release-apks/SpyLove-${VERSION}-armeabi-v7a.apk"
+          cp "$SRC/app-x86_64-release.apk" "release-apks/SpyLove-${VERSION}-x86_64.apk"
+
+      - name: Build universal release APK
+        run: |
+          set -euo pipefail
+          flutter build apk --release \
+            --target-platform android-arm,android-arm64,android-x64 \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=WS_BASE_URL="$WS_BASE_URL"
+          VERSION="${{ steps.version.outputs.version }}"
+          cp build/app/outputs/flutter-apk/app-release.apk \
+            "release-apks/SpyLove-${VERSION}-universal.apk"
+          echo "APKs:"
+          ls -lh release-apks
+          test -s "release-apks/SpyLove-${VERSION}-arm64-v8a.apk"
+          test -s "release-apks/SpyLove-${VERSION}-armeabi-v7a.apk"
+          test -s "release-apks/SpyLove-${VERSION}-x86_64.apk"
+          test -s "release-apks/SpyLove-${VERSION}-universal.apk"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Spy Love ${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: release-apks/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
