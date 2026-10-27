@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:spy_love/app/core/theme/app_theme.dart';
-import 'package:spy_love/app/core/theme/app_tokens.dart';
-import 'package:spy_love/app/core/types/either.dart';
-import 'package:spy_love/app/core/widgets/adaptive_metric_row.dart';
-import 'package:spy_love/app/core/widgets/app_button.dart';
-import 'package:spy_love/app/core/widgets/app_card.dart';
-import 'package:spy_love/app/core/widgets/device_list_tile.dart';
-import 'package:spy_love/app/core/widgets/metric_card.dart';
-import 'package:spy_love/app/core/widgets/section_header.dart';
-import 'package:spy_love/app/core/widgets/status_badge.dart';
-import 'package:spy_love/app/modules/dashboard/models/device_home_snapshot.dart';
-import 'package:spy_love/app/modules/dashboard/models/device_model.dart';
-import 'package:spy_love/app/modules/dashboard/models/keyword_model.dart';
-import 'package:spy_love/app/modules/dashboard/repositories/keyword_repository.dart';
-import 'package:spy_love/app/modules/device_detail/models/device_event_model.dart';
-import 'package:spy_love/app/modules/device_detail/views/activity_feed_tab.dart';
+import 'package:spy_love/core/theme/app_theme.dart';
+import 'package:spy_love/core/theme/app_tokens.dart';
+import 'package:spy_love/core/types/either.dart';
+import 'package:spy_love/shared/widgets/adaptive_metric_row.dart';
+import 'package:spy_love/shared/widgets/app_button.dart';
+import 'package:spy_love/shared/widgets/app_card.dart';
+import 'package:spy_love/features/devices/widgets/device_list_tile.dart';
+import 'package:spy_love/shared/widgets/metric_card.dart';
+import 'package:spy_love/shared/widgets/section_header.dart';
+import 'package:spy_love/shared/widgets/status_badge.dart';
+import 'package:spy_love/features/devices/models/device_home_snapshot.dart';
+import 'package:spy_love/features/devices/models/device_model.dart';
+import 'package:spy_love/features/devices/models/keyword_model.dart';
+import 'package:spy_love/features/devices/repositories/keyword_repository.dart';
+import 'package:spy_love/features/devices/models/device_event_model.dart';
+import 'package:spy_love/features/devices/views/activity_feed_tab.dart';
 
 /// Goldens at 412×915 land in `test/goldens/` (copied to stitch-phase1/app-captures by script).
 void main() {

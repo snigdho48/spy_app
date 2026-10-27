@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spy_love/app/core/constants/api_constants.dart';
-import 'package:spy_love/app/core/types/either.dart';
-import 'package:spy_love/app/modules/pairing/models/consent_scope.dart';
+import 'package:spy_love/core/constants/api_constants.dart';
+import 'package:spy_love/core/types/either.dart';
+import 'package:spy_love/features/consent/models/consent_scope.dart';
 
 void main() {
   test('success stays on the left of the app result type', () {

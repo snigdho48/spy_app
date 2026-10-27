@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:spy_love/app/app.dart';
-import 'package:spy_love/app/core/bootstrap/app_bootstrap.dart';
+import 'package:spy_love/core/bootstrap/app_bootstrap.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

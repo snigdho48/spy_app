@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:spy_love/app/core/monitoring/geofence_math.dart';
+import 'package:spy_love/features/monitoring/geofence_math.dart';
 
 void main() {
   test('distanceMeters is ~0 for the same point', () {

@@ -6,6 +6,15 @@ The iOS native code for consent-scoped live screen monitoring is committed under
 Android MediaProjection contract. Finish the wiring on a Mac with Xcode using
 the steps below.
 
+## Dart counterparts
+
+Paths below are from the repository root. The native channels are unchanged.
+
+- `lib/features/monitoring/screen_share/screen_capture_bridge.dart` — MethodChannel `org.hmg.spy_love/monitoring` and EventChannel `org.hmg.spy_love/screen_frames`.
+- `lib/features/monitoring/screen_share/screen_share_service.dart` — `screen` scope check, in-app consent, and session lifecycle.
+- `lib/features/consent/screen_share_consent_prompt.dart` — Allow/Deny dialog shown on the monitored device before the OS capture prompt.
+- `lib/features/monitoring/screen_share/screen_sharing_indicator.dart` — persistent in-app "screen is being shared" banner.
+
 ## What already exists in the repo
 
 - `ios/Shared/SpyLoveBroadcastShared.swift` — App Group id, shared frame file
