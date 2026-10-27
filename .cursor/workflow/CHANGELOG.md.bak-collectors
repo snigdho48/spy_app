@@ -1,0 +1,133 @@
+# App changelog
+
+All meaningful Flutter app changes go here. Newest entries first.
+
+Agents: update this file at the end of every coding turn that touches `spy_love/`. Include **Time** `YYYY-MM-DD HH:MM (UTC+6)`, Author, Model, Mode, Summary, Files, and Impact.
+
+## [Unreleased]
+
+### Changed — 2026-09-30
+
+**Time:** 2026-09-30 17:51 (UTC+6)
+**Author:** Cursor agent
+**Model:** Auto
+**Mode:** agent
+**Issue:** n/a
+
+**Summary:** Allowed cleartext HTTP in the Android debug build so the emulator can reach the local API.
+
+**Files:**
+- `spy_love/android/app/src/debug/AndroidManifest.xml` — `usesCleartextTraffic` for debug only
+
+**Impact:** Debug Android builds can call `http://127.0.0.1:8002`. Release builds are unchanged.
+
+### Changed — 2026-09-30
+
+**Time:** 2026-09-30 16:22 (UTC+6)
+**Author:** Cursor agent
+**Model:** Auto
+**Mode:** agent
+**Issue:** n/a
+
+**Summary:** Request chrome and the theme now take brand colors from AppConfig and follow light or dark mode.
+
+**Files:**
+- `spy_love/lib/app/core/config/app_config.dart` — theme-aware surface, text, and scrim
+- `spy_love/lib/app/core/network/spy_request_chrome.dart` — wait card and offline bar
+- `spy_love/lib/app/core/network/one_request_config.dart` — loader colors from AppConfig
+- `spy_love/lib/app/core/theme/app_theme.dart` — primary color from AppConfig
+
+**Impact:** Loading and offline UI switch with the system theme.
+
+### Changed — 2026-09-30
+
+**Time:** 2026-09-30 15:58 (UTC+6)
+**Author:** Cursor agent
+**Model:** Auto
+**Mode:** agent
+**Issue:** n/a
+
+**Summary:** Replaced one_request EasyLoading toasts with Spy Love chrome: a navy wait card, the app snackbar for errors, and a matching offline bar.
+
+**Files:**
+- `spy_love/lib/app/core/network/spy_request_chrome.dart` — wait card and offline bar
+- `spy_love/lib/app/core/network/api_service.dart` — app loader and snackbar; package overlays off per call
+- `spy_love/lib/app/core/network/one_request_config.dart` — disable EasyLoading; custom connectivity builder
+- `spy_love/lib/app/core/network/network_service.dart` — back-online snackbar
+- `spy_love/lib/app/app.dart` — overlay above the navigator
+- `spy_love/lib/app/app_providers.dart` — request overlay controller
+
+**Impact:** Loading and offline UI. Restart the app to see it; hot reload is not enough for the provider change.
+
+### Fixed — 2026-09-30
+
+**Time:** 2026-09-30 15:52 (UTC+6)
+**Author:** Cursor agent
+**Model:** Auto
+**Mode:** agent
+**Issue:** n/a
+
+**Summary:** Replaced the empty Flutter test file so `flutter test` loads a `main` and checks the result type, consent scopes, and API paths.
+
+**Files:**
+- `spy_love/test/widget_test.dart` — three contract checks
+
+**Impact:** `flutter test` passes (3 tests).
+
+### Changed — 2026-09-30
+
+**Time:** 2026-09-30 15:38 (UTC+6)
+**Author:** Cursor agent
+**Model:** Auto
+**Mode:** agent
+**Issue:** n/a
+
+**Summary:** Upgraded Flutter packages to current compatible releases and moved the app onto one_request 3.1: per-service client, connectivity notices, and a live event socket.
+
+**Files:**
+- `spy_love/pubspec.yaml` — `one_request` ^3.1.0; dropped direct `connectivity_plus`
+- `spy_love/pubspec.lock` — resolved one_request 3.1.0 plus firebase_core 4.15.0, flutter_secure_storage 11.2.0, geolocator 14.1.1, mobile_scanner 7.4.2
+- `spy_love/lib/app/core/network/api_service.dart` — `OneRequest(baseUrl:, headers:)`; absolute JWT refresh URL
+- `spy_love/lib/app/core/network/one_request_config.dart` — `setConnectivity` snackbar and websocket reconnect
+- `spy_love/lib/app/core/network/network_service.dart` — online flag from `OneRequest.checkConnectivity`
+- `spy_love/lib/app/core/network/event_stream_client.dart` — `OneRequest.socket` for device events
+- `spy_love/lib/app/modules/device_detail/controllers/device_detail_controller.dart` — refresh on live events
+- `spy_love/lib/app/routes/app_routes.dart` — pass token storage into device detail
+
+**Impact:** HTTP client and connectivity. Device detail listens on `ws/v1/events/` while open. `flutter analyze` reports no issues.
+
+### Added — 2026-09-30
+
+**Time:** 2026-09-30 15:02 (UTC+6)
+**Author:** Cursor agent
+**Model:** Auto
+**Mode:** high
+**Issue:** n/a
+
+**Summary:** Added Flutter Cursor workflow docs so app changes are logged in this folder.
+
+**Files:**
+- `spy_love/.cursor/rules/app-workflow.mdc` — conventions and changelog path
+- `spy_love/.cursor/workflow/README.md` — module map
+
+**Impact:** none
+
+### Changed — 2026-09-07
+
+**Time:** 2026-09-07 18:28 (UTC+6)
+**Author:** Cursor agent
+**Model:** Auto
+**Mode:** high
+**Issue:** n/a
+
+**Summary:** Bumped direct plugins to current releases and moved HTTP onto one_request 3 for every platform, including web. Recorded after the fact; this folder did not exist during that change.
+
+**Files:**
+- `spy_love/pubspec.yaml` — one_request 3.0.0; connectivity_plus, firebase_core, flutter_secure_storage, permission_handler, geolocator, flutter_map, latlong2, google_fonts, mobile_scanner, uuid, intl, url_launcher, cupertino_icons; direct dio removed
+- `spy_love/lib/app/core/network/api_service.dart` — single client; `OneRequest.setAuth`; map package Either to app Left=success
+- `spy_love/lib/app/core/types/either.dart` — local Left=success Either
+- `spy_love/lib/app/app.dart` — `OneRequest.wrap()`
+- `spy_love/lib/app/core/bootstrap/app_bootstrap.dart` — OneRequest setup on all platforms
+- `spy_love/android/app/build.gradle.kts` — `compileSdk` 37
+
+**Impact:** API client. JWT refresh is handled by one_request. Web no longer uses a separate Dio client.
