@@ -71,6 +71,6 @@ Override either URL with a repository **variable** of the same name (`API_BASE_U
 
 - Java Temurin 17
 - Flutter 3.47.8 (Dart 3.13.7), which satisfies `pubspec.yaml` `sdk: ^3.12.1`
-- `compileSdk` follows the Flutter toolchain (`flutter.compileSdkVersion`, 36 on Flutter 3.47.8) so the build uses `platforms/android-36`
+- `compileSdk` 37 with `compileSdkMinor` 0, which resolves the published SDK directory `platforms/android-37.0` (`permission_handler_android` 14 requires API 37). `targetSdk` stays on the Flutter default (36)
 - NDK `28.2.13676358` (`flutter.ndkVersion` on Flutter 3.47.8)
 - R8 minify and resource shrinking stay off, matching `android/app/build.gradle.kts`

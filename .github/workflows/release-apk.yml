@@ -94,13 +94,16 @@ jobs:
           export ANDROID_SDK_ROOT="$SDK"
           # `yes` exits 141 (SIGPIPE) once sdkmanager closes stdin. Don't fail the step on that.
           yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK" --licenses >/dev/null || true
-          # compileSdk follows Flutter (36 on 3.47.8), which resolves
-          # platforms/android-36. NDK matches flutter.ndkVersion.
+          # compileSdk 37 with compileSdkMinor 0 resolves platforms/android-37.0
+          # (the published package). There is no platforms/android-37 directory.
+          # NDK matches Flutter 3.47.8's flutter.ndkVersion.
           "$SDK/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$SDK" \
             "platform-tools" \
+            "platforms;android-37.0" \
             "platforms;android-36" \
             "platforms;android-35" \
             "platforms;android-34" \
+            "build-tools;37.0.0" \
             "build-tools;36.0.0" \
             "ndk;28.2.13676358"
           flutter config --android-sdk "$SDK"
