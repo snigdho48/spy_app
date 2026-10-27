@@ -19,13 +19,53 @@ abstract final class AppConfig {
   /// Builds the per-session live screen WebSocket URL from [wsBaseUrl].
   ///
   /// [sessionWsPath] is the `ws_url` the backend returns for a screen-share
-  /// session, e.g. `ws/v1/screen/<id>/`. The events suffix of [wsBaseUrl] is
-  /// stripped so the screen socket shares the same host/scheme.
+  /// session, e.g. `ws/v1/screen/<id>/`. An absolute URL keeps only its path.
+  /// The events suffix of [wsBaseUrl] is stripped so the screen socket uses
+  /// the compiled host, even when the payload names a different one.
   static String screenWsUrl(String sessionWsPath) {
     final origin = wsBaseUrl.replaceFirst(RegExp(r'/ws/v1/events/?$'), '');
-    final path =
-        sessionWsPath.startsWith('/') ? sessionWsPath : '/$sessionWsPath';
-    return '$origin$path';
+    return '$origin${screenPath(sessionWsPath)}';
+  }
+
+  /// Path portion of a screen `ws_url`. Absolute URLs drop their host.
+  static String screenPath(String sessionWsPath) {
+    final raw = sessionWsPath.trim();
+    if (raw.isEmpty) return '/';
+    final parsed = Uri.tryParse(raw);
+    if (parsed != null && parsed.hasScheme && parsed.host.isNotEmpty) {
+      final path = parsed.path.isEmpty ? '/' : parsed.path;
+      return path.startsWith('/') ? path : '/$path';
+    }
+    return raw.startsWith('/') ? raw : '/$raw';
+  }
+
+  /// True when [value] is a single absolute URL on a host other than the
+  /// compiled API or websocket host. Those values are leftover overrides and
+  /// are never used as [apiBaseUrl] or [wsBaseUrl].
+  static bool isForeignStoredHost(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty ||
+        trimmed.startsWith('{') ||
+        trimmed.startsWith('[') ||
+        trimmed.contains(' ') ||
+        trimmed.contains('\n')) {
+      return false;
+    }
+    final uri = Uri.tryParse(trimmed);
+    if (uri == null || uri.host.isEmpty) return false;
+    final scheme = uri.scheme.toLowerCase();
+    if (scheme != 'http' &&
+        scheme != 'https' &&
+        scheme != 'ws' &&
+        scheme != 'wss') {
+      return false;
+    }
+    final host = uri.host.toLowerCase();
+    final compiled = {
+      Uri.parse(apiBaseUrl).host.toLowerCase(),
+      Uri.parse(wsBaseUrl).host.toLowerCase(),
+    };
+    return !compiled.contains(host);
   }
 
   static const Duration apiTimeout = Duration(seconds: 30);
@@ -60,13 +100,9 @@ abstract final class AppConfig {
   static Color scrim(BuildContext context) =>
       isDark(context) ? loaderOverlayColor : const Color(0x66101828);
 
-  /// JSON headers for API calls. The ngrok browser-warning header is added
-  /// only when [apiBaseUrl] still points at an ngrok host (a `--dart-define`
-  /// override). Production traffic does not send it.
-  static Map<String, String> get defaultHeaders => {
-        'Content-Type': 'application/json',
-        if (apiBaseUrl.contains('ngrok')) 'ngrok-skip-browser-warning': 'true',
-      };
+  static const Map<String, String> defaultHeaders = {
+    'Content-Type': 'application/json',
+  };
 
   /// Web OAuth client ID — required on Android to obtain an ID token.
   static const String googleWebClientId = String.fromEnvironment(
