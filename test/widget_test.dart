@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spy_love/core/config/app_config.dart';
 import 'package:spy_love/core/constants/api_constants.dart';
@@ -39,11 +41,22 @@ void main() {
   test('production API and websocket hosts are the compiled defaults', () {
     expect(AppConfig.apiBaseUrl, 'https://spy.way2points.com/api/v1');
     expect(AppConfig.wsBaseUrl, 'wss://spy.way2points.com/ws/v1/events/');
-    expect(AppConfig.defaultHeaders.containsKey('ngrok-skip-browser-warning'), isFalse);
-    expect(AppConfig.defaultHeaders['Content-Type'], 'application/json');
+    expect(AppConfig.defaultHeaders, {'Content-Type': 'application/json'});
     expect(
       AppConfig.screenWsUrl('ws/v1/screen/abc/'),
       'wss://spy.way2points.com/ws/v1/screen/abc/',
+    );
+    expect(
+      AppConfig.screenWsUrl('wss://stale.example/ws/v1/screen/abc/'),
+      'wss://spy.way2points.com/ws/v1/screen/abc/',
+    );
+    expect(AppConfig.isForeignStoredHost('https://stale.example/api/v1'), isTrue);
+    expect(AppConfig.isForeignStoredHost(AppConfig.apiBaseUrl), isFalse);
+    expect(AppConfig.isForeignStoredHost(AppConfig.wsBaseUrl), isFalse);
+    expect(AppConfig.isForeignStoredHost('system'), isFalse);
+    expect(
+      AppConfig.isForeignStoredHost('{"url":"https://stale.example/api/v1"}'),
+      isFalse,
     );
   });
 
@@ -58,6 +71,22 @@ void main() {
 
     expect(status.tenantName, isEmpty);
     expect(status.isLinked, isFalse);
+  });
+
+  test('github release description does not publish the API host', () {
+    final workflow = File('.github/workflows/release-apk.yml').readAsStringSync();
+    const marker = 'cat > release-notes.md << EOF\n';
+    final start = workflow.indexOf(marker);
+    expect(start, greaterThanOrEqualTo(0));
+    final bodyStart = start + marker.length;
+    final end = workflow.indexOf('\n          EOF', bodyStart);
+    expect(end, greaterThan(bodyStart));
+    final body = workflow.substring(bodyStart, end);
+    expect(body.contains('way2points'), isFalse);
+    expect(body.contains('https://'), isFalse);
+    expect(body.contains('wss://'), isFalse);
+    expect(body.contains('API 24'), isTrue);
+    expect(body.contains('Firebase'), isTrue);
   });
 
   test('client paths stay aligned with the API', () {

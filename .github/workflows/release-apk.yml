@@ -27,8 +27,9 @@ jobs:
     name: Build and publish APKs
     runs-on: ubuntu-latest
     env:
-      # Optional repository variables. Unset values match the production host
-      # compiled into app_config.dart.
+      # Optional repository variables. Unset values match the compiled default
+      # in app_config.dart. A later step drops a variable that still names a
+      # tunnel host so it cannot override that default.
       API_BASE_URL: ${{ vars.API_BASE_URL != '' && vars.API_BASE_URL || 'https://spy.way2points.com/api/v1' }}
       WS_BASE_URL: ${{ vars.WS_BASE_URL != '' && vars.WS_BASE_URL || 'wss://spy.way2points.com/ws/v1/events/' }}
     steps:
@@ -152,15 +153,42 @@ jobs:
       - name: Download Dart packages
         run: flutter pub get
 
+      - name: Drop tunnel hosts from release defines
+        run: |
+          set -euo pipefail
+          # A stale repository variable must not win over the compiled default.
+          # Empty values are omitted from --dart-define so String.fromEnvironment
+          # keeps the default in app_config.dart. Do not print the host.
+          sanitize() {
+            local name="$1"
+            local value="$2"
+            local lower
+            lower="$(printf '%s' "$value" | tr '[:upper:]' '[:lower:]')"
+            case "$lower" in
+              *ngrok*|*relaxed-cub-selected*)
+                echo "${name} names a tunnel host. The compiled default will be used."
+                printf '%s=\n' "$name" >> "$GITHUB_ENV"
+                ;;
+            esac
+          }
+          sanitize API_BASE_URL "$API_BASE_URL"
+          sanitize WS_BASE_URL "$WS_BASE_URL"
+
       - name: Build split-per-ABI release APKs
         run: |
           set -euo pipefail
           # Project has no abiFilters. Flutter's release APK targets are
           # android-arm, android-arm64, and android-x64 (not 32-bit x86).
+          defines=()
+          if [[ -n "${API_BASE_URL}" ]]; then
+            defines+=(--dart-define=API_BASE_URL="$API_BASE_URL")
+          fi
+          if [[ -n "${WS_BASE_URL}" ]]; then
+            defines+=(--dart-define=WS_BASE_URL="$WS_BASE_URL")
+          fi
           flutter build apk --release --split-per-abi \
             --target-platform android-arm,android-arm64,android-x64 \
-            --dart-define=API_BASE_URL="$API_BASE_URL" \
-            --dart-define=WS_BASE_URL="$WS_BASE_URL"
+            "${defines[@]}"
           VERSION="${{ steps.version.outputs.version }}"
           SRC="build/app/outputs/flutter-apk"
           mkdir -p release-apks
@@ -171,10 +199,16 @@ jobs:
       - name: Build universal release APK
         run: |
           set -euo pipefail
+          defines=()
+          if [[ -n "${API_BASE_URL}" ]]; then
+            defines+=(--dart-define=API_BASE_URL="$API_BASE_URL")
+          fi
+          if [[ -n "${WS_BASE_URL}" ]]; then
+            defines+=(--dart-define=WS_BASE_URL="$WS_BASE_URL")
+          fi
           flutter build apk --release \
             --target-platform android-arm,android-arm64,android-x64 \
-            --dart-define=API_BASE_URL="$API_BASE_URL" \
-            --dart-define=WS_BASE_URL="$WS_BASE_URL"
+            "${defines[@]}"
           VERSION="${{ steps.version.outputs.version }}"
           cp build/app/outputs/flutter-apk/app-release.apk \
             "release-apks/SpyLove-${VERSION}-universal.apk"
@@ -194,7 +228,7 @@ jobs:
           set -euo pipefail
           # Escaped backticks stay literal in this unquoted heredoc.
           cat > release-notes.md << EOF
-          Spy Love ${VERSION} is a consent-based monitoring app. The person being monitored can see that monitoring is on and can pause sharing. This build is compiled for the production API at https://spy.way2points.com.
+          Spy Love ${VERSION} is a consent-based monitoring app. The person being monitored can see that monitoring is on and can pause sharing.
 
           ## What's included
 
@@ -202,7 +236,6 @@ jobs:
           - Consent Horizon screens for pairing, home, devices, activity, location, and account
           - Pairing that the other phone must accept before monitoring starts
           - Location, safe zones, and activity limited to the consent scopes that were accepted
-          - Production API and live events on https://spy.way2points.com
 
           ## Which APK to install
 
@@ -225,7 +258,6 @@ jobs:
           ## Notes
 
           - **Android:** 7.0 or newer (API 24, \`minSdk\` 24).
-          - **Backend:** https://spy.way2points.com (API \`/api/v1\`, events WebSocket \`/ws/v1/events/\`).
           - **Firebase:** initialized from the Firebase Android config shipped in this build, including Google Sign-In.
 
           ## Changes since last release

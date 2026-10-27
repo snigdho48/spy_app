@@ -17,7 +17,7 @@ This project does not set `abiFilters`. Flutter's release APK targets are `andro
 
 ## GitHub Release page
 
-The workflow titles the release `Spy Love <version> — Consent Horizon`. Before publish it writes a fixed description (intro, what is included, the APK table, install steps, and notes for Android 7.0 / API 24, https://spy.way2points.com, and Firebase) and passes that file as `body_path`. Commits since the previous tag are appended under **Changes since last release**. APK filenames stay the same.
+The workflow titles the release `Spy Love <version> — Consent Horizon`. Before publish it writes a fixed description (intro, what is included, the APK table, install steps, and notes for Android 7.0 / API 24 and Firebase) and passes that file as `body_path`. That description does not include the API host. Commits since the previous tag are appended under **Changes since last release**. APK filenames stay the same.
 
 ## Cut a release
 
@@ -69,7 +69,7 @@ The workflow passes:
 --dart-define=WS_BASE_URL=wss://spy.way2points.com/ws/v1/events/
 ```
 
-Override either URL with a repository **variable** of the same name (`API_BASE_URL`, `WS_BASE_URL`). Those are not secrets. The same production URLs are the defaults in `lib/core/config/app_config.dart`, so a local build without `--dart-define` talks to `spy.way2points.com`. A define that points the API host at ngrok still sends `ngrok-skip-browser-warning`; production traffic does not.
+Override either URL with a repository **variable** of the same name (`API_BASE_URL`, `WS_BASE_URL`). Those are not secrets. The same hosts are the defaults in `lib/core/config/app_config.dart`, so a local build without `--dart-define` uses that compiled default. A release build ignores a variable that still points at a tunnel host and uses the compiled default instead. The GitHub Release description does not include the API host.
 
 ## Toolchain
 
