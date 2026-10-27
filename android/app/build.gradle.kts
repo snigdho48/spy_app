@@ -28,7 +28,11 @@ val hasReleaseKeystore = listOf(
 
 android {
     namespace = "org.hmg.spy_love"
+    // permission_handler_android 14 requires API 37. The published platform
+    // package is platforms;android-37.0 (directory android-37.0), so the minor
+    // level must be set. compileSdk = 37 alone looks for platforms/android-37.
     compileSdk = 37
+    compileSdkMinor = 0
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

@@ -41,6 +41,12 @@ class ScreenShareService extends ChangeNotifier {
   ScreenShareSession? _session;
   bool _sharing = false;
   bool _supported = true;
+  bool _pollInFlight = false;
+  bool _acceptInFlight = false;
+
+  /// Bumped when capture is torn down so an in-flight Allow dialog cannot
+  /// start the OS prompt after stop/logout.
+  int _epoch = 0;
 
   bool get isSharing => _sharing;
   bool get isSupported => _supported;
@@ -64,14 +70,19 @@ class ScreenShareService extends ChangeNotifier {
   }
 
   Future<void> _poll() async {
+    if (_pollInFlight || _acceptInFlight || _sharing) return;
     final deviceId = _deviceId;
-    if (deviceId == null || _sharing) return;
-    final result = await _repo.pendingForOwner(deviceId);
-    if (result.isRight) return;
-    final pending = result.left;
-    if (pending == null) return;
-    if (pending.status == 'requested') {
+    if (deviceId == null) return;
+    _pollInFlight = true;
+    try {
+      final result = await _repo.pendingForOwner(deviceId);
+      if (_acceptInFlight || _sharing) return;
+      if (result.isRight) return;
+      final pending = result.left;
+      if (pending == null || pending.status != 'requested') return;
       await accept(pending);
+    } finally {
+      _pollInFlight = false;
     }
   }
 
@@ -79,7 +90,22 @@ class ScreenShareService extends ChangeNotifier {
   /// `screen` scope locally when reported, prompts the OS grant, starts capture,
   /// and begins streaming frames. Returns false (and declines the request
   /// server-side) if consent is missing, the user denies, or capture fails.
+  ///
+  /// A second call while the Allow dialog or OS prompt is up returns false
+  /// without touching the in-flight request. The native bridge also refuses to
+  /// complete the first MediaProjection result as a denial.
   Future<bool> accept(ScreenShareSession pending) async {
+    if (_sharing || _acceptInFlight) return false;
+    _acceptInFlight = true;
+    final epoch = _epoch;
+    try {
+      return await _acceptCurrent(pending, epoch);
+    } finally {
+      _acceptInFlight = false;
+    }
+  }
+
+  Future<bool> _acceptCurrent(ScreenShareSession pending, int epoch) async {
     // (b) Local, defence-in-depth consent check: if the backend reported the
     // device's active scopes and `screen` is not among them, decline without
     // ever raising the OS prompt. (The server also enforces this.)
@@ -88,12 +114,14 @@ class ScreenShareService extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+    if (epoch != _epoch) return false;
 
     // (a) Explicit in-app consent before anything OS-visible happens.
     final allowed = await showScreenShareConsentPrompt(
       requestedByEmail: pending.requestedByEmail,
       deviceName: pending.deviceName,
     );
+    if (epoch != _epoch) return false;
     if (!allowed) {
       await _repo.denySession(pending.id);
       notifyListeners();
@@ -101,6 +129,7 @@ class ScreenShareService extends ChangeNotifier {
     }
 
     _supported = await ScreenCaptureBridge.isSupported();
+    if (epoch != _epoch) return false;
     if (!_supported) {
       await _repo.denySession(pending.id);
       notifyListeners();
@@ -108,12 +137,20 @@ class ScreenShareService extends ChangeNotifier {
     }
 
     final granted = await ScreenCaptureBridge.startCapture();
+    if (epoch != _epoch) {
+      if (granted) await ScreenCaptureBridge.stopCapture();
+      return false;
+    }
     if (!granted) {
       await _repo.denySession(pending.id);
       return false;
     }
 
     final started = await _repo.startSession(pending.id);
+    if (epoch != _epoch) {
+      await ScreenCaptureBridge.stopCapture();
+      return false;
+    }
     if (started.isRight) {
       // M4: don't leave the request dangling in `requested` after a failed
       // start — tear capture down and decline server-side.
@@ -141,6 +178,10 @@ class ScreenShareService extends ChangeNotifier {
       },
       onClosed: () => unawaited(stop(reason: 'socket_closed')),
     );
+    if (epoch != _epoch) {
+      await _endAndTeardown(reason: 'superseded');
+      return false;
+    }
     if (!connected) {
       await _endAndTeardown(reason: 'connect_failed');
       return false;
@@ -211,6 +252,7 @@ class ScreenShareService extends ChangeNotifier {
   }
 
   Future<void> _teardown({String? reason}) async {
+    _epoch++;
     _iosStartTimeout?.cancel();
     _iosStartTimeout = null;
     await _frameSub?.cancel();

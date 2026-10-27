@@ -115,7 +115,7 @@ class OwnedDeviceStatus {
       deviceId: json['device_id'].toString(),
       deviceName: json['device_name'] as String,
       status: json['status'] as String,
-      tenantName: json['tenant_name'] as String,
+      tenantName: json['tenant_name'] as String? ?? '',
       isLinked: json['is_linked'] as bool? ?? false,
       sharing: SharingState.fromJson(
         json['sharing'] as Map<String, dynamic>?,

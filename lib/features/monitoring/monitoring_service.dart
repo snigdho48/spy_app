@@ -44,6 +44,7 @@ class MonitoringService {
   StreamSubscription<Position>? _locationSub;
   StreamSubscription<Map<String, dynamic>>? _simSub;
   String? _activeDeviceId;
+  int _epoch = 0;
   DateTime? _pausedUntil;
   SharingState _sharing = SharingState.inactive;
   List<SafeZoneModel> _cachedZones = const [];
@@ -69,16 +70,30 @@ class MonitoringService {
   String? _lastNetworkKey;
 
   Future<void> bootstrap() async {
+    if (!await MonitoredDeviceStorage.isMarkedLinked()) {
+      final legacyId = await MonitoredDeviceStorage.getDeviceId();
+      if (legacyId == null || legacyId.isEmpty) return;
+      final devices = _devices;
+      if (devices == null) return;
+      final result = await devices.getOwnedDeviceStatus(legacyId);
+      final linked = result.fold((status) => status.isLinked, (_) => false);
+      if (!linked) return;
+      await MonitoredDeviceStorage.markLinked(legacyId);
+    }
     final deviceId = await MonitoredDeviceStorage.getDeviceId();
     if (deviceId == null || deviceId.isEmpty) return;
     await start(deviceId);
   }
 
+  bool _owns(int epoch) => epoch == _epoch;
+
   Future<void> start(String deviceId) async {
     if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) return;
 
+    final epoch = ++_epoch;
     _activeDeviceId = deviceId;
     await MonitoredDeviceStorage.saveDeviceId(deviceId);
+    if (!_owns(epoch)) return;
 
     // Watch for consent-gated live screen-share requests (monitored side).
     final screenShare = _screenShare;
@@ -86,21 +101,27 @@ class MonitoringService {
     if (screenShare != null && screenStream != null) {
       screenShare.watchForRequests(deviceId, screenStream);
     }
+    if (!_owns(epoch)) return;
 
     await _requestDataPermissions();
-    await _startLocationTracking();
-    await _startSimTracking();
+    if (!_owns(epoch)) return;
+    await _startLocationTracking(epoch);
+    if (!_owns(epoch)) return;
+    await _startSimTracking(epoch);
+    if (!_owns(epoch)) return;
     await _syncAll();
+    if (!_owns(epoch)) return;
 
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(const Duration(minutes: 2), (_) => _syncAll());
 
     if (Platform.isAndroid) {
-      await _listenNotifications();
+      await _listenNotifications(epoch);
     }
   }
 
   Future<void> stop() async {
+    _epoch++;
     _syncTimer?.cancel();
     _syncTimer = null;
     await _notificationSub?.cancel();
@@ -141,22 +162,29 @@ class MonitoringService {
     }
   }
 
-  Future<void> _startLocationTracking() async {
-    await _locationSub?.cancel();
+  Future<void> _startLocationTracking(int epoch) async {
+    if (!_owns(epoch)) return;
+    final previous = _locationSub;
+    _locationSub = null;
+    await previous?.cancel();
+    if (!_owns(epoch)) return;
 
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
+    if (!_owns(epoch) || !serviceEnabled) return;
 
     var permission = await Geolocator.checkPermission();
+    if (!_owns(epoch)) return;
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
+    if (!_owns(epoch)) return;
     if (permission == LocationPermission.denied ||
         permission == LocationPermission.deniedForever) {
       return;
     }
 
     await _uploadCurrentPosition();
+    if (!_owns(epoch)) return;
 
     const settings = LocationSettings(
       accuracy: LocationAccuracy.high,
@@ -300,8 +328,12 @@ class MonitoringService {
     ]);
   }
 
-  Future<void> _listenNotifications() async {
-    await _notificationSub?.cancel();
+  Future<void> _listenNotifications(int epoch) async {
+    if (!_owns(epoch)) return;
+    final previous = _notificationSub;
+    _notificationSub = null;
+    await previous?.cancel();
+    if (!_owns(epoch)) return;
     _notificationSub = NotificationBridge.notificationStream.listen((event) {
       final package = event['package'] as String? ?? '';
       if (!_isMessagingApp(package)) return;
@@ -570,12 +602,18 @@ class MonitoringService {
     }
   }
 
-  Future<void> _startSimTracking() async {
+  Future<void> _startSimTracking(int epoch) async {
     if (!Platform.isAndroid) return;
+    if (!_owns(epoch)) return;
     if (!await Permission.phone.isGranted) return;
+    if (!_owns(epoch)) return;
 
-    await _simSub?.cancel();
+    final previous = _simSub;
+    _simSub = null;
+    await previous?.cancel();
+    if (!_owns(epoch)) return;
     await _processSimCards(await SimBridge.getSimCards());
+    if (!_owns(epoch)) return;
 
     _simSub = SimBridge.simEventStream.listen((event) async {
       if (!await Permission.phone.isGranted) return;

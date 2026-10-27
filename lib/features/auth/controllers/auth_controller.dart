@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:spy_love/core/constants/api_constants.dart';
+import 'package:spy_love/features/monitoring/monitored_device_storage.dart';
 import 'package:spy_love/features/monitoring/monitoring_service.dart';
 import 'package:spy_love/core/navigation/app_navigator.dart';
 import 'package:spy_love/features/auth/models/auth_user.dart';
@@ -215,9 +216,11 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _repository.logout();
     user = null;
     notifyListeners();
+    await _monitoring.stop();
+    await MonitoredDeviceStorage.clear();
+    await _repository.logout();
     AppNavigator.popUntilHome();
   }
 

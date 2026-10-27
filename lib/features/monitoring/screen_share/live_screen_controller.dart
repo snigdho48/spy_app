@@ -58,8 +58,12 @@ class LiveScreenController extends ChangeNotifier {
         }
         notifyListeners();
       },
-      onSignal: (signal) {
-        if (signal['signal'] == 'ended' || signal['signal'] == 'paused') {
+      onSignal: (message) {
+        // The backend relays the control payload under `data`, same as the
+        // publisher. Accept a top-level `signal` too if a caller sends one.
+        final data = message['data'];
+        final signal = data is Map ? data['signal'] : message['signal'];
+        if (signal == 'ended' || signal == 'paused') {
           _setStatus(LiveScreenStatus.ended);
         }
       },

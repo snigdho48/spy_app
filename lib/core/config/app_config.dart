@@ -8,12 +8,12 @@ abstract final class AppConfig {
 
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://relaxed-cub-selected.ngrok-free.app/api/v1',
+    defaultValue: 'https://spy.way2points.com/api/v1',
   );
 
   static const String wsBaseUrl = String.fromEnvironment(
     'WS_BASE_URL',
-    defaultValue: 'wss://relaxed-cub-selected.ngrok-free.app/ws/v1/events/',
+    defaultValue: 'wss://spy.way2points.com/ws/v1/events/',
   );
 
   /// Builds the per-session live screen WebSocket URL from [wsBaseUrl].
@@ -60,10 +60,13 @@ abstract final class AppConfig {
   static Color scrim(BuildContext context) =>
       isDark(context) ? loaderOverlayColor : const Color(0x66101828);
 
-  static const Map<String, String> defaultHeaders = {
-    'Content-Type': 'application/json',
-    'ngrok-skip-browser-warning': 'true',
-  };
+  /// JSON headers for API calls. The ngrok browser-warning header is added
+  /// only when [apiBaseUrl] still points at an ngrok host (a `--dart-define`
+  /// override). Production traffic does not send it.
+  static Map<String, String> get defaultHeaders => {
+        'Content-Type': 'application/json',
+        if (apiBaseUrl.contains('ngrok')) 'ngrok-skip-browser-warning': 'true',
+      };
 
   /// Web OAuth client ID — required on Android to obtain an ID token.
   static const String googleWebClientId = String.fromEnvironment(

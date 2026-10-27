@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 
 /// Android MediaProjection bridge for consent-scoped live screen capture.
@@ -19,14 +21,55 @@ class ScreenCaptureBridge {
   static const _frameChannel =
       EventChannel('org.hmg.spy_love/screen_frames');
 
-  static Stream<Map<String, dynamic>>? _frames;
+  static StreamController<Map<String, dynamic>>? _frames;
+  static StreamSubscription<dynamic>? _platformFrames;
 
   /// Broadcast of captured frames: `{image: base64 jpeg, w: int, h: int}`.
+  ///
+  /// The platform stream is reattached for every session. If a native side
+  /// ends the EventChannel, the next listen opens a fresh one so a second
+  /// share in the same process still delivers frames.
   static Stream<Map<String, dynamic>> get frameStream {
-    _frames ??= _frameChannel
-        .receiveBroadcastStream()
-        .map((event) => Map<String, dynamic>.from(event as Map));
-    return _frames!;
+    final existing = _frames;
+    if (existing != null && !existing.isClosed) return existing.stream;
+    final controller = StreamController<Map<String, dynamic>>.broadcast(
+      onListen: _attachPlatformFrames,
+      onCancel: _detachPlatformFrames,
+    );
+    _frames = controller;
+    return controller.stream;
+  }
+
+  static void _attachPlatformFrames() {
+    if (_platformFrames != null) return;
+    _platformFrames = _frameChannel.receiveBroadcastStream().listen(
+      (event) {
+        final controller = _frames;
+        if (controller == null || controller.isClosed) return;
+        if (event is Map) {
+          controller.add(Map<String, dynamic>.from(event));
+        }
+      },
+      onError: (Object error, StackTrace stack) {
+        final controller = _frames;
+        if (controller == null || controller.isClosed) return;
+        controller.addError(error, stack);
+      },
+      onDone: () {
+        final controller = _frames;
+        _platformFrames = null;
+        _frames = null;
+        if (controller != null && !controller.isClosed) {
+          controller.close();
+        }
+      },
+    );
+  }
+
+  static void _detachPlatformFrames() {
+    final sub = _platformFrames;
+    _platformFrames = null;
+    unawaited(sub?.cancel());
   }
 
   /// Whether live screen capture is available on this platform/OS version.
