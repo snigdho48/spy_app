@@ -9,10 +9,13 @@ class SafeZoneRepository {
 
   final ApiService _api;
 
-  Future<Either<List<SafeZoneModel>, String>> list() async {
+  /// GET /devices/safe-zones/ — optionally scoped to a device. Background
+  /// fetches keep loader:false so the global overlay never trips.
+  Future<Either<List<SafeZoneModel>, String>> list({String? deviceId}) async {
     final result = await _api.send<Map<String, dynamic>>(
       url: ApiConstants.safeZones,
       method: HttpMethod.get,
+      queryParameters: {'device_id': ?deviceId},
       loader: false,
       resultOverlay: false,
     );
@@ -35,6 +38,7 @@ class SafeZoneRepository {
     int radiusM = 100,
     String address = '',
     String? deviceId,
+    bool enabled = true,
   }) async {
     final result = await _api.send<Map<String, dynamic>>(
       url: ApiConstants.safeZones,
@@ -44,8 +48,41 @@ class SafeZoneRepository {
         'lat': lat,
         'lng': lng,
         'radius_m': radiusM,
+        'enabled': enabled,
         if (address.isNotEmpty) 'address': address,
         'device_id': ?deviceId,
+      },
+      loader: true,
+      resultOverlay: true,
+    );
+
+    if (result.isLeft) {
+      return Left(SafeZoneModel.fromJson(result.left));
+    }
+    return Right(result.right);
+  }
+
+  /// PATCH /devices/safe-zones/{id}/ — partial update. Any provided field is
+  /// sent; omitted fields are left unchanged server-side.
+  Future<Either<SafeZoneModel, String>> update({
+    required String id,
+    String? name,
+    double? lat,
+    double? lng,
+    int? radiusM,
+    String? address,
+    bool? enabled,
+  }) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.safeZoneDetail(id),
+      method: HttpMethod.patch,
+      body: {
+        'name': ?name,
+        'lat': ?lat,
+        'lng': ?lng,
+        'radius_m': ?radiusM,
+        'address': ?address,
+        'enabled': ?enabled,
       },
       loader: true,
       resultOverlay: true,

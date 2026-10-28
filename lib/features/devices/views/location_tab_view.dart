@@ -4,19 +4,28 @@ import 'package:provider/provider.dart';
 import 'package:spy_love/app/routes.dart';
 import 'package:spy_love/core/theme/app_colors.dart';
 import 'package:spy_love/core/theme/app_tokens.dart';
+import 'package:spy_love/features/auth/controllers/auth_controller.dart';
 import 'package:spy_love/features/devices/controllers/device_detail_controller.dart';
 import 'package:spy_love/features/devices/models/location_point.dart';
+import 'package:spy_love/features/devices/models/safe_zone_model.dart';
+import 'package:spy_love/features/devices/views/geofence_editor_sheet.dart';
 import 'package:spy_love/features/devices/views/location_map_fullscreen_view.dart';
 import 'package:spy_love/features/devices/widgets/location_history_map.dart';
 import 'package:spy_love/shared/widgets/app_button.dart';
 import 'package:spy_love/shared/widgets/app_card.dart';
 import 'package:spy_love/shared/widgets/app_states.dart';
+import 'package:spy_love/shared/widgets/section_header.dart';
 import 'package:spy_love/shared/widgets/status_badge.dart';
 import 'package:spy_love/shared/widgets/timestamp_label.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class LocationTabView extends StatelessWidget {
   const LocationTabView({super.key});
+
+  bool _canEdit(BuildContext context) {
+    final role = context.read<AuthController>().user?.role?.toUpperCase();
+    return role != 'VIEWER';
+  }
 
   void _openFullscreen(
     BuildContext context,
@@ -33,6 +42,92 @@ class LocationTabView extends StatelessWidget {
     );
   }
 
+  Future<void> _addOrEdit(
+    BuildContext context,
+    DeviceDetailController controller, {
+    SafeZoneModel? existing,
+    LatLng? center,
+  }) async {
+    if (!_canEdit(context)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Viewers can browse safe zones but cannot edit them'),
+        ),
+      );
+      return;
+    }
+    final draft = await showGeofenceEditorSheet(
+      context,
+      existing: existing,
+      initialCenter: center ??
+          (controller.latestLocation != null
+              ? LatLng(
+                  controller.latestLocation!.lat,
+                  controller.latestLocation!.lng,
+                )
+              : null),
+    );
+    if (draft == null || !context.mounted) return;
+
+    final error = existing == null
+        ? await controller.createSafeZone(
+            name: draft.name,
+            lat: draft.lat,
+            lng: draft.lng,
+            radiusM: draft.radiusM,
+            address: draft.address,
+            enabled: draft.enabled,
+          )
+        : await controller.updateSafeZone(
+            id: existing.id,
+            name: draft.name,
+            lat: draft.lat,
+            lng: draft.lng,
+            radiusM: draft.radiusM,
+            address: draft.address,
+            enabled: draft.enabled,
+          );
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+    }
+  }
+
+  Future<void> _delete(
+    BuildContext context,
+    DeviceDetailController controller,
+    SafeZoneModel zone,
+  ) async {
+    if (!_canEdit(context)) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete safe zone?'),
+        content: Text(
+          'Remove "${zone.name}"? Enter/exit alerts for this zone will stop.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final error = await controller.deleteSafeZone(zone.id);
+    if (!context.mounted) return;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<DeviceDetailController>();
@@ -47,9 +142,15 @@ class LocationTabView extends StatelessWidget {
     final latest = controller.latestLocation;
     final tokens = context.tokens;
     final zoneLabel = latest?.zoneName ?? latest?.placeName;
+    final canEdit = _canEdit(context);
 
     return RefreshIndicator(
-      onRefresh: controller.refreshLocations,
+      onRefresh: () async {
+        await Future.wait([
+          controller.refreshLocations(),
+          controller.refreshSafeZones(),
+        ]);
+      },
       child: ListView(
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
         children: [
@@ -135,14 +236,6 @@ class LocationTabView extends StatelessWidget {
                 ],
               ),
             ),
-          ] else ...[
-            const SizedBox(height: 12),
-            Text(
-              'Safe zones are managed under Account. Zone enter/exit events appear in the history below.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
-            ),
           ],
           const SizedBox(height: 12),
           AppButton(
@@ -166,7 +259,30 @@ class LocationTabView extends StatelessWidget {
           _MapPreviewCard(
             points: points,
             controller: controller,
+            canEdit: canEdit,
             onExpand: () => _openFullscreen(context, controller),
+            onLongPress: canEdit
+                ? (point) => _addOrEdit(context, controller, center: point)
+                : null,
+          ),
+          const SizedBox(height: 20),
+          _SafeZonesSection(
+            controller: controller,
+            canEdit: canEdit,
+            onAdd: () => _addOrEdit(context, controller),
+            onEdit: (zone) => _addOrEdit(context, controller, existing: zone),
+            onDelete: (zone) => _delete(context, controller, zone),
+            onToggle: (zone, enabled) async {
+              final error = await controller.updateSafeZone(
+                id: zone.id,
+                enabled: enabled,
+              );
+              if (error != null && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(error)),
+                );
+              }
+            },
           ),
           const SizedBox(height: 20),
           Row(
@@ -228,16 +344,151 @@ class LocationTabView extends StatelessWidget {
   }
 }
 
+class _SafeZonesSection extends StatelessWidget {
+  const _SafeZonesSection({
+    required this.controller,
+    required this.canEdit,
+    required this.onAdd,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onToggle,
+  });
+
+  final DeviceDetailController controller;
+  final bool canEdit;
+  final VoidCallback onAdd;
+  final void Function(SafeZoneModel) onEdit;
+  final void Function(SafeZoneModel) onDelete;
+  final void Function(SafeZoneModel, bool) onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    final zones = controller.safeZones;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(
+          title: 'Safe zones',
+          subtitle: canEdit
+              ? 'Long-press the map to drop a centre, or add below'
+              : 'View only — ask a monitor to edit',
+          action: canEdit
+              ? IconButton(
+                  tooltip: 'Add safe zone',
+                  onPressed: onAdd,
+                  icon: const Icon(Icons.add_location_alt_outlined),
+                )
+              : null,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (controller.isLoadingSafeZones && zones.isEmpty)
+          const LoadingSkeleton(lines: 2)
+        else if (zones.isEmpty)
+          AppCard(
+            child: Text(
+              canEdit
+                  ? 'No safe zones yet. Long-press the map or tap + to create one.'
+                  : 'No safe zones configured for this device.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: tokens.secondaryText,
+              ),
+            ),
+          )
+        else
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (var i = 0; i < zones.length; i++) ...[
+                  if (i > 0) Divider(height: 1, color: tokens.border),
+                  Semantics(
+                    label:
+                        'Safe zone ${zones[i].name}, ${zones[i].radiusM} meters, '
+                        '${zones[i].enabled ? "enabled" : "disabled"}',
+                    child: ListTile(
+                      leading: Icon(
+                        Icons.shield_outlined,
+                        color: zones[i].enabled
+                            ? Theme.of(context).colorScheme.primary
+                            : tokens.dormant,
+                      ),
+                      title: Text(zones[i].name),
+                      subtitle: Text(
+                        [
+                          if (zones[i].address.isNotEmpty) zones[i].address,
+                          '${zones[i].radiusM} m',
+                        ].join(' · '),
+                      ),
+                      trailing: canEdit
+                          ? Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Switch(
+                                  value: zones[i].enabled,
+                                  onChanged: (v) => onToggle(zones[i], v),
+                                ),
+                                PopupMenuButton<String>(
+                                  onSelected: (value) {
+                                    if (value == 'edit') onEdit(zones[i]);
+                                    if (value == 'delete') onDelete(zones[i]);
+                                  },
+                                  itemBuilder: (_) => const [
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: Text('Edit'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            )
+                          : StatusBadge(
+                              label: zones[i].enabled ? 'On' : 'Off',
+                              tone: zones[i].enabled
+                                  ? StatusTone.success
+                                  : StatusTone.neutral,
+                              showDot: false,
+                            ),
+                      onTap: canEdit ? () => onEdit(zones[i]) : null,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        if (canEdit) ...[
+          const SizedBox(height: AppSpacing.sm),
+          AppButton(
+            label: 'Add safe zone',
+            icon: Icons.add,
+            variant: AppButtonVariant.secondary,
+            onPressed: onAdd,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _MapPreviewCard extends StatelessWidget {
   const _MapPreviewCard({
     required this.points,
     required this.controller,
     required this.onExpand,
+    required this.canEdit,
+    this.onLongPress,
   });
 
   final List<LocationPoint> points;
   final DeviceDetailController controller;
   final VoidCallback onExpand;
+  final bool canEdit;
+  final void Function(LatLng point)? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -255,7 +506,9 @@ class _MapPreviewCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Map preview',
+                    canEdit
+                        ? 'Map preview · long-press to drop a zone'
+                        : 'Map preview',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
@@ -279,8 +532,10 @@ class _MapPreviewCard extends StatelessWidget {
                   LocationHistoryMap(
                     points: points,
                     mapController: controller.mapController,
-                    interactive: false,
+                    interactive: canEdit,
+                    safeZones: controller.safeZones,
                     onTap: points.isEmpty ? null : onExpand,
+                    onLongPress: onLongPress,
                   ),
                   if (points.isNotEmpty)
                     Positioned(

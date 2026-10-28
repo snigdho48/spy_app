@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:spy_love/core/theme/app_colors.dart';
 import 'package:spy_love/core/theme/app_tokens.dart';
 import 'package:spy_love/features/devices/models/location_point.dart';
+import 'package:spy_love/features/devices/models/safe_zone_model.dart';
 import 'package:spy_love/features/devices/utils/location_map_utils.dart';
 import 'package:spy_love/shared/widgets/app_states.dart';
 
@@ -16,6 +17,8 @@ class LocationHistoryMap extends StatelessWidget {
     this.interactive = true,
     this.showEmptyState = true,
     this.onTap,
+    this.onLongPress,
+    this.safeZones = const [],
   });
 
   final List<LocationPoint> points;
@@ -23,6 +26,8 @@ class LocationHistoryMap extends StatelessWidget {
   final bool interactive;
   final bool showEmptyState;
   final VoidCallback? onTap;
+  final void Function(LatLng point)? onLongPress;
+  final List<SafeZoneModel> safeZones;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +60,9 @@ class LocationHistoryMap extends StatelessWidget {
           flags: interactive ? InteractiveFlag.all : InteractiveFlag.none,
         ),
         onTap: onTap == null ? null : (_, _) => onTap!(),
+        onLongPress: onLongPress == null
+            ? null
+            : (_, point) => onLongPress!(point),
       ),
       children: [
         TileLayer(
@@ -69,6 +77,21 @@ class LocationHistoryMap extends StatelessWidget {
                 color: primary.withValues(alpha: 0.85),
                 strokeWidth: 4,
               ),
+            ],
+          ),
+        if (safeZones.isNotEmpty)
+          CircleLayer(
+            circles: [
+              for (final zone in safeZones)
+                if (zone.enabled)
+                  CircleMarker(
+                    point: LatLng(zone.lat, zone.lng),
+                    radius: zone.radiusM.toDouble(),
+                    useRadiusInMeter: true,
+                    color: AppColors.primary.withValues(alpha: 0.14),
+                    borderColor: AppColors.primary.withValues(alpha: 0.7),
+                    borderStrokeWidth: 2,
+                  ),
             ],
           ),
         MarkerLayer(

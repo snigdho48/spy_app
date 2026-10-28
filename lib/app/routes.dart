@@ -9,6 +9,7 @@ import 'package:spy_love/features/devices/repositories/device_repository.dart';
 import 'package:spy_love/features/devices/views/dashboard_view.dart';
 import 'package:spy_love/features/devices/controllers/device_detail_controller.dart';
 import 'package:spy_love/features/devices/repositories/event_repository.dart';
+import 'package:spy_love/features/devices/repositories/safe_zone_repository.dart';
 import 'package:spy_love/features/devices/views/device_detail_view.dart';
 import 'package:spy_love/features/devices/views/event_detail_view.dart';
 import 'package:spy_love/features/devices/views/installed_apps_view.dart';
@@ -81,6 +82,7 @@ abstract final class AppRoutes {
             create: (ctx) => DeviceDetailController(
               ctx.read<DeviceRepository>(),
               ctx.read<EventRepository>(),
+              ctx.read<SafeZoneRepository>(),
               device,
               ctx.read<TokenStorage>(),
             ),
