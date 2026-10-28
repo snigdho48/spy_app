@@ -84,6 +84,19 @@ abstract final class OneRequestConfig {
   static void _configureErrorHandler() {
     OneRequest.setErrorHandler(
       handler: (body, status, url) {
+        // A non-JSON body (e.g. an HTML 404 page from a misrouted request)
+        // must never be echoed to the user. Map common statuses to short,
+        // safe copy and never surface a raw host/path or markup.
+        if (body.isEmpty) {
+          final code = status ?? 0;
+          if (code == 404) {
+            return 'Server path not found. Please update the app.';
+          }
+          if (code >= 500) {
+            return 'The server had a problem. Please try again shortly.';
+          }
+          return 'Request failed';
+        }
         final error = body['error'];
         if (error is Map) {
           return error['message']?.toString() ?? 'Request failed';
