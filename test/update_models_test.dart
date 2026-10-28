@@ -17,10 +17,7 @@ void main() {
       info.apkUrlForAbis(const ['arm64-v8a', 'armeabi-v7a']),
       'https://example.test/arm64.apk',
     );
-    expect(
-      info.apkUrlForAbis(const ['x86']),
-      'https://example.test/uni.apk',
-    );
+    expect(info.apkUrlForAbis(const ['x86']), 'https://example.test/uni.apk');
   });
 
   test('tryParse requires version and build', () {
