@@ -19,6 +19,7 @@ import 'package:spy_love/features/devices/views/notifications_tab.dart';
 import 'package:spy_love/features/devices/views/remote_apps_tab.dart';
 import 'package:spy_love/features/devices/views/usage_tab.dart';
 import 'package:spy_love/features/devices/widgets/device_health_card.dart';
+import 'package:spy_love/features/devices/views/export_sheet.dart';
 import 'package:spy_love/features/devices/views/device_care_tab.dart';
 import 'package:spy_love/features/devices/views/event_detail_view.dart';
 import 'package:spy_love/features/monitoring/screen_share/live_screen_tab.dart';
@@ -95,6 +96,8 @@ class DeviceDetailView extends StatelessWidget {
                   tooltip: 'Device actions',
                   onSelected: (value) {
                     switch (value) {
+                      case 'export':
+                        showExportSheet(context);
                       case 'disconnect':
                         controller.disconnectDevice();
                       case 'delete':
@@ -102,6 +105,10 @@ class DeviceDetailView extends StatelessWidget {
                     }
                   },
                   itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'export',
+                      child: Text('Export data'),
+                    ),
                     PopupMenuItem(
                       value: 'disconnect',
                       child: Text('Disconnect'),
