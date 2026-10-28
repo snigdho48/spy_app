@@ -28,6 +28,7 @@ import 'package:spy_love/features/consent/controllers/pairing_controller.dart';
 import 'package:spy_love/features/subscription/controllers/subscription_controller.dart';
 import 'package:spy_love/features/subscription/repositories/subscription_repository.dart';
 import 'package:spy_love/core/theme/theme_mode_controller.dart';
+import 'package:spy_love/core/onboarding/onboarding_controller.dart';
 
 class AppProviders extends StatelessWidget {
   const AppProviders({super.key, required this.child});
@@ -40,6 +41,7 @@ class AppProviders extends StatelessWidget {
       providers: [
         Provider(create: (_) => TokenStorage()),
         ChangeNotifierProvider(create: (_) => ThemeModeController()),
+        ChangeNotifierProvider(create: (_) => OnboardingController()),
         ChangeNotifierProvider(create: (_) => RequestOverlayController()),
         ChangeNotifierProvider(create: (_) => NetworkService()),
         ChangeNotifierProvider(create: (_) => PermissionService()),

@@ -29,6 +29,8 @@ import 'package:spy_love/features/consent/views/pairing_initiate_view.dart';
 import 'package:spy_love/features/consent/views/pairing_start_view.dart';
 import 'package:spy_love/features/consent/views/permission_setup_view.dart';
 import 'package:spy_love/features/subscription/views/subscription_plans_view.dart';
+import 'package:spy_love/core/onboarding/onboarding_controller.dart';
+import 'package:spy_love/features/onboarding/views/onboarding_view.dart';
 
 abstract final class AppRoutes {
   static const login = '/';
@@ -170,8 +172,9 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AuthController>(
-      builder: (context, auth, _) {
+    return Consumer2<AuthController, OnboardingController>(
+      builder: (context, auth, onboarding, _) {
+        if (!onboarding.completed) return const OnboardingView();
         if (auth.isRestoring) return const _SessionRestoreSplash();
         if (!auth.isLoggedIn) return const AuthView();
         return const DashboardView();
