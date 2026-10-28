@@ -16,6 +16,7 @@ import 'package:spy_love/features/devices/repositories/safe_zone_repository.dart
 import 'package:spy_love/features/devices/views/device_detail_view.dart';
 import 'package:spy_love/features/devices/views/event_detail_view.dart';
 import 'package:spy_love/features/devices/views/fleet_overview_view.dart';
+import 'package:spy_love/features/devices/views/all_devices_map_view.dart';
 import 'package:spy_love/features/devices/views/activity_timeline_view.dart';
 import 'package:spy_love/features/devices/views/installed_apps_view.dart';
 import 'package:spy_love/features/devices/views/location_map_fullscreen_view.dart';
@@ -43,6 +44,7 @@ abstract final class AppRoutes {
   static const locationMapFullscreen = '/devices/location-map';
   static const fleetOverview = '/devices/overview';
   static const activityTimeline = '/devices/activity';
+  static const allDevicesMap = '/devices/map';
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -113,6 +115,18 @@ abstract final class AppRoutes {
               ctx.read<AlertRepository>(),
             ),
             child: const FleetOverviewView(),
+          ),
+        );
+      case allDevicesMap:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (context) => ChangeNotifierProvider(
+            create: (ctx) => FleetOverviewController(
+              ctx.read<DeviceRepository>(),
+              ctx.read<EventRepository>(),
+              ctx.read<AlertRepository>(),
+            ),
+            child: const AllDevicesMapView(),
           ),
         );
       case activityTimeline:
