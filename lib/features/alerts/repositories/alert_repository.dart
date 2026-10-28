@@ -106,4 +106,32 @@ class AlertRepository {
     if (result.isLeft) return const Left(null);
     return Right(result.right);
   }
+
+  /// POST /alerts/push-tokens/ — register an FCM token. Returns the server id.
+  Future<Either<String, String>> registerPushToken({
+    required String token,
+    required String platform,
+  }) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.pushTokens,
+      method: HttpMethod.post,
+      body: {'token': token, 'platform': platform},
+      loader: false,
+      resultOverlay: false,
+    );
+    if (result.isLeft) return Left(result.left['id'].toString());
+    return Right(result.right);
+  }
+
+  /// DELETE /alerts/push-tokens/{id}/ — unregister on logout.
+  Future<Either<void, String>> deletePushToken(String id) async {
+    final result = await _api.send<void>(
+      url: ApiConstants.pushTokenDetail(id),
+      method: HttpMethod.delete,
+      loader: false,
+      resultOverlay: false,
+    );
+    if (result.isLeft) return const Left(null);
+    return Right(result.right);
+  }
 }
