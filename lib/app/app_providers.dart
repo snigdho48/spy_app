@@ -28,6 +28,7 @@ import 'package:spy_love/features/consent/controllers/pairing_controller.dart';
 import 'package:spy_love/features/subscription/controllers/subscription_controller.dart';
 import 'package:spy_love/features/subscription/repositories/subscription_repository.dart';
 import 'package:spy_love/core/theme/theme_mode_controller.dart';
+import 'package:spy_love/features/auth/controllers/security_controller.dart';
 
 class AppProviders extends StatelessWidget {
   const AppProviders({super.key, required this.child});
@@ -147,6 +148,18 @@ class AppProviders extends StatelessWidget {
           ),
           update: (_, repo, monitoring, controller) =>
               controller ?? AuthController(repo, monitoring),
+        ),
+        ChangeNotifierProxyProvider2<
+          AuthRepository,
+          AuthController,
+          SecurityController
+        >(
+          create: (context) => SecurityController(
+            context.read<AuthRepository>(),
+            context.read<AuthController>(),
+          ),
+          update: (_, repo, auth, previous) =>
+              previous ?? SecurityController(repo, auth),
         ),
         ChangeNotifierProxyProvider2<
           AlertRepository,

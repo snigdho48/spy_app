@@ -8,6 +8,19 @@ class ApiConstants {
   static const authLinkGoogle = '/auth/link/google/';
   static const authSetPassword = '/auth/link/password/';
 
+  // --- Two-factor authentication ---
+  static const auth2faStatus = '/auth/2fa/';
+  static const auth2faEnroll = '/auth/2fa/enroll/';
+  static const auth2faConfirm = '/auth/2fa/confirm/';
+  static const auth2faDisable = '/auth/2fa/disable/';
+  static const auth2faRecovery = '/auth/2fa/recovery-codes/';
+  static const auth2faVerify = '/auth/2fa/verify/';
+
+  // --- Sessions ---
+  static const authSessions = '/auth/sessions/';
+  static const authSessionsRevokeOthers = '/auth/sessions/revoke-others/';
+  static String authSessionDetail(String id) => '/auth/sessions/$id/';
+
   static const subscriptionPlans = '/subscriptions/plans/';
   static const subscriptionCurrent = '/subscriptions/current/';
   static const subscriptionSubscribe = '/subscriptions/subscribe/';

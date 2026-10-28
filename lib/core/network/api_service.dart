@@ -36,6 +36,7 @@ class ApiService {
         '/auth/register',
         '/auth/google',
         '/auth/token',
+        '/auth/2fa/verify',
       ],
       onRefreshFailed: _tokenStorage.clearTokens,
     );

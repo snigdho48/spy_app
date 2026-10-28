@@ -7,6 +7,7 @@ import 'package:spy_love/features/monitoring/monitored_device_storage.dart';
 import 'package:spy_love/features/monitoring/monitoring_service.dart';
 import 'package:spy_love/core/navigation/app_navigator.dart';
 import 'package:spy_love/features/auth/models/auth_user.dart';
+import 'package:spy_love/features/auth/models/login_result.dart';
 import 'package:spy_love/features/auth/repositories/auth_repository.dart';
 import 'package:spy_love/features/notifications/push_service.dart';
 import 'package:spy_love/features/subscription/controllers/subscription_controller.dart';
@@ -28,7 +29,13 @@ class AuthController extends ChangeNotifier {
   bool isGoogleLoading = false;
   String errorMessage = '';
 
+  /// Set when password login succeeds but TOTP is still required.
+  String? pending2faToken;
+  String pending2faEmail = '';
+
   bool get isLoggedIn => user != null;
+  bool get awaiting2fa =>
+      pending2faToken != null && pending2faToken!.isNotEmpty;
 
   void bindSubscription(SubscriptionController subscription) {
     _subscription = subscription;
@@ -105,9 +112,49 @@ class AuthController extends ChangeNotifier {
 
   Future<void> login(String email, String password) async {
     errorMessage = '';
+    pending2faToken = null;
+    pending2faEmail = '';
     notifyListeners();
     final result = await _repository.login(email: email, password: password);
     result.fold((value) {
+      switch (value) {
+        case LoginSuccess(:final user):
+          this.user = user;
+          _syncSubscription(user);
+          _bootstrapMonitoring();
+          _requestPushConsent();
+          AppNavigator.popUntilHome();
+        case LoginRequires2fa(:final preAuthToken, :final email):
+          pending2faToken = preAuthToken;
+          pending2faEmail = email;
+      }
+    }, (error) => errorMessage = error);
+    notifyListeners();
+  }
+
+  void clearPending2fa() {
+    pending2faToken = null;
+    pending2faEmail = '';
+    errorMessage = '';
+    notifyListeners();
+  }
+
+  Future<void> verifyTotpLogin(String code) async {
+    final token = pending2faToken;
+    if (token == null || token.isEmpty) {
+      errorMessage = 'No pending two-factor challenge';
+      notifyListeners();
+      return;
+    }
+    errorMessage = '';
+    notifyListeners();
+    final result = await _repository.verifyTotpLogin(
+      preAuthToken: token,
+      code: code,
+    );
+    result.fold((value) {
+      pending2faToken = null;
+      pending2faEmail = '';
       user = value;
       _syncSubscription(value);
       _bootstrapMonitoring();

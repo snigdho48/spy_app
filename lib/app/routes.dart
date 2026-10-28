@@ -29,6 +29,7 @@ import 'package:spy_love/features/consent/views/pairing_initiate_view.dart';
 import 'package:spy_love/features/consent/views/pairing_start_view.dart';
 import 'package:spy_love/features/consent/views/permission_setup_view.dart';
 import 'package:spy_love/features/subscription/views/subscription_plans_view.dart';
+import 'package:spy_love/features/auth/views/security_settings_view.dart';
 
 abstract final class AppRoutes {
   static const login = '/';
@@ -47,6 +48,7 @@ abstract final class AppRoutes {
   static const fleetOverview = '/devices/overview';
   static const activityTimeline = '/devices/activity';
   static const allDevicesMap = '/devices/map';
+  static const securitySettings = '/security';
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -155,6 +157,11 @@ abstract final class AppRoutes {
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => LocationRoutePlaybackView(args: args),
+        );
+      case securitySettings:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const SecuritySettingsView(),
         );
       default:
         return MaterialPageRoute(
