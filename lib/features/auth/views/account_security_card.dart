@@ -6,6 +6,8 @@ import 'package:spy_love/shared/widgets/app_card.dart';
 import 'package:spy_love/shared/widgets/app_text_field.dart';
 import 'package:spy_love/shared/widgets/status_badge.dart';
 import 'package:spy_love/features/auth/controllers/auth_controller.dart';
+import 'package:spy_love/app/routes.dart';
+import 'package:spy_love/core/navigation/app_navigator.dart';
 
 class AccountSecurityCard extends StatelessWidget {
   const AccountSecurityCard({super.key});
@@ -58,6 +60,13 @@ class AccountSecurityCard extends StatelessWidget {
                         : StatusTone.neutral,
                     pulse: false,
                   ),
+                  StatusBadge(
+                    label: user.totpEnabled ? '2FA on' : '2FA off',
+                    tone: user.totpEnabled
+                        ? StatusTone.success
+                        : StatusTone.warning,
+                    pulse: false,
+                  ),
                 ],
               ),
               if (auth.errorMessage.isNotEmpty) ...[
@@ -98,6 +107,14 @@ class AccountSecurityCard extends StatelessWidget {
                         : auth.linkGoogleAccount,
                   ),
               ],
+              const SizedBox(height: AppSpacing.md),
+              AppButton(
+                label: 'Manage two-factor & recovery',
+                icon: Icons.security_outlined,
+                variant: AppButtonVariant.secondary,
+                onPressed: () =>
+                    AppNavigator.toNamed(AppRoutes.securitySettings),
+              ),
             ],
           ),
         );

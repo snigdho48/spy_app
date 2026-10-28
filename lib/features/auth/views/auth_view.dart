@@ -30,6 +30,7 @@ class _AuthFormState extends State<_AuthForm> {
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
   final _tenantController = TextEditingController();
+  final _totpController = TextEditingController();
   bool _isRegister = true;
 
   @override
@@ -38,6 +39,7 @@ class _AuthFormState extends State<_AuthForm> {
     _passwordController.dispose();
     _nameController.dispose();
     _tenantController.dispose();
+    _totpController.dispose();
     super.dispose();
   }
 
@@ -73,6 +75,71 @@ class _AuthFormState extends State<_AuthForm> {
     final theme = Theme.of(context);
     final auth = context.watch<AuthController>();
     final network = context.watch<NetworkService>();
+
+    if (auth.awaiting2fa) {
+      return Scaffold(
+        backgroundColor: tokens.background,
+        body: ScaledTextScope(
+          child: SafeArea(
+            child: ResponsiveBody(
+              maxWidth: 480,
+              child: ListView(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                children: [
+                  Text(
+                    'Two-factor authentication',
+                    style: theme.textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    auth.pending2faEmail.isNotEmpty
+                        ? 'Enter the code from your authenticator for ${auth.pending2faEmail}.'
+                        : 'Enter the code from your authenticator app (or a recovery code).',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: tokens.secondaryText,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  if (auth.errorMessage.isNotEmpty) ...[
+                    Text(
+                      auth.errorMessage,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                  AppTextField(
+                    controller: _totpController,
+                    label: 'Authentication code',
+                    keyboardType: TextInputType.visiblePassword,
+                    textInputAction: TextInputAction.done,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Semantics(
+                    button: true,
+                    label: 'Verify authentication code',
+                    child: AppButton(
+                      label: 'Verify',
+                      onPressed: () => auth.verifyTotpLogin(_totpController.text),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  AppButton(
+                    label: 'Back',
+                    variant: AppButtonVariant.ghost,
+                    onPressed: () {
+                      _totpController.clear();
+                      auth.clearPending2fa();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: tokens.background,

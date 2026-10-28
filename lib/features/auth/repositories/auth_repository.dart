@@ -12,6 +12,8 @@ import 'package:spy_love/core/storage/token_storage.dart';
 import 'package:spy_love/features/auth/models/auth_methods.dart';
 
 import 'package:spy_love/features/auth/models/auth_user.dart';
+import 'package:spy_love/features/auth/models/login_result.dart';
+import 'package:spy_love/features/auth/models/totp_models.dart';
 
 class AuthRepository {
   AuthRepository(this._api, this._tokenStorage, this._googleSignIn);
@@ -62,31 +64,140 @@ class AuthRepository {
     return Right(result.right);
   }
 
-  Future<Either<AuthUser, String>> login({
+  Future<Either<LoginResult, String>> login({
     required String email,
-
     required String password,
+    String deviceLabel = '',
   }) async {
+    final body = <String, dynamic>{
+      'email': email,
+      'password': password,
+      if (deviceLabel.isNotEmpty) 'device_label': deviceLabel,
+    };
     final result = await _api.send<Map<String, dynamic>>(
       url: ApiConstants.authLogin,
-
       method: HttpMethod.post,
-
-      body: {'email': email, 'password': password},
-
+      body: body,
       requireAuth: false,
-
       loader: true,
-
       resultOverlay: true,
     );
 
     if (result.isLeft) {
-      await _saveTokens(result.left);
-
-      return Left(AuthUser.fromAuthResponse(result.left));
+      final data = result.left;
+      if (data['requires_2fa'] == true) {
+        final user = data['user'] as Map<String, dynamic>?;
+        return Left(
+          LoginRequires2fa(
+            preAuthToken: data['pre_auth_token'] as String? ?? '',
+            email: user?['email'] as String? ?? email,
+          ),
+        );
+      }
+      await _saveTokens(data);
+      return Left(LoginSuccess(AuthUser.fromAuthResponse(data)));
     }
 
+    return Right(result.right);
+  }
+
+  Future<Either<AuthUser, String>> verifyTotpLogin({
+    required String preAuthToken,
+    required String code,
+    String deviceLabel = '',
+  }) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.auth2faVerify,
+      method: HttpMethod.post,
+      body: {
+        'pre_auth_token': preAuthToken,
+        'code': code.trim(),
+        if (deviceLabel.isNotEmpty) 'device_label': deviceLabel,
+      },
+      requireAuth: false,
+      loader: true,
+      resultOverlay: true,
+    );
+    if (result.isLeft) {
+      await _saveTokens(result.left);
+      return Left(AuthUser.fromAuthResponse(result.left));
+    }
+    return Right(result.right);
+  }
+
+  Future<Either<TotpStatus, String>> totpStatus() async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.auth2faStatus,
+      method: HttpMethod.get,
+      loader: false,
+      resultOverlay: false,
+    );
+    if (result.isLeft) return Left(TotpStatus.fromJson(result.left));
+    return Right(result.right);
+  }
+
+  Future<Either<TotpEnrollment, String>> totpEnroll() async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.auth2faEnroll,
+      method: HttpMethod.post,
+      loader: true,
+      resultOverlay: true,
+    );
+    if (result.isLeft) return Left(TotpEnrollment.fromJson(result.left));
+    return Right(result.right);
+  }
+
+  Future<Either<List<String>, String>> totpConfirm(String code) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.auth2faConfirm,
+      method: HttpMethod.post,
+      body: {'code': code.trim()},
+      loader: true,
+      resultOverlay: true,
+    );
+    if (result.isLeft) {
+      final codes = result.left['recovery_codes'] as List<dynamic>? ?? const [];
+      return Left(codes.map((e) => e.toString()).toList());
+    }
+    return Right(result.right);
+  }
+
+  Future<Either<bool, String>> totpDisable({
+    String? password,
+    String? code,
+  }) async {
+    final body = <String, dynamic>{};
+    if (password != null && password.isNotEmpty) body['password'] = password;
+    if (code != null && code.isNotEmpty) body['code'] = code.trim();
+    final result = await _api.send<dynamic>(
+      url: ApiConstants.auth2faDisable,
+      method: HttpMethod.post,
+      body: body,
+      loader: true,
+      resultOverlay: true,
+    );
+    if (result.isLeft) return const Left(true);
+    return Right(result.right);
+  }
+
+  Future<Either<List<String>, String>> totpRegenerateRecovery({
+    String? password,
+    String? code,
+  }) async {
+    final body = <String, dynamic>{};
+    if (password != null && password.isNotEmpty) body['password'] = password;
+    if (code != null && code.isNotEmpty) body['code'] = code.trim();
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.auth2faRecovery,
+      method: HttpMethod.post,
+      body: body,
+      loader: true,
+      resultOverlay: true,
+    );
+    if (result.isLeft) {
+      final codes = result.left['recovery_codes'] as List<dynamic>? ?? const [];
+      return Left(codes.map((e) => e.toString()).toList());
+    }
     return Right(result.right);
   }
 
@@ -257,14 +368,15 @@ class AuthRepository {
   }
 
   Future<void> _saveTokens(Map<String, dynamic> data) async {
-    final tokens =
-        data['tokens'] as Map<String, dynamic>? ??
-        {'access': data['access'], 'refresh': data['refresh']};
-
-    await _tokenStorage.saveTokens(
-      access: tokens['access'] as String,
-
-      refresh: tokens['refresh'] as String,
-    );
+    final nested = data['tokens'] as Map<String, dynamic>?;
+    final access = (nested?['access'] ?? data['access']) as String?;
+    final refresh = (nested?['refresh'] ?? data['refresh']) as String?;
+    if (access == null ||
+        refresh == null ||
+        access.isEmpty ||
+        refresh.isEmpty) {
+      throw StateError('Auth response missing access/refresh tokens');
+    }
+    await _tokenStorage.saveTokens(access: access, refresh: refresh);
   }
 }

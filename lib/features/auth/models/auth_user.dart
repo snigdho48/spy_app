@@ -11,6 +11,7 @@ class AuthUser {
     this.needsWorkspace = false,
     this.subscription,
     this.authMethods = const AuthMethods(hasPassword: false, hasGoogle: false),
+    this.totpEnabled = false,
   });
 
   final String id;
@@ -21,6 +22,7 @@ class AuthUser {
   final bool needsWorkspace;
   final SubscriptionInfo? subscription;
   final AuthMethods authMethods;
+  final bool totpEnabled;
 
   bool get hasWorkspace => !needsWorkspace && tenantName != null;
 
@@ -33,6 +35,7 @@ class AuthUser {
     bool? needsWorkspace,
     SubscriptionInfo? subscription,
     AuthMethods? authMethods,
+    bool? totpEnabled,
   }) {
     return AuthUser(
       id: id ?? this.id,
@@ -43,6 +46,7 @@ class AuthUser {
       needsWorkspace: needsWorkspace ?? this.needsWorkspace,
       subscription: subscription ?? this.subscription,
       authMethods: authMethods ?? this.authMethods,
+      totpEnabled: totpEnabled ?? this.totpEnabled,
     );
   }
 
@@ -61,6 +65,7 @@ class AuthUser {
       authMethods: AuthMethods.fromJson(
         data['auth_methods'] as Map<String, dynamic>?,
       ),
+      totpEnabled: data['totp_enabled'] as bool? ?? false,
     );
   }
 
@@ -79,6 +84,7 @@ class AuthUser {
       authMethods: AuthMethods.fromJson(
         data['auth_methods'] as Map<String, dynamic>?,
       ),
+      totpEnabled: data['totp_enabled'] as bool? ?? false,
     );
   }
 }
