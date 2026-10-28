@@ -8,6 +8,7 @@ import 'package:spy_love/features/monitoring/monitoring_service.dart';
 import 'package:spy_love/core/navigation/app_navigator.dart';
 import 'package:spy_love/features/auth/models/auth_user.dart';
 import 'package:spy_love/features/auth/repositories/auth_repository.dart';
+import 'package:spy_love/features/notifications/push_service.dart';
 import 'package:spy_love/features/subscription/controllers/subscription_controller.dart';
 
 class AuthController extends ChangeNotifier {
@@ -16,6 +17,7 @@ class AuthController extends ChangeNotifier {
   final AuthRepository _repository;
   final MonitoringService _monitoring;
   SubscriptionController? _subscription;
+  PushService? _push;
 
   AuthUser? user;
   bool isLoading = false;
@@ -32,6 +34,29 @@ class AuthController extends ChangeNotifier {
     _subscription = subscription;
   }
 
+  void bindPush(PushService push) {
+    _push = push;
+  }
+
+  /// Silent token registration when a session is restored (permission already
+  /// decided). Explicit sign-in flows show the consent rationale instead.
+  void _registerPushSilently() {
+    unawaited(_push?.registerToken());
+  }
+
+  /// Consent-style permission prompt + token registration after an explicit
+  /// sign-in. No-op when the push service is unbound.
+  void _requestPushConsent() {
+    final push = _push;
+    if (push == null) return;
+    final ctx = AppNavigator.context;
+    if (ctx == null) {
+      unawaited(push.registerToken());
+      return;
+    }
+    unawaited(push.requestPermissionWithRationale(ctx));
+  }
+
   Future<void> restoreSession() async {
     isRestoring = true;
     isLoading = true;
@@ -44,6 +69,7 @@ class AuthController extends ChangeNotifier {
         _syncSubscription(value);
         if (value != null) {
           _bootstrapMonitoring();
+          _registerPushSilently();
         }
       }, (error) => errorMessage = error);
     } catch (e) {
@@ -85,6 +111,7 @@ class AuthController extends ChangeNotifier {
       user = value;
       _syncSubscription(value);
       _bootstrapMonitoring();
+      _requestPushConsent();
       AppNavigator.popUntilHome();
     }, (error) => errorMessage = error);
     notifyListeners();
@@ -108,6 +135,7 @@ class AuthController extends ChangeNotifier {
       user = value;
       _syncSubscription(value);
       _bootstrapMonitoring();
+      _requestPushConsent();
       AppNavigator.popUntilHome();
     }, (error) => errorMessage = error);
     notifyListeners();
@@ -217,6 +245,7 @@ class AuthController extends ChangeNotifier {
   Future<void> logout() async {
     user = null;
     notifyListeners();
+    await _push?.unregister();
     await _monitoring.stop();
     await MonitoredDeviceStorage.clear();
     await _repository.logout();

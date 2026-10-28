@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:spy_love/features/auth/google_sign_in_service.dart';
@@ -13,6 +15,7 @@ import 'package:spy_love/core/storage/token_storage.dart';
 import 'package:spy_love/features/audit/repositories/audit_repository.dart';
 import 'package:spy_love/features/alerts/controllers/alerts_controller.dart';
 import 'package:spy_love/features/alerts/repositories/alert_repository.dart';
+import 'package:spy_love/features/notifications/push_service.dart';
 import 'package:spy_love/features/auth/controllers/auth_controller.dart';
 import 'package:spy_love/features/auth/repositories/auth_repository.dart';
 import 'package:spy_love/features/devices/controllers/dashboard_controller.dart';
@@ -68,6 +71,9 @@ class AppProviders extends StatelessWidget {
         ),
         ProxyProvider<ApiService, AlertRepository>(
           update: (_, api, previous) => previous ?? AlertRepository(api),
+        ),
+        ProxyProvider<AlertRepository, PushService>(
+          update: (_, alerts, previous) => previous ?? PushService(alerts),
         ),
         ProxyProvider<ApiService, KeywordRepository>(
           update: (_, api, previous) => previous ?? KeywordRepository(api),
@@ -223,6 +229,9 @@ class _ControllerBinderState extends State<_ControllerBinder> {
     final subscription = context.read<SubscriptionController>();
     auth.bindSubscription(subscription);
     subscription.bindAuth(auth);
+    final push = context.read<PushService>();
+    auth.bindPush(push);
+    unawaited(push.init());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       auth.restoreSession();
