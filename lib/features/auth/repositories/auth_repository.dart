@@ -13,13 +13,8 @@ import 'package:spy_love/features/auth/models/auth_methods.dart';
 
 import 'package:spy_love/features/auth/models/auth_user.dart';
 
-
-
 class AuthRepository {
-
   AuthRepository(this._api, this._tokenStorage, this._googleSignIn);
-
-
 
   final ApiService _api;
 
@@ -27,10 +22,7 @@ class AuthRepository {
 
   final GoogleSignInService _googleSignIn;
 
-
-
   Future<Either<AuthUser, String>> register({
-
     required String email,
 
     required String password,
@@ -38,17 +30,13 @@ class AuthRepository {
     required String fullName,
 
     required String tenantName,
-
   }) async {
-
     final result = await _api.send<Map<String, dynamic>>(
-
       url: ApiConstants.authRegister,
 
       method: HttpMethod.post,
 
       body: {
-
         'email': email,
 
         'password': password,
@@ -56,7 +44,6 @@ class AuthRepository {
         'full_name': fullName,
 
         'tenant_name': tenantName,
-
       },
 
       requireAuth: false,
@@ -64,35 +51,23 @@ class AuthRepository {
       loader: true,
 
       resultOverlay: true,
-
     );
 
-
-
     if (result.isLeft) {
-
       await _saveTokens(result.left);
 
       return Left(AuthUser.fromAuthResponse(result.left));
-
     }
 
     return Right(result.right);
-
   }
 
-
-
   Future<Either<AuthUser, String>> login({
-
     required String email,
 
     required String password,
-
   }) async {
-
     final result = await _api.send<Map<String, dynamic>>(
-
       url: ApiConstants.authLogin,
 
       method: HttpMethod.post,
@@ -104,53 +79,35 @@ class AuthRepository {
       loader: true,
 
       resultOverlay: true,
-
     );
 
-
-
     if (result.isLeft) {
-
       await _saveTokens(result.left);
 
       return Left(AuthUser.fromAuthResponse(result.left));
-
     }
 
     return Right(result.right);
-
   }
 
-
-
   Future<Either<AuthUser, String>> signInWithGoogle({
-
     required String idToken,
 
     String? tenantName,
 
     String? fullName,
-
   }) async {
-
     final body = <String, dynamic>{'id_token': idToken};
 
     if (tenantName != null && tenantName.isNotEmpty) {
-
       body['tenant_name'] = tenantName;
-
     }
 
     if (fullName != null && fullName.isNotEmpty) {
-
       body['full_name'] = fullName;
-
     }
 
-
-
     final result = await _api.send<Map<String, dynamic>>(
-
       url: ApiConstants.authGoogle,
 
       method: HttpMethod.post,
@@ -162,41 +119,27 @@ class AuthRepository {
       loader: true,
 
       resultOverlay: true,
-
     );
 
-
-
     if (result.isLeft) {
-
       await _saveTokens(result.left);
 
       return Left(AuthUser.fromAuthResponse(result.left));
-
     }
 
-
-
     if (_isTenantRequiredError(result.right)) {
-
       return const Right(ApiConstants.tenantRequiredError);
-
     }
 
     return Right(result.right);
-
   }
-
-
 
   Future<String?> obtainGoogleIdToken() => _googleSignIn.getIdToken();
 
-
-
-  Future<Either<AuthMethods, String>> linkGoogle({required String idToken}) async {
-
+  Future<Either<AuthMethods, String>> linkGoogle({
+    required String idToken,
+  }) async {
     final result = await _api.send<Map<String, dynamic>>(
-
       url: ApiConstants.authLinkGoogle,
 
       method: HttpMethod.post,
@@ -206,27 +149,23 @@ class AuthRepository {
       loader: true,
 
       resultOverlay: true,
-
     );
 
-
-
     if (result.isLeft) {
-
-      return Left(AuthMethods.fromJson(result.left['auth_methods'] as Map<String, dynamic>?));
-
+      return Left(
+        AuthMethods.fromJson(
+          result.left['auth_methods'] as Map<String, dynamic>?,
+        ),
+      );
     }
 
     return Right(result.right);
-
   }
 
-
-
-  Future<Either<AuthMethods, String>> setPassword({required String password}) async {
-
+  Future<Either<AuthMethods, String>> setPassword({
+    required String password,
+  }) async {
     final result = await _api.send<Map<String, dynamic>>(
-
       url: ApiConstants.authSetPassword,
 
       method: HttpMethod.post,
@@ -236,69 +175,63 @@ class AuthRepository {
       loader: true,
 
       resultOverlay: true,
-
     );
 
-
-
     if (result.isLeft) {
-
-      return Left(AuthMethods.fromJson(result.left['auth_methods'] as Map<String, dynamic>?));
-
+      return Left(
+        AuthMethods.fromJson(
+          result.left['auth_methods'] as Map<String, dynamic>?,
+        ),
+      );
     }
 
     return Right(result.right);
-
   }
-
-
 
   Future<Either<AuthUser?, String>> getCurrentUser() async {
-
     if (!await _tokenStorage.hasTokens()) {
-
       return const Left(null);
-
     }
-
-
 
     final result = await _api.send<Map<String, dynamic>>(
-
       url: ApiConstants.authMe,
-
       method: HttpMethod.get,
-
       loader: false,
-
       resultOverlay: false,
-
     );
 
-
-
     if (result.isLeft) {
-
       return Left(AuthUser.fromMeResponse(result.left));
-
     }
 
-    await _tokenStorage.clearTokens();
-
-    return const Left(null);
-
+    // OneRequest already attempted a silent refresh on 401. Only wipe the
+    // durable session when the failure is clearly unauthorized — never on
+    // network / transient errors (that cleared tokens on every cold start).
+    if (_isUnauthorizedError(result.right)) {
+      await _tokenStorage.clearTokens();
+      return const Left(null);
+    }
+    return Right(result.right);
   }
 
-
+  bool _isUnauthorizedError(String error) {
+    final lower = error.toLowerCase();
+    return lower.contains('401') ||
+        lower.contains('unauthorized') ||
+        lower.contains('not authenticated') ||
+        lower.contains('authentication credentials') ||
+        lower.contains('token_not_valid') ||
+        lower.contains('token is invalid') ||
+        lower.contains('token has expired') ||
+        lower.contains('given token not valid') ||
+        (lower.contains('refresh') && lower.contains('expired'));
+  }
 
   Future<void> logout() async {
-
     final refresh = await _tokenStorage.getRefreshToken();
 
     if (refresh != null) {
-
       await _api.send<Map<String, dynamic>>(
-
         url: ApiConstants.authLogout,
 
         method: HttpMethod.post,
@@ -308,47 +241,30 @@ class AuthRepository {
         loader: false,
 
         resultOverlay: false,
-
       );
-
     }
 
     await _tokenStorage.clearTokens();
 
     await _googleSignIn.signOut();
-
   }
 
-
-
   bool _isTenantRequiredError(String error) {
-
     final lower = error.toLowerCase();
 
     return lower.contains('tenant_required') ||
-
         lower.contains('organization name is required');
-
   }
 
-
-
   Future<void> _saveTokens(Map<String, dynamic> data) async {
-
-    final tokens = data['tokens'] as Map<String, dynamic>? ??
-
+    final tokens =
+        data['tokens'] as Map<String, dynamic>? ??
         {'access': data['access'], 'refresh': data['refresh']};
 
     await _tokenStorage.saveTokens(
-
       access: tokens['access'] as String,
 
       refresh: tokens['refresh'] as String,
-
     );
-
   }
-
 }
-
-

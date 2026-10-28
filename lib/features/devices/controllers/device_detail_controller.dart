@@ -15,10 +15,15 @@ import 'package:spy_love/features/devices/repositories/event_repository.dart';
 import 'package:spy_love/features/devices/utils/location_map_utils.dart';
 
 class DeviceDetailController extends ChangeNotifier {
-  DeviceDetailController(this._devices, this._events, this.device, TokenStorage tokens)
-      : _eventsStream = EventStreamClient(tokens) {
+  DeviceDetailController(
+    this._devices,
+    this._events,
+    this.device,
+    TokenStorage tokens,
+  ) : _eventsStream = EventStreamClient(tokens) {
     loadDetail();
     unawaited(_eventsStream.listen(_onLiveEvent));
+    // Poll quietly — never trip the global RequestOverlay.
     _locationRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
       unawaited(refreshLocations(silent: true));
     });
@@ -81,7 +86,12 @@ class DeviceDetailController extends ChangeNotifier {
   int get uniqueSmsSenders {
     final senders = <String>{};
     for (final e in sms) {
-      final id = (e.payload['number'] ?? e.payload['address'] ?? e.payload['phone'] ?? '').toString();
+      final id =
+          (e.payload['number'] ??
+                  e.payload['address'] ??
+                  e.payload['phone'] ??
+                  '')
+              .toString();
       if (id.isNotEmpty) senders.add(id);
     }
     return senders.length;
@@ -90,7 +100,12 @@ class DeviceDetailController extends ChangeNotifier {
   int get uniqueMessageApps {
     final apps = <String>{};
     for (final e in messages) {
-      final id = (e.payload['app'] ?? e.payload['package'] ?? e.payload['source'] ?? '').toString();
+      final id =
+          (e.payload['app'] ??
+                  e.payload['package'] ??
+                  e.payload['source'] ??
+                  '')
+              .toString();
       if (id.isNotEmpty) apps.add(id);
     }
     return apps.length;
@@ -102,18 +117,13 @@ class DeviceDetailController extends ChangeNotifier {
     notifyListeners();
 
     final detail = await _devices.getDevice(device.id);
-    detail.fold(
-      (data) {
-        ownerEmail = data['owner_email'] as String?;
-        ownerName = data['owner_name'] as String?;
-        consent = data['consent'] as Map<String, dynamic>?;
-        sharing = SharingState.fromJson(
-          data['sharing'] as Map<String, dynamic>?,
-        );
-        _syncCountdown();
-      },
-      (error) => errorMessage = error,
-    );
+    detail.fold((data) {
+      ownerEmail = data['owner_email'] as String?;
+      ownerName = data['owner_name'] as String?;
+      consent = data['consent'] as Map<String, dynamic>?;
+      sharing = SharingState.fromJson(data['sharing'] as Map<String, dynamic>?);
+      _syncCountdown();
+    }, (error) => errorMessage = error);
 
     isLoading = false;
     notifyListeners();
@@ -145,7 +155,10 @@ class DeviceDetailController extends ChangeNotifier {
         _countdownTimer?.cancel();
         return;
       }
-      final remaining = until.toUtc().difference(DateTime.now().toUtc()).inSeconds;
+      final remaining = until
+          .toUtc()
+          .difference(DateTime.now().toUtc())
+          .inSeconds;
       if (remaining <= 0) {
         sharing = SharingState.inactive;
         _countdownTimer?.cancel();
@@ -212,18 +225,18 @@ class DeviceDetailController extends ChangeNotifier {
       eventPrefix: 'location',
     );
 
-    result.fold(
-      (events) {
-        final points = events
-            .where((e) => e.payload['lat'] != null && e.payload['lng'] != null)
-            .map(LocationPoint.fromEvent)
-            .toList()
-          ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
-        locations = points;
-        _fitMapToPoints();
-      },
-      (_) {},
-    );
+    result.fold((events) {
+      final points =
+          events
+              .where(
+                (e) => e.payload['lat'] != null && e.payload['lng'] != null,
+              )
+              .map(LocationPoint.fromEvent)
+              .toList()
+            ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      locations = points;
+      _fitMapToPoints();
+    }, (_) {});
 
     if (!silent) {
       isLoadingEvents = false;
@@ -239,46 +252,50 @@ class DeviceDetailController extends ChangeNotifier {
       eventPrefix: 'sim',
     );
 
-    result.fold(
-      (events) {
-        final history = events
-            .where((e) => e.eventType == 'sim.inserted' || e.eventType == 'sim.removed')
-            .toList()
-          ..sort((a, b) => b.eventTimestamp.compareTo(a.eventTimestamp));
-        simHistory = history;
+    result.fold((events) {
+      final history =
+          events
+              .where(
+                (e) =>
+                    e.eventType == 'sim.inserted' ||
+                    e.eventType == 'sim.removed',
+              )
+              .toList()
+            ..sort((a, b) => b.eventTimestamp.compareTo(a.eventTimestamp));
+      simHistory = history;
 
-        final snapshots = events.where((e) => e.eventType == 'sim.current').toList()
-          ..sort((a, b) => b.eventTimestamp.compareTo(a.eventTimestamp));
+      final snapshots =
+          events.where((e) => e.eventType == 'sim.current').toList()
+            ..sort((a, b) => b.eventTimestamp.compareTo(a.eventTimestamp));
 
-        if (snapshots.isNotEmpty) {
-          final latest = snapshots.first;
-          final sims = latest.payload['sims'];
-          if (sims is List) {
-            currentSims = sims.map((sim) {
-              final map = Map<String, dynamic>.from(sim as Map);
-              map['updated_at'] = latest.eventTimestamp;
-              return map;
-            }).toList();
-            notifyListeners();
-            return;
-          }
-        }
-
-        final inserted = events.where((e) => e.eventType == 'sim.inserted').toList()
-          ..sort((a, b) => b.eventTimestamp.compareTo(a.eventTimestamp));
-        final activeBySlot = <int, Map<String, dynamic>>{};
-        for (final event in inserted) {
-          final slot = (event.payload['slot'] as num?)?.toInt() ?? 0;
-          activeBySlot.putIfAbsent(slot, () {
-            final map = Map<String, dynamic>.from(event.payload);
-            map['updated_at'] = event.eventTimestamp;
+      if (snapshots.isNotEmpty) {
+        final latest = snapshots.first;
+        final sims = latest.payload['sims'];
+        if (sims is List) {
+          currentSims = sims.map((sim) {
+            final map = Map<String, dynamic>.from(sim as Map);
+            map['updated_at'] = latest.eventTimestamp;
             return map;
-          });
+          }).toList();
+          notifyListeners();
+          return;
         }
-        currentSims = activeBySlot.values.toList();
-      },
-      (_) {},
-    );
+      }
+
+      final inserted =
+          events.where((e) => e.eventType == 'sim.inserted').toList()
+            ..sort((a, b) => b.eventTimestamp.compareTo(a.eventTimestamp));
+      final activeBySlot = <int, Map<String, dynamic>>{};
+      for (final event in inserted) {
+        final slot = (event.payload['slot'] as num?)?.toInt() ?? 0;
+        activeBySlot.putIfAbsent(slot, () {
+          final map = Map<String, dynamic>.from(event.payload);
+          map['updated_at'] = event.eventTimestamp;
+          return map;
+        });
+      }
+      currentSims = activeBySlot.values.toList();
+    }, (_) {});
     notifyListeners();
   }
 
@@ -322,10 +339,7 @@ class DeviceDetailController extends ChangeNotifier {
       deviceId: device.id,
       eventPrefix: prefix,
     );
-    result.fold(
-      assign,
-      (_) => assign(const []),
-    );
+    result.fold(assign, (_) => assign(const []));
   }
 
   Future<void> disconnectDevice() async {
@@ -344,17 +358,14 @@ class DeviceDetailController extends ChangeNotifier {
       final deleted = await _devices.deleteDevice(device.id);
       isActionInProgress = false;
       notifyListeners();
-      deleted.fold(
-        (_) {
-          AppNavigator.pop('deleted');
-          AppNavigator.snackbar(
-            'Device removed',
-            '${device.name} was disconnected and historical telemetry purged.',
-            icon: Icons.delete_outline,
-          );
-        },
-        (error) => errorMessage = error,
-      );
+      deleted.fold((_) {
+        AppNavigator.pop('deleted');
+        AppNavigator.snackbar(
+          'Device removed',
+          '${device.name} was disconnected and historical telemetry purged.',
+          icon: Icons.delete_outline,
+        );
+      }, (error) => errorMessage = error);
       notifyListeners();
       return;
     }
@@ -363,17 +374,14 @@ class DeviceDetailController extends ChangeNotifier {
     isActionInProgress = false;
     notifyListeners();
 
-    disconnect.fold(
-      (updated) {
-        AppNavigator.pop('disconnected');
-        AppNavigator.snackbar(
-          'Device disconnected',
-          '${updated.name} is no longer being monitored.',
-          icon: Icons.link_off,
-        );
-      },
-      (error) => errorMessage = error,
-    );
+    disconnect.fold((updated) {
+      AppNavigator.pop('disconnected');
+      AppNavigator.snackbar(
+        'Device disconnected',
+        '${updated.name} is no longer being monitored.',
+        icon: Icons.link_off,
+      );
+    }, (error) => errorMessage = error);
     notifyListeners();
   }
 
@@ -394,19 +402,16 @@ class DeviceDetailController extends ChangeNotifier {
     isActionInProgress = false;
     notifyListeners();
 
-    deleteResult.fold(
-      (_) {
-        AppNavigator.pop(result.purgeHistory ? 'deleted' : 'disconnected');
-        AppNavigator.snackbar(
-          result.purgeHistory ? 'Device removed' : 'Device disconnected',
-          result.purgeHistory
-              ? '${device.name} was deleted from your workspace.'
-              : '${device.name} is no longer being monitored.',
-          icon: result.purgeHistory ? Icons.delete_outline : Icons.link_off,
-        );
-      },
-      (error) => errorMessage = error,
-    );
+    deleteResult.fold((_) {
+      AppNavigator.pop(result.purgeHistory ? 'deleted' : 'disconnected');
+      AppNavigator.snackbar(
+        result.purgeHistory ? 'Device removed' : 'Device disconnected',
+        result.purgeHistory
+            ? '${device.name} was deleted from your workspace.'
+            : '${device.name} is no longer being monitored.',
+        icon: result.purgeHistory ? Icons.delete_outline : Icons.link_off,
+      );
+    }, (error) => errorMessage = error);
     notifyListeners();
   }
 
