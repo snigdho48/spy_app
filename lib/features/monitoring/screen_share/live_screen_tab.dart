@@ -6,8 +6,8 @@ import 'package:spy_love/core/storage/token_storage.dart';
 import 'package:spy_love/features/monitoring/screen_share/live_screen_controller.dart';
 import 'package:spy_love/features/monitoring/screen_share/screen_share_repository.dart';
 
-/// Monitor-side "Live screen" tab. Requests a consent-gated live view of the
-/// monitored device and renders relayed JPEG frames. Read-only.
+/// Monitor-side "Live screen" tab. Starts a consent-scoped live view of the
+/// monitored device (silent — no per-session approval) and renders JPEG frames.
 class LiveScreenTab extends StatefulWidget {
   const LiveScreenTab({super.key, required this.deviceId});
 
@@ -68,17 +68,14 @@ class _LiveScreenTabState extends State<LiveScreenTab> {
     final (icon, message) = switch (controller.status) {
       LiveScreenStatus.idle => (
         Icons.screen_share_outlined,
-        'Request a live view of this device\'s screen.\n'
-            'The owner must approve it and their screen will show a '
-            'sharing indicator the whole time.',
+        'View this device\'s screen live.\n'
+            'Requires the screen consent scope on that device. '
+            'Android still shows the system capture dialog on the paired phone.',
       ),
-      LiveScreenStatus.requesting => (
-        Icons.hourglass_empty,
-        'Sending request\u2026',
-      ),
-      LiveScreenStatus.waiting => (
-        Icons.phonelink_ring_outlined,
-        'Waiting for the device owner to approve and start sharing\u2026',
+      LiveScreenStatus.requesting => (Icons.hourglass_empty, 'Starting\u2026'),
+      LiveScreenStatus.connecting => (
+        Icons.hourglass_top,
+        'Connecting\u2026 If this hangs, the paired device may be offline.',
       ),
       LiveScreenStatus.live => (Icons.cast_connected, 'Live'),
       LiveScreenStatus.ended => (
@@ -129,7 +126,7 @@ class _LiveScreenTabState extends State<LiveScreenTab> {
           FilledButton.icon(
             onPressed: () => controller.start(widget.deviceId),
             icon: const Icon(Icons.screen_share),
-            label: const Text('Request live screen'),
+            label: const Text('Start live screen'),
           ),
       ],
     );

@@ -5,7 +5,7 @@ import 'package:spy_love/core/network/screen_stream_client.dart';
 import 'package:spy_love/features/monitoring/screen_share/screen_share_session.dart';
 import 'package:spy_love/features/monitoring/screen_share/screen_share_repository.dart';
 
-enum LiveScreenStatus { idle, requesting, waiting, live, ended, error }
+enum LiveScreenStatus { idle, requesting, connecting, live, ended, error }
 
 /// Monitor-side controller for viewing a monitored device's live screen.
 ///
@@ -30,7 +30,8 @@ class LiveScreenController extends ChangeNotifier {
   String? get error => _error;
   int get frameCount => _frameCount;
   bool get isStreaming =>
-      _status == LiveScreenStatus.live || _status == LiveScreenStatus.waiting;
+      _status == LiveScreenStatus.live ||
+      _status == LiveScreenStatus.connecting;
 
   Future<void> start(String deviceId) async {
     if (isStreaming) return;
@@ -44,7 +45,7 @@ class LiveScreenController extends ChangeNotifier {
       return;
     }
     _session = requested.left;
-    _setStatus(LiveScreenStatus.waiting);
+    _setStatus(LiveScreenStatus.connecting);
 
     final connected = await _stream.connect(
       _session!.wsPath,

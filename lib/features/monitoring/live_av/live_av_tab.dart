@@ -86,9 +86,9 @@ class _LiveAvTabState extends State<LiveAvTab> {
             'Requires camera / microphone consent on that device.',
       ),
       LiveAvStatus.requesting => (Icons.hourglass_empty, 'Starting…'),
-      LiveAvStatus.waiting => (
-        Icons.phonelink_ring_outlined,
-        'Waiting for the paired device to connect…',
+      LiveAvStatus.connecting => (
+        Icons.hourglass_top,
+        'Connecting… If this hangs, the paired device may be offline.',
       ),
       LiveAvStatus.live => (
         Icons.hearing,
