@@ -10,6 +10,7 @@ import 'package:spy_love/core/types/either.dart';
 import 'package:spy_love/features/devices/models/device_event_model.dart';
 import 'package:spy_love/features/devices/models/app_usage_model.dart';
 import 'package:spy_love/features/devices/models/telemetry_model.dart';
+import 'package:spy_love/features/devices/models/activity_item.dart';
 
 class EventRepository {
   EventRepository(this._api, this._tokens);
@@ -254,6 +255,63 @@ class EventRepository {
       return Right(e.message ?? 'Export failed');
     } catch (e) {
       return Right(e.toString());
+    }
+  }
+
+  /// GET /events/activity/?device_id=&from=&to=&types=&cursor=&limit=
+  /// Merged reverse-chronological feed (events + alerts) for one device.
+  /// Uses Dio directly so the HTTP status is visible: 403 -> access denied
+  /// (VIEWER / consent off), 404 -> endpoint not deployed (caller falls back to
+  /// a client-side merge). Background/poll fetches never trigger the overlay.
+  Future<ActivityFetchOutcome> activity({
+    required String deviceId,
+    DateTime? from,
+    DateTime? to,
+    List<String> types = const [],
+    String? cursor,
+    int limit = 50,
+  }) async {
+    try {
+      final token = await _tokens.getAccessToken();
+      final response = await OneRequest.client.get<Map<String, dynamic>>(
+        '${AppConfig.apiBaseUrl.replaceAll(RegExp(r"/+$"), "")}'
+        '${ApiConstants.eventsActivity}',
+        queryParameters: {
+          'device_id': deviceId,
+          'limit': limit,
+          if (from != null) 'from': from.toUtc().toIso8601String(),
+          if (to != null) 'to': to.toUtc().toIso8601String(),
+          if (types.isNotEmpty) 'types': types.join(','),
+          if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+        },
+        options: Options(
+          headers: {
+            if (token != null && token.isNotEmpty)
+              'Authorization': 'Bearer $token',
+          },
+          validateStatus: (s) => s != null && s < 500,
+        ),
+      );
+      final status = response.statusCode ?? 0;
+      if (status == 403) return ActivityFetchOutcome.denied();
+      if (status == 404) return ActivityFetchOutcome.notAvailable();
+      if (status >= 400 || response.data == null) {
+        return ActivityFetchOutcome.failed('Activity feed failed (HTTP $status)');
+      }
+      final data = response.data!;
+      final raw = data['results'] as List<dynamic>? ?? const [];
+      final items = [
+        for (final e in raw)
+          ActivityItem.fromJson((e as Map).cast<String, dynamic>()),
+      ];
+      final next = data['next']?.toString();
+      return ActivityFetchOutcome.loaded(
+        ActivityPage(items: items, nextCursor: next),
+      );
+    } on DioException catch (e) {
+      return ActivityFetchOutcome.failed(e.message ?? 'Activity feed failed');
+    } catch (e) {
+      return ActivityFetchOutcome.failed(e.toString());
     }
   }
 }
