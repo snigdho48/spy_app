@@ -49,13 +49,17 @@ class SubscriptionRepository {
 
     if (result.isLeft) {
       return Left(
-        SubscriptionInfo.fromJson(result.left['subscription'] as Map<String, dynamic>),
+        SubscriptionInfo.fromJson(
+          result.left['subscription'] as Map<String, dynamic>,
+        ),
       );
     }
     return Right(result.right);
   }
 
-  Future<Either<Map<String, dynamic>, String>> createWorkspace(String name) async {
+  Future<Either<Map<String, dynamic>, String>> createWorkspace(
+    String name,
+  ) async {
     final result = await _api.send<Map<String, dynamic>>(
       url: ApiConstants.workspaceCreate,
       method: HttpMethod.post,

@@ -30,12 +30,7 @@ void main() {
       ),
       child: MaterialApp(
         theme: AppTheme.light,
-        home: Scaffold(
-          body: TickerMode(
-            enabled: false,
-            child: child,
-          ),
-        ),
+        home: Scaffold(body: TickerMode(enabled: false, child: child)),
       ),
     );
   }
@@ -130,8 +125,9 @@ void main() {
                         '60% Circle Slots Used',
                         style: TextStyle(
                           fontSize: 11,
-                          color: theme.colorScheme.onSurface
-                              .withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.6,
+                          ),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -153,8 +149,9 @@ void main() {
                     child: LinearProgressIndicator(
                       value: 0.6,
                       minHeight: 14,
-                      backgroundColor:
-                          theme.colorScheme.primary.withValues(alpha: 0.12),
+                      backgroundColor: theme.colorScheme.primary.withValues(
+                        alpha: 0.12,
+                      ),
                       color: theme.colorScheme.primary,
                     ),
                   ),

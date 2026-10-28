@@ -55,10 +55,7 @@ class _AuthFormState extends State<_AuthForm> {
         tenantName: _tenantController.text.trim(),
       );
     } else {
-      await auth.login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+      await auth.login(_emailController.text.trim(), _passwordController.text);
     }
   }
 
@@ -88,60 +85,78 @@ class _AuthFormState extends State<_AuthForm> {
               children: [
                 const SizedBox(height: AppSpacing.sm),
                 Center(
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: tokens.primarySoft,
-                          shape: BoxShape.circle,
-                          boxShadow: tokens.cardShadow,
-                        ),
-                        child: Icon(
-                          Icons.health_and_safety_rounded,
-                          size: 32,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      Positioned(
-                        right: -2,
-                        bottom: -2,
-                        child: Container(
-                          width: 18,
-                          height: 18,
-                          decoration: const BoxDecoration(
-                            color: AppColors.consented,
+                  child: Semantics(
+                    image: true,
+                    label: 'Spy Love consent monitoring logo',
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: tokens.primarySoft,
                             shape: BoxShape.circle,
+                            boxShadow: tokens.cardShadow,
                           ),
-                          child: const Icon(Icons.check, size: 12, color: AppColors.white),
+                          child: Icon(
+                            Icons.health_and_safety_rounded,
+                            size: 32,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
-                      ),
-                    ],
+                        Positioned(
+                          right: -2,
+                          bottom: -2,
+                          child: Container(
+                            width: 18,
+                            height: 18,
+                            decoration: const BoxDecoration(
+                              color: AppColors.consented,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.check,
+                              size: 12,
+                              color: AppColors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: tokens.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(AppRadius.badge),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.verified_user, size: 14, color: theme.colorScheme.primary),
-                        const SizedBox(width: 6),
-                        Text(
-                          'SPY LOVE ECOSYSTEM',
-                          style: theme.textTheme.labelSmall?.copyWith(
+                  child: Semantics(
+                    label: 'Spy Love ecosystem',
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: tokens.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(AppRadius.badge),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.verified_user,
+                            size: 14,
                             color: theme.colorScheme.primary,
-                            letterSpacing: 1.2,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 6),
+                          Text(
+                            'SPY LOVE ECOSYSTEM',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -154,7 +169,9 @@ class _AuthFormState extends State<_AuthForm> {
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Transparent mutual monitoring built for family care and trusted teams.',
-                  style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: tokens.secondaryText,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -171,7 +188,11 @@ class _AuthFormState extends State<_AuthForm> {
                           color: tokens.successSoft,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(Icons.lock_open_rounded, size: 18, color: tokens.consentedLabel),
+                        child: Icon(
+                          Icons.lock_open_rounded,
+                          size: 18,
+                          color: tokens.consentedLabel,
+                        ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       Expanded(
@@ -180,7 +201,10 @@ class _AuthFormState extends State<_AuthForm> {
                           children: [
                             Row(
                               children: [
-                                Text('Trust & Consent Guarantee', style: theme.textTheme.titleMedium),
+                                Text(
+                                  'Trust & Consent Guarantee',
+                                  style: theme.textTheme.titleMedium,
+                                ),
                                 const SizedBox(width: 6),
                                 Container(
                                   width: 8,
@@ -195,7 +219,9 @@ class _AuthFormState extends State<_AuthForm> {
                             const SizedBox(height: 4),
                             Text(
                               'No hidden spyware. All monitored devices receive bidirectional pairing verification and persistent real-time consent audit indicators.',
-                              style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: tokens.secondaryText,
+                              ),
                             ),
                           ],
                         ),
@@ -219,7 +245,9 @@ class _AuthFormState extends State<_AuthForm> {
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
                                   color: tokens.surfaceContainer,
-                                  borderRadius: BorderRadius.circular(AppRadius.badge),
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadius.badge,
+                                  ),
                                 ),
                                 child: Row(
                                   children: [
@@ -227,14 +255,16 @@ class _AuthFormState extends State<_AuthForm> {
                                       child: _AuthTab(
                                         label: 'Sign In',
                                         selected: !_isRegister,
-                                        onTap: () => setState(() => _isRegister = false),
+                                        onTap: () =>
+                                            setState(() => _isRegister = false),
                                       ),
                                     ),
                                     Expanded(
                                       child: _AuthTab(
                                         label: 'Create Account',
                                         selected: _isRegister,
-                                        onTap: () => setState(() => _isRegister = true),
+                                        onTap: () =>
+                                            setState(() => _isRegister = true),
                                       ),
                                     ),
                                   ],
@@ -250,7 +280,9 @@ class _AuthFormState extends State<_AuthForm> {
                                   controller: _tenantController,
                                   label: 'Family Circle or Team Workspace',
                                   hint: 'The Morrison Family Circle',
-                                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                                  validator: (v) => v == null || v.isEmpty
+                                      ? 'Required'
+                                      : null,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
@@ -263,7 +295,9 @@ class _AuthFormState extends State<_AuthForm> {
                                 AppTextField(
                                   controller: _nameController,
                                   label: 'Full name',
-                                  validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                                  validator: (v) => v == null || v.isEmpty
+                                      ? 'Required'
+                                      : null,
                                 ),
                                 const SizedBox(height: AppSpacing.sm),
                               ],
@@ -274,8 +308,9 @@ class _AuthFormState extends State<_AuthForm> {
                                     : 'Email address',
                                 keyboardType: TextInputType.emailAddress,
                                 autofillHints: const [AutofillHints.email],
-                                validator: (v) =>
-                                    v == null || !v.contains('@') ? 'Invalid email' : null,
+                                validator: (v) => v == null || !v.contains('@')
+                                    ? 'Invalid email'
+                                    : null,
                               ),
                               const SizedBox(height: AppSpacing.sm),
                               AppTextField(
@@ -283,8 +318,9 @@ class _AuthFormState extends State<_AuthForm> {
                                 label: 'Secure Password',
                                 obscureText: true,
                                 autofillHints: const [AutofillHints.password],
-                                validator: (v) =>
-                                    v == null || v.length < 10 ? 'Min 10 characters' : null,
+                                validator: (v) => v == null || v.length < 10
+                                    ? 'Min 10 characters'
+                                    : null,
                               ),
                               if (auth.errorMessage.isNotEmpty) ...[
                                 const SizedBox(height: AppSpacing.sm),
@@ -308,14 +344,17 @@ class _AuthFormState extends State<_AuthForm> {
                                 children: [
                                   const Expanded(child: Divider()),
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSpacing.sm,
+                                    ),
                                     child: Text(
                                       'OR VERIFY WITH',
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        letterSpacing: 0.6,
-                                        fontWeight: FontWeight.w700,
-                                        color: tokens.secondaryText,
-                                      ),
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            letterSpacing: 0.6,
+                                            fontWeight: FontWeight.w700,
+                                            color: tokens.secondaryText,
+                                          ),
                                     ),
                                   ),
                                   const Expanded(child: Divider()),
@@ -327,7 +366,9 @@ class _AuthFormState extends State<_AuthForm> {
                                 icon: Icons.g_mobiledata,
                                 variant: AppButtonVariant.secondary,
                                 loading: auth.isGoogleLoading,
-                                onPressed: auth.isGoogleLoading ? null : _signInWithGoogle,
+                                onPressed: auth.isGoogleLoading
+                                    ? null
+                                    : _signInWithGoogle,
                               ),
                             ],
                           ),
@@ -357,23 +398,28 @@ class _AuthTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
-    return Material(
-      color: selected ? tokens.surface : Colors.transparent,
-      borderRadius: BorderRadius.circular(AppRadius.badge),
-      child: InkWell(
-        onTap: onTap,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      child: Material(
+        color: selected ? tokens.surface : Colors.transparent,
         borderRadius: BorderRadius.circular(AppRadius.badge),
-        child: SizedBox(
-          height: 44,
-          child: Center(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: selected
-                        ? Theme.of(context).colorScheme.primary
-                        : tokens.secondaryText,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                  ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppRadius.badge),
+          child: SizedBox(
+            height: 44,
+            child: Center(
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: selected
+                      ? Theme.of(context).colorScheme.primary
+                      : tokens.secondaryText,
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                ),
+              ),
             ),
           ),
         ),

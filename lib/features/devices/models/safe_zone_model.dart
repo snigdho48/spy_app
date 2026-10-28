@@ -19,10 +19,9 @@ class SafeZoneModel {
   final String? deviceId;
   final String? displayLabel;
 
-  String get label =>
-      (displayLabel != null && displayLabel!.isNotEmpty)
-          ? displayLabel!
-          : 'Safe Zone: $name';
+  String get label => (displayLabel != null && displayLabel!.isNotEmpty)
+      ? displayLabel!
+      : 'Safe Zone: $name';
 
   factory SafeZoneModel.fromJson(Map<String, dynamic> json) {
     return SafeZoneModel(

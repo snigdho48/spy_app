@@ -33,7 +33,9 @@ class AppButton extends StatelessWidget {
             height: 20,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              color: variant == AppButtonVariant.primary ? AppColors.white : AppColors.primary,
+              color: variant == AppButtonVariant.primary
+                  ? AppColors.white
+                  : AppColors.primary,
             ),
           )
         : Row(
@@ -50,37 +52,37 @@ class AppButton extends StatelessWidget {
 
     final button = switch (variant) {
       AppButtonVariant.primary => FilledButton(
-          onPressed: enabled ? onPressed : null,
-          child: child,
-        ),
+        onPressed: enabled ? onPressed : null,
+        child: child,
+      ),
       AppButtonVariant.secondary => FilledButton(
-          onPressed: enabled ? onPressed : null,
-          style: FilledButton.styleFrom(
-            backgroundColor: tokens.input,
-            foregroundColor: tokens.primaryText,
-          ),
-          child: child,
+        onPressed: enabled ? onPressed : null,
+        style: FilledButton.styleFrom(
+          backgroundColor: tokens.input,
+          foregroundColor: tokens.primaryText,
         ),
+        child: child,
+      ),
       AppButtonVariant.soft => FilledButton(
-          onPressed: enabled ? onPressed : null,
-          style: FilledButton.styleFrom(
-            backgroundColor: tokens.primarySoft,
-            foregroundColor: Theme.of(context).colorScheme.primary,
-          ),
-          child: child,
+        onPressed: enabled ? onPressed : null,
+        style: FilledButton.styleFrom(
+          backgroundColor: tokens.primarySoft,
+          foregroundColor: Theme.of(context).colorScheme.primary,
         ),
+        child: child,
+      ),
       AppButtonVariant.ghost => TextButton(
-          onPressed: enabled ? onPressed : null,
-          child: child,
-        ),
+        onPressed: enabled ? onPressed : null,
+        child: child,
+      ),
       AppButtonVariant.destructive => FilledButton(
-          onPressed: enabled ? onPressed : null,
-          style: FilledButton.styleFrom(
-            backgroundColor: tokens.dangerSoft,
-            foregroundColor: tokens.revokeText,
-          ),
-          child: child,
+        onPressed: enabled ? onPressed : null,
+        style: FilledButton.styleFrom(
+          backgroundColor: tokens.dangerSoft,
+          foregroundColor: tokens.revokeText,
         ),
+        child: child,
+      ),
     };
 
     final sized = ConstrainedBox(

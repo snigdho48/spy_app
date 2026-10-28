@@ -47,9 +47,9 @@ class DeviceDetailView extends StatelessWidget {
               Text(controller.device.name),
               Text(
                 '● CONSENTED LINK',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: tokens.consented,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelSmall?.copyWith(color: tokens.consented),
               ),
             ],
           ),
@@ -89,6 +89,7 @@ class DeviceDetailView extends StatelessWidget {
                   );
                 }
                 return PopupMenuButton<String>(
+                  tooltip: 'Device actions',
                   onSelected: (value) {
                     switch (value) {
                       case 'disconnect':
@@ -212,7 +213,8 @@ class _OverviewTab extends StatelessWidget {
     final lastSeen = controller.device.lastSeenAt;
     final battery = controller.latestBattery;
     final network = controller.latestNetwork;
-    final batteryLevel = battery?.payload['level'] ?? battery?.payload['percent'];
+    final batteryLevel =
+        battery?.payload['level'] ?? battery?.payload['percent'];
     final ssid = network?.payload['ssid'] ?? network?.payload['wifi_ssid'];
 
     return RefreshIndicator(
@@ -231,14 +233,20 @@ class _OverviewTab extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       backgroundColor: tokens.surface,
-                      child: Icon(Icons.smartphone, color: theme.colorScheme.primary),
+                      child: Icon(
+                        Icons.smartphone,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(controller.device.name, style: theme.textTheme.titleMedium),
+                          Text(
+                            controller.device.name,
+                            style: theme.textTheme.titleMedium,
+                          ),
                           Text(
                             '$platform · Battery ${batteryLevel ?? '—'}%',
                             style: theme.textTheme.bodyMedium?.copyWith(
@@ -254,7 +262,9 @@ class _OverviewTab extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   lastSeen == null
-                      ? (online ? 'Live synced just now' : 'Waiting for heartbeat')
+                      ? (online
+                            ? 'Live synced just now'
+                            : 'Waiting for heartbeat')
                       : 'Live synced ${TimestampLabel.relative(lastSeen)}',
                   style: theme.textTheme.labelMedium,
                 ),
@@ -384,7 +394,9 @@ class _OverviewTab extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Consent is set at pairing. Disconnect or delete to revoke all scopes for this device.',
-            style: theme.textTheme.bodySmall?.copyWith(color: tokens.secondaryText),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: tokens.secondaryText,
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           Text('Recent activity', style: theme.textTheme.titleLarge),
@@ -418,7 +430,9 @@ class _OverviewTab extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Actions honor mutual notification protocols',
-            style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: tokens.secondaryText,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Builder(

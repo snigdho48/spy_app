@@ -16,6 +16,8 @@ dependencies:
 
   # Networking — latest pub.dev is 3.1.0 (re-exports dio / EasyLoading / dart_either / connectivity; do not add those)
   one_request: ^3.1.0
+  # Direct import for IOHttpClientAdapter (certificate pinning).
+  dio: ^5.11.0
 
   # Firebase
   firebase_core: ^4.14.0
@@ -24,6 +26,7 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   flutter_secure_storage: ^11.0.0
+  crypto: ^3.0.6
 
   # Utils
   uuid: ^4.6.0

@@ -19,13 +19,15 @@ class ResponsiveBody extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = AppBreakpoints.ofWidth(constraints.maxWidth);
-        final pad = padding ?? EdgeInsets.symmetric(
-          horizontal: switch (size) {
-            AppLayoutSize.compact => AppSpacing.page,
-            AppLayoutSize.medium => AppSpacing.pageTablet,
-            AppLayoutSize.expanded => AppSpacing.pageDesktop,
-          },
-        );
+        final pad =
+            padding ??
+            EdgeInsets.symmetric(
+              horizontal: switch (size) {
+                AppLayoutSize.compact => AppSpacing.page,
+                AppLayoutSize.medium => AppSpacing.pageTablet,
+                AppLayoutSize.expanded => AppSpacing.pageDesktop,
+              },
+            );
         return Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(

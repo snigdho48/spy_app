@@ -25,9 +25,9 @@ class PairingCompleteView extends StatelessWidget {
             const Text('Confirm pairing & consent'),
             Text(
               '● CONSENTED LINK',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: tokens.consented,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: tokens.consented),
             ),
           ],
         ),
@@ -52,7 +52,8 @@ class _ContinueFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final enabled = controller.isPairingCodeValid &&
+    final enabled =
+        controller.isPairingCodeValid &&
         controller.selectedScopes.isNotEmpty &&
         !controller.isLoading;
     return FloatingActionButton.extended(
@@ -65,7 +66,10 @@ class _ContinueFab extends StatelessWidget {
           ? const SizedBox(
               width: 18,
               height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
             )
           : const Icon(Icons.verified_outlined),
       label: Text(controller.isLoading ? 'Sending…' : 'Confirm & continue'),
@@ -134,7 +138,9 @@ class _ScannerPaneState extends State<_ScannerPane> {
                     'Point the camera at the monitored phone\'s pairing QR. '
                     'The code fills in and pairing continues automatically.',
                     textAlign: TextAlign.center,
-                    style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -180,11 +186,16 @@ class _ApprovalForm extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Define mutual scope boundary', style: theme.textTheme.titleMedium),
+                    Text(
+                      'Define mutual scope boundary',
+                      style: theme.textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Select telemetry channels to request. The monitored member must approve this exact list.',
-                      style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: tokens.secondaryText,
+                      ),
                     ),
                   ],
                 ),
@@ -211,10 +222,14 @@ class _ApprovalForm extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text('Scopes requested', style: theme.textTheme.titleLarge),
+              child: Text(
+                'Scopes requested',
+                style: theme.textTheme.titleLarge,
+              ),
             ),
             StatusBadge(
-              label: '${controller.selectedScopes.length}/${ConsentScope.all.length}',
+              label:
+                  '${controller.selectedScopes.length}/${ConsentScope.all.length}',
               tone: StatusTone.info,
             ),
           ],

@@ -74,30 +74,28 @@ class _ActivityFeedTabState extends State<ActivityFeedTab> {
       widget.events.where((e) => _callDirection(e) == 'incoming').length;
   int get _outgoingCount =>
       widget.events.where((e) => _callDirection(e) == 'outgoing').length;
-  int get _blockedCount =>
-      widget.events.where((e) => _isBlocked(e)).length;
+  int get _blockedCount => widget.events.where((e) => _isBlocked(e)).length;
   int get _flaggedCount =>
       widget.events.where((e) => _isFlagged(e, _keywords)).length;
-  int get _knownCount =>
-      widget.events.where(_isKnown).length;
+  int get _knownCount => widget.events.where(_isKnown).length;
 
   List<DeviceEventModel> get _filtered {
     final events = widget.events;
     return switch (widget.kind) {
       ActivityFeedKind.calls => switch (_callFilter) {
-          _CallFilter.all => events,
-          _CallFilter.incoming =>
-            events.where((e) => _callDirection(e) == 'incoming').toList(),
-          _CallFilter.outgoing =>
-            events.where((e) => _callDirection(e) == 'outgoing').toList(),
-          _CallFilter.blocked => events.where(_isBlocked).toList(),
-        },
+        _CallFilter.all => events,
+        _CallFilter.incoming =>
+          events.where((e) => _callDirection(e) == 'incoming').toList(),
+        _CallFilter.outgoing =>
+          events.where((e) => _callDirection(e) == 'outgoing').toList(),
+        _CallFilter.blocked => events.where(_isBlocked).toList(),
+      },
       ActivityFeedKind.sms || ActivityFeedKind.messages => switch (_smsFilter) {
-          _SmsFilter.all => events,
-          _SmsFilter.flagged =>
-            events.where((e) => _isFlagged(e, _keywords)).toList(),
-          _SmsFilter.known => events.where(_isKnown).toList(),
-        },
+        _SmsFilter.all => events,
+        _SmsFilter.flagged =>
+          events.where((e) => _isFlagged(e, _keywords)).toList(),
+        _SmsFilter.known => events.where(_isKnown).toList(),
+      },
     };
   }
 
@@ -105,7 +103,9 @@ class _ActivityFeedTabState extends State<ActivityFeedTab> {
     final raw = (event.payload['direction'] ?? event.payload['type'] ?? '')
         .toString()
         .toLowerCase();
-    if (raw.contains('block') || raw.contains('spam') || raw.contains('screen')) {
+    if (raw.contains('block') ||
+        raw.contains('spam') ||
+        raw.contains('screen')) {
       return 'blocked';
     }
     if (raw == 'in' || raw.contains('incoming') || raw.contains('inbound')) {
@@ -137,7 +137,9 @@ class _ActivityFeedTabState extends State<ActivityFeedTab> {
     final contact = event.contact;
     if (contact.isFlagged) return true;
     final p = event.payload;
-    if (p['flagged'] == true || p['keyword_hit'] == true || p['alert'] == true) {
+    if (p['flagged'] == true ||
+        p['keyword_hit'] == true ||
+        p['alert'] == true) {
       return true;
     }
     final text = [
@@ -148,7 +150,8 @@ class _ActivityFeedTabState extends State<ActivityFeedTab> {
       p['tags'],
     ].whereType<Object>().join(' ').toLowerCase();
     for (final keyword in keywords) {
-      if (keyword.word.isNotEmpty && text.contains(keyword.word.toLowerCase())) {
+      if (keyword.word.isNotEmpty &&
+          text.contains(keyword.word.toLowerCase())) {
         return true;
       }
     }
@@ -346,7 +349,8 @@ class _ActivityFeedTabState extends State<ActivityFeedTab> {
           ),
           const SizedBox(height: AppSpacing.md),
         ],
-        if (kind == ActivityFeedKind.sms || kind == ActivityFeedKind.messages) ...[
+        if (kind == ActivityFeedKind.sms ||
+            kind == ActivityFeedKind.messages) ...[
           AppCard(
             color: tokens.successSoft,
             elevated: false,
@@ -375,7 +379,9 @@ class _ActivityFeedTabState extends State<ActivityFeedTab> {
                   kind == ActivityFeedKind.sms
                       ? 'Personal conversation text is protected. Only emergency keywords and verified contacts are analyzed locally with consent.'
                       : 'Chat alerts use notification access with consent — not a full message archive.',
-                  style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: tokens.secondaryText,
+                  ),
                 ),
               ],
             ),
@@ -384,7 +390,9 @@ class _ActivityFeedTabState extends State<ActivityFeedTab> {
           AdaptiveMetricRow(
             children: [
               MetricCard(
-                label: kind == ActivityFeedKind.sms ? 'Logged SMS' : 'Chat alerts',
+                label: kind == ActivityFeedKind.sms
+                    ? 'Logged SMS'
+                    : 'Chat alerts',
                 value: '${events.length}',
                 caption: 'With consent',
                 icon: Icons.chat_bubble_outline,
@@ -489,7 +497,8 @@ class _ActivityFeedTabState extends State<ActivityFeedTab> {
               ),
             ),
           ),
-        if (kind == ActivityFeedKind.sms || kind == ActivityFeedKind.messages) ...[
+        if (kind == ActivityFeedKind.sms ||
+            kind == ActivityFeedKind.messages) ...[
           const SizedBox(height: AppSpacing.md),
           AppCard(
             color: tokens.primarySoft,
@@ -547,8 +556,9 @@ class _ActivityFeedTabState extends State<ActivityFeedTab> {
                             backgroundColor: tokens.surface,
                             side: BorderSide(color: tokens.border),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppRadius.full),
+                              borderRadius: BorderRadius.circular(
+                                AppRadius.full,
+                              ),
                             ),
                           ),
                         )
@@ -565,11 +575,16 @@ class _ActivityFeedTabState extends State<ActivityFeedTab> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Reciprocal ledger entry', style: theme.textTheme.titleMedium),
+              Text(
+                'Reciprocal ledger entry',
+                style: theme.textTheme.titleMedium,
+              ),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 'Both people can audit this sync session on the mutual transparency ledger.',
-                style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: tokens.secondaryText,
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               AppButton(
@@ -639,7 +654,8 @@ class _PrivacyMandateBanner extends StatelessWidget {
     final theme = Theme.of(context);
     final title = switch (kind) {
       ActivityFeedKind.calls => 'Mutual Voice Privacy',
-      ActivityFeedKind.sms || ActivityFeedKind.messages => 'Mutual Privacy Mandate',
+      ActivityFeedKind.sms ||
+      ActivityFeedKind.messages => 'Mutual Privacy Mandate',
     };
     final body = switch (kind) {
       ActivityFeedKind.calls =>
@@ -663,7 +679,9 @@ class _PrivacyMandateBanner extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
+                    Expanded(
+                      child: Text(title, style: theme.textTheme.titleMedium),
+                    ),
                     if (kind == ActivityFeedKind.calls)
                       const StatusBadge(
                         label: 'Zero Eavesdropping',
@@ -675,7 +693,9 @@ class _PrivacyMandateBanner extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   body,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: tokens.secondaryText,
+                  ),
                 ),
               ],
             ),
@@ -708,21 +728,24 @@ class _ActivityCard extends StatelessWidget {
     final blocked = _ActivityFeedTabState._isBlocked(event);
 
     final (icon, tone) = switch (kind) {
-      ActivityFeedKind.calls => blocked
-          ? (Icons.phone_disabled, StatusTone.danger)
-          : switch (direction) {
-              'incoming' => (Icons.call_received, StatusTone.success),
-              'outgoing' => (Icons.call_made, StatusTone.info),
-              'missed' => (Icons.call_missed, StatusTone.danger),
-              _ => (Icons.call_outlined, StatusTone.neutral),
-            },
+      ActivityFeedKind.calls =>
+        blocked
+            ? (Icons.phone_disabled, StatusTone.danger)
+            : switch (direction) {
+                'incoming' => (Icons.call_received, StatusTone.success),
+                'outgoing' => (Icons.call_made, StatusTone.info),
+                'missed' => (Icons.call_missed, StatusTone.danger),
+                _ => (Icons.call_outlined, StatusTone.neutral),
+              },
       ActivityFeedKind.sms => (Icons.sms_outlined, StatusTone.info),
       ActivityFeedKind.messages => (Icons.chat_bubble_outline, StatusTone.info),
     };
 
-    final duration = payload['duration']?.toString() ??
+    final duration =
+        payload['duration']?.toString() ??
         payload['duration_seconds']?.toString();
-    final number = payload['number']?.toString() ??
+    final number =
+        payload['number']?.toString() ??
         payload['address']?.toString() ??
         payload['phone']?.toString() ??
         payload['from']?.toString();

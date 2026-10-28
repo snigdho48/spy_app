@@ -51,9 +51,10 @@ class StatusBadge extends StatelessWidget {
       'revoked' => 'Revoked',
       'offline' => 'Off-Grid',
       'consented' => 'Consented',
-      _ => status.isEmpty
-          ? 'Unknown'
-          : '${status[0].toUpperCase()}${status.substring(1)}',
+      _ =>
+        status.isEmpty
+            ? 'Unknown'
+            : '${status[0].toUpperCase()}${status.substring(1)}',
     };
   }
 
@@ -62,18 +63,30 @@ class StatusBadge extends StatelessWidget {
     final tokens = context.tokens;
     final (fg, bg, dot) = switch (tone) {
       StatusTone.success => (
-          tokens.consentedLabel,
-          tokens.successSoft,
-          tokens.consented
-        ),
-      StatusTone.warning => (tokens.pending, tokens.warningSoft, tokens.pending),
-      StatusTone.danger => (tokens.revokeText, tokens.dangerSoft, tokens.revoked),
+        tokens.consentedLabel,
+        tokens.successSoft,
+        tokens.consented,
+      ),
+      StatusTone.warning => (
+        tokens.pending,
+        tokens.warningSoft,
+        tokens.pending,
+      ),
+      StatusTone.danger => (
+        tokens.revokeText,
+        tokens.dangerSoft,
+        tokens.revoked,
+      ),
       StatusTone.info => (
-          Theme.of(context).colorScheme.primary,
-          tokens.primarySoft,
-          Theme.of(context).colorScheme.primary
-        ),
-      StatusTone.neutral => (tokens.dormant, tokens.dormantSoft, tokens.dormant),
+        Theme.of(context).colorScheme.primary,
+        tokens.primarySoft,
+        Theme.of(context).colorScheme.primary,
+      ),
+      StatusTone.neutral => (
+        tokens.dormant,
+        tokens.dormantSoft,
+        tokens.dormant,
+      ),
     };
 
     return Semantics(
@@ -97,11 +110,11 @@ class StatusBadge extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: fg,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.15,
-                      height: 1.2,
-                    ),
+                  color: fg,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.15,
+                  height: 1.2,
+                ),
               ),
             ),
           ],
@@ -121,7 +134,8 @@ class _StatusDot extends StatefulWidget {
   State<_StatusDot> createState() => _StatusDotState();
 }
 
-class _StatusDotState extends State<_StatusDot> with SingleTickerProviderStateMixin {
+class _StatusDotState extends State<_StatusDot>
+    with SingleTickerProviderStateMixin {
   AnimationController? _controller;
 
   @override

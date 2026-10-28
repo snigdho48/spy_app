@@ -25,10 +25,7 @@ class AppPage extends StatelessWidget {
     );
 
     final body = center
-        ? ResponsiveBody(
-            padding: EdgeInsets.zero,
-            child: list,
-          )
+        ? ResponsiveBody(padding: EdgeInsets.zero, child: list)
         : list;
 
     if (onRefresh == null) return body;
@@ -56,24 +53,21 @@ class PageIntro extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (badge != null) ...[
-            badge!,
-            const SizedBox(height: AppSpacing.sm),
-          ],
+          if (badge != null) ...[badge!, const SizedBox(height: AppSpacing.sm)],
           Text(
             title,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  letterSpacing: -0.2,
-                  height: 1.15,
-                ),
+              letterSpacing: -0.2,
+              height: 1.15,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             subtitle,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: tokens.secondaryText,
-                  height: 1.45,
-                ),
+              color: tokens.secondaryText,
+              height: 1.45,
+            ),
           ),
         ],
       ),

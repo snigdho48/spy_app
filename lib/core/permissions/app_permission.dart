@@ -52,7 +52,8 @@ class AppPermission {
       scope: 'sim',
       permission: Permission.phone,
       title: 'SIM & phone number',
-      description: 'Read active SIM numbers and detect SIM insert/remove events.',
+      description:
+          'Read active SIM numbers and detect SIM insert/remove events.',
     ),
   ];
 }

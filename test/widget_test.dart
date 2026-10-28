@@ -19,22 +19,20 @@ void main() {
   });
 
   test('consent scopes stay aligned with the API catalog', () {
-    expect(
-      ConsentScope.all.map((scope) => scope.id).toSet(),
-      {
-        'call_log',
-        'sms',
-        'messaging',
-        'sim',
-        'location',
-        'battery',
-        'network',
-        'app_usage',
-        'device_info',
-        'notifications',
-        'screen',
-      },
-    );
+    expect(ConsentScope.all.map((scope) => scope.id).toSet(), {
+      'call_log',
+      'sms',
+      'contacts',
+      'messaging',
+      'sim',
+      'location',
+      'battery',
+      'network',
+      'app_usage',
+      'device_info',
+      'notifications',
+      'screen',
+    });
     expect(ConsentScope.consentVersion, '1.0.0');
   });
 
@@ -50,7 +48,10 @@ void main() {
       AppConfig.screenWsUrl('wss://stale.example/ws/v1/screen/abc/'),
       'wss://spy.way2points.com/ws/v1/screen/abc/',
     );
-    expect(AppConfig.isForeignStoredHost('https://stale.example/api/v1'), isTrue);
+    expect(
+      AppConfig.isForeignStoredHost('https://stale.example/api/v1'),
+      isTrue,
+    );
     expect(AppConfig.isForeignStoredHost(AppConfig.apiBaseUrl), isFalse);
     expect(AppConfig.isForeignStoredHost(AppConfig.wsBaseUrl), isFalse);
     expect(AppConfig.isForeignStoredHost('system'), isFalse);
@@ -74,7 +75,9 @@ void main() {
   });
 
   test('github release description does not publish the API host', () {
-    final workflow = File('.github/workflows/release-apk.yml').readAsStringSync();
+    final workflow = File(
+      '.github/workflows/release-apk.yml',
+    ).readAsStringSync();
     const marker = 'cat > release-notes.md << EOF\n';
     final start = workflow.indexOf(marker);
     expect(start, greaterThanOrEqualTo(0));

@@ -97,7 +97,9 @@ class AppTheme {
       primary: AppColors.primary,
       onPrimary: AppColors.white,
       primaryContainer: AppColors.primaryContainer,
-      onPrimaryContainer: isDark ? AppColors.inversePrimary : const Color(0xFFFDFCFF),
+      onPrimaryContainer: isDark
+          ? AppColors.inversePrimary
+          : const Color(0xFFFDFCFF),
       secondary: AppColors.skyTint,
       onSecondary: AppColors.white,
       secondaryContainer: const Color(0xFF39B8FD),
@@ -145,7 +147,9 @@ class AppTheme {
         backgroundColor: tokens.background,
         foregroundColor: tokens.primaryText,
         surfaceTintColor: Colors.transparent,
-        systemOverlayStyle: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
         titleTextStyle: textTheme.headlineSmall,
       ),
       iconButtonTheme: IconButtonThemeData(
@@ -161,7 +165,11 @@ class AppTheme {
         shape: cardShape,
         clipBehavior: Clip.antiAlias,
       ),
-      dividerTheme: DividerThemeData(color: tokens.border, space: 1, thickness: 1),
+      dividerTheme: DividerThemeData(
+        color: tokens.border,
+        space: 1,
+        thickness: 1,
+      ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
@@ -170,7 +178,9 @@ class AppTheme {
           minimumSize: const Size(0, AppSpacing.touchMin),
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           shape: pill,
-          textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
+          textStyle: textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -196,7 +206,10 @@ class AppTheme {
         fillColor: tokens.surface,
         hintStyle: textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
         labelStyle: textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: AppRadius.inputBorder,
           borderSide: BorderSide(color: tokens.inputBorder),
@@ -247,18 +260,28 @@ class AppTheme {
         indicatorColor: tokens.primarySoft,
         selectedIconTheme: const IconThemeData(color: AppColors.primary),
         unselectedIconTheme: IconThemeData(color: tokens.secondaryText),
-        selectedLabelTextStyle: textTheme.labelMedium?.copyWith(color: AppColors.primary),
-        unselectedLabelTextStyle: textTheme.labelMedium?.copyWith(color: tokens.secondaryText),
+        selectedLabelTextStyle: textTheme.labelMedium?.copyWith(
+          color: AppColors.primary,
+        ),
+        unselectedLabelTextStyle: textTheme.labelMedium?.copyWith(
+          color: tokens.secondaryText,
+        ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: tokens.surface,
-        shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheetBorder),
+        shape: const RoundedRectangleBorder(
+          borderRadius: AppRadius.sheetBorder,
+        ),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         backgroundColor: tokens.navy,
-        contentTextStyle: textTheme.bodyMedium?.copyWith(color: AppColors.white),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+        contentTextStyle: textTheme.bodyMedium?.copyWith(
+          color: AppColors.white,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
@@ -275,20 +298,30 @@ class AppTheme {
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
-          return states.contains(WidgetState.selected) ? AppColors.white : tokens.secondaryText;
+          return states.contains(WidgetState.selected)
+              ? AppColors.white
+              : tokens.secondaryText;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
-          return states.contains(WidgetState.selected) ? AppColors.primary : tokens.border;
+          return states.contains(WidgetState.selected)
+              ? AppColors.primary
+              : tokens.border;
         }),
       ),
       checkboxTheme: CheckboxThemeData(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.sm)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.sm),
+        ),
         fillColor: WidgetStateProperty.resolveWith((states) {
-          return states.contains(WidgetState.selected) ? AppColors.primary : Colors.transparent;
+          return states.contains(WidgetState.selected)
+              ? AppColors.primary
+              : Colors.transparent;
         }),
         side: BorderSide(color: AppColors.mutedTertiary, width: 1.5),
       ),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.primary),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.primary,
+      ),
     );
   }
 }

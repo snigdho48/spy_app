@@ -90,7 +90,8 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
         key: 'location_always',
         icon: Icons.my_location_outlined,
         title: 'Background location',
-        description: 'Keep sharing location while the app is in the background.',
+        description:
+            'Keep sharing location while the app is in the background.',
         kind: _GrantKind.runtime,
         permission: Permission.locationAlways,
         androidOnly: Platform.isAndroid,
@@ -116,7 +117,8 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
         key: 'phone',
         icon: Icons.call_outlined,
         title: 'Phone & call log',
-        description: 'Read call history (numbers, duration, type) and SIM info.',
+        description:
+            'Read call history (numbers, duration, type) and SIM info.',
         kind: _GrantKind.runtime,
         permission: Permission.phone,
         androidOnly: true,
@@ -159,7 +161,8 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
         key: 'usage_access',
         icon: Icons.query_stats_outlined,
         title: 'Usage access',
-        description: 'Report which apps are used and for how long (screen time).',
+        description:
+            'Report which apps are used and for how long (screen time).',
         kind: _GrantKind.settingsOnly,
         settingsPage: SystemSettingsPage.usageAccess,
         androidOnly: true,
@@ -253,8 +256,9 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
   /// the native build cannot report it (then the row shows "Check").
   Future<bool?> _querySettingsState(String key) async {
     try {
-      return await _channel
-          .invokeMethod<bool>('getSettingsPermissionState', {'page': key});
+      return await _channel.invokeMethod<bool>('getSettingsPermissionState', {
+        'page': key,
+      });
     } on PlatformException {
       return null;
     } on MissingPluginException {
@@ -316,7 +320,9 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
             const Text('Device permissions'),
             Text(
               '● MUTUAL TRANSPARENCY ACTIVE',
-              style: theme.textTheme.labelSmall?.copyWith(color: tokens.consented),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: tokens.consented,
+              ),
             ),
           ],
         ),
@@ -336,8 +342,10 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Text('$_grantedCount / ${items.length}',
-                  style: theme.textTheme.labelMedium),
+              Text(
+                '$_grantedCount / ${items.length}',
+                style: theme.textTheme.labelMedium,
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
@@ -347,7 +355,9 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
             'Tap Grant to trigger the real system request. If a permission was '
             'permanently denied, Grant opens the exact settings page to re-enable '
             'it. Spy Love never runs hidden.',
-            style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: tokens.secondaryText,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           for (final item in items) ...[
@@ -370,14 +380,15 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
             label: 'Review installed apps',
             icon: Icons.apps,
             variant: AppButtonVariant.soft,
-            onPressed: () =>
-                Navigator.of(context).pushNamed('/apps/installed'),
+            onPressed: () => Navigator.of(context).pushNamed('/apps/installed'),
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Revocable anytime in device Settings.',
             textAlign: TextAlign.center,
-            style: theme.textTheme.labelMedium?.copyWith(color: tokens.secondaryText),
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: tokens.secondaryText,
+            ),
           ),
         ],
       ),
@@ -436,19 +447,23 @@ class _PermissionRow extends StatelessWidget {
     };
 
     return AppCard(
+      semanticLabel: '${item.title}, $label',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
+              Semantics(
+                excludeSemantics: true,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(item.icon, color: theme.colorScheme.primary),
                 ),
-                child: Icon(item.icon, color: theme.colorScheme.primary),
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -460,7 +475,9 @@ class _PermissionRow extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             item.description,
-            style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: tokens.secondaryText,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           AppButton(
@@ -468,9 +485,9 @@ class _PermissionRow extends StatelessWidget {
             icon: status == _RowStatus.granted
                 ? Icons.check_circle_outline
                 : (item.kind == _GrantKind.settingsOnly ||
-                        status == _RowStatus.blocked)
-                    ? Icons.open_in_new
-                    : Icons.lock_open_outlined,
+                      status == _RowStatus.blocked)
+                ? Icons.open_in_new
+                : Icons.lock_open_outlined,
             variant: status == _RowStatus.granted
                 ? AppButtonVariant.soft
                 : AppButtonVariant.primary,

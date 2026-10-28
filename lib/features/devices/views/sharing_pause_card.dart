@@ -59,18 +59,15 @@ class _SharingPauseCardState extends State<SharingPauseCard> {
     final repo = context.read<DeviceRepository>();
     final result = await repo.getOwnedDeviceStatus(id);
     if (!mounted) return;
-    result.fold(
-      (status) {
-        final monitoring = context.read<MonitoringService>();
-        monitoring.applySharingState(status.sharing);
-        setState(() {
-          _sharing = status.sharing;
-          _loading = false;
-        });
-        _armCountdown();
-      },
-      (_) => setState(() => _loading = false),
-    );
+    result.fold((status) {
+      final monitoring = context.read<MonitoringService>();
+      monitoring.applySharingState(status.sharing);
+      setState(() {
+        _sharing = status.sharing;
+        _loading = false;
+      });
+      _armCountdown();
+    }, (_) => setState(() => _loading = false));
   }
 
   void _armCountdown() {
@@ -79,8 +76,10 @@ class _SharingPauseCardState extends State<SharingPauseCard> {
     _tick = Timer.periodic(const Duration(seconds: 1), (_) {
       final until = _sharing.pausedUntil;
       if (until == null) return;
-      final remaining =
-          until.toUtc().difference(DateTime.now().toUtc()).inSeconds;
+      final remaining = until
+          .toUtc()
+          .difference(DateTime.now().toUtc())
+          .inSeconds;
       if (!mounted) return;
       if (remaining <= 0) {
         setState(() => _sharing = SharingState.inactive);
@@ -123,13 +122,14 @@ class _SharingPauseCardState extends State<SharingPauseCard> {
   }
 
   String _formatCountdown() {
-    final seconds = _sharing.resumesInSeconds ??
+    final seconds =
+        _sharing.resumesInSeconds ??
         (_sharing.pausedUntil == null
             ? 0
             : _sharing.pausedUntil!
-                .toUtc()
-                .difference(DateTime.now().toUtc())
-                .inSeconds);
+                  .toUtc()
+                  .difference(DateTime.now().toUtc())
+                  .inSeconds);
     final safe = seconds < 0 ? 0 : seconds;
     final h = safe ~/ 3600;
     final m = (safe % 3600) ~/ 60;

@@ -71,14 +71,18 @@ android {
             }
         }
         release {
-            signingConfig = if (hasReleaseKeystore) {
-                signingConfigs.getByName("release")
-            } else {
-                // Local release builds stay runnable. CI refuses this fallback below.
-                signingConfigs.getByName("debug")
+            // Only assign a release signingConfig when a keystore is present.
+            // Assembling release without one fails in whenReady below — never
+            // fall back to the debug keystore.
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.getByName("release")
             }
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 
@@ -103,14 +107,18 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
 
+// Fail any Release assemble/bundle when key.properties is missing.
+// Do not silently sign with the debug keystore.
 gradle.taskGraph.whenReady {
     val assemblingRelease = allTasks.any { task ->
-        task.project == project && task.name.contains("Release")
+        task.project == project &&
+            task.name.contains("Release", ignoreCase = false)
     }
-    if (System.getenv("CI") == "true" && assemblingRelease && !hasReleaseKeystore) {
+    if (assemblingRelease && !hasReleaseKeystore) {
         throw org.gradle.api.GradleException(
             "Release signing requires android/key.properties with storeFile, " +
-                "storePassword, keyAlias, and keyPassword.",
+                "storePassword, keyAlias, and keyPassword. " +
+                "Refusing to fall back to the debug keystore.",
         )
     }
 }

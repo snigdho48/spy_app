@@ -74,9 +74,9 @@ class PairingController extends ChangeNotifier {
   final TextEditingController codeController = TextEditingController();
 
   /// True when the current input normalises to a valid `XXX-XXX` pairing code.
-  bool get isPairingCodeValid =>
-      RegExp(r'^[A-Z0-9]{3}-[A-Z0-9]{3}$')
-          .hasMatch(_normalizePairingCode(pairingCodeInput));
+  bool get isPairingCodeValid => RegExp(
+    r'^[A-Z0-9]{3}-[A-Z0-9]{3}$',
+  ).hasMatch(_normalizePairingCode(pairingCodeInput));
 
   String get defaultDeviceName {
     if (kIsWeb) return 'Web browser';
@@ -155,14 +155,11 @@ class PairingController extends ChangeNotifier {
       deviceFingerprint: fingerprint,
     );
 
-    result.fold(
-      (value) {
-        activePairing = value;
-        deviceName = name;
-        unawaited(_onPairingCreated(value.deviceId));
-      },
-      (error) => errorMessage = error,
-    );
+    result.fold((value) {
+      activePairing = value;
+      deviceName = name;
+      unawaited(_onPairingCreated(value.deviceId));
+    }, (error) => errorMessage = error);
     isLoading = false;
     notifyListeners();
   }
@@ -201,14 +198,11 @@ class PairingController extends ChangeNotifier {
     try {
       final result = await _repository.getOwnedDeviceStatus(deviceId);
       if (generation != _watchGeneration || _auth.user == null) return;
-      result.fold(
-        (status) {
-          if (status.isLinked) {
-            unawaited(_handlePairingActivated(status, generation));
-          }
-        },
-        (_) {},
-      );
+      result.fold((status) {
+        if (status.isLinked) {
+          unawaited(_handlePairingActivated(status, generation));
+        }
+      }, (_) {});
     } finally {
       _pollInFlight = false;
     }
@@ -218,7 +212,9 @@ class PairingController extends ChangeNotifier {
     OwnedDeviceStatus status,
     int generation,
   ) async {
-    if (_activationHandled || generation != _watchGeneration || _auth.user == null) {
+    if (_activationHandled ||
+        generation != _watchGeneration ||
+        _auth.user == null) {
       return;
     }
     _activationHandled = true;

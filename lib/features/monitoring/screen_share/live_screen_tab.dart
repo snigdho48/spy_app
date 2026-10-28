@@ -61,38 +61,34 @@ class _LiveScreenTabState extends State<LiveScreenTab> {
       return Container(
         color: Colors.black,
         alignment: Alignment.center,
-        child: Image.memory(
-          frame,
-          gaplessPlayback: true,
-          fit: BoxFit.contain,
-        ),
+        child: Image.memory(frame, gaplessPlayback: true, fit: BoxFit.contain),
       );
     }
 
     final (icon, message) = switch (controller.status) {
       LiveScreenStatus.idle => (
-          Icons.screen_share_outlined,
-          'Request a live view of this device\'s screen.\n'
-              'The owner must approve it and their screen will show a '
-              'sharing indicator the whole time.'
-        ),
+        Icons.screen_share_outlined,
+        'Request a live view of this device\'s screen.\n'
+            'The owner must approve it and their screen will show a '
+            'sharing indicator the whole time.',
+      ),
       LiveScreenStatus.requesting => (
-          Icons.hourglass_empty,
-          'Sending request\u2026'
-        ),
+        Icons.hourglass_empty,
+        'Sending request\u2026',
+      ),
       LiveScreenStatus.waiting => (
-          Icons.phonelink_ring_outlined,
-          'Waiting for the device owner to approve and start sharing\u2026'
-        ),
+        Icons.phonelink_ring_outlined,
+        'Waiting for the device owner to approve and start sharing\u2026',
+      ),
       LiveScreenStatus.live => (Icons.cast_connected, 'Live'),
       LiveScreenStatus.ended => (
-          Icons.cast_outlined,
-          'The live session has ended.'
-        ),
+        Icons.cast_outlined,
+        'The live session has ended.',
+      ),
       LiveScreenStatus.error => (
-          Icons.error_outline,
-          controller.error ?? 'Could not start the live screen session.'
-        ),
+        Icons.error_outline,
+        controller.error ?? 'Could not start the live screen session.',
+      ),
     };
 
     return Center(

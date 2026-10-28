@@ -29,7 +29,8 @@ final class Left<L, R> extends Either<L, R> {
   R get right => throw StateError('Tried to read right from Left');
 
   @override
-  T fold<T>(T Function(L left) ifLeft, T Function(R right) ifRight) => ifLeft(value);
+  T fold<T>(T Function(L left) ifLeft, T Function(R right) ifRight) =>
+      ifLeft(value);
 }
 
 final class Right<L, R> extends Either<L, R> {
@@ -47,5 +48,6 @@ final class Right<L, R> extends Either<L, R> {
   R get right => value;
 
   @override
-  T fold<T>(T Function(L left) ifLeft, T Function(R right) ifRight) => ifRight(value);
+  T fold<T>(T Function(L left) ifLeft, T Function(R right) ifRight) =>
+      ifRight(value);
 }

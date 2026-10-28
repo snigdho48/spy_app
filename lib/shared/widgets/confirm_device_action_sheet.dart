@@ -47,7 +47,8 @@ class _DisconnectConfirmDialog extends StatefulWidget {
   final String deviceName;
 
   @override
-  State<_DisconnectConfirmDialog> createState() => _DisconnectConfirmDialogState();
+  State<_DisconnectConfirmDialog> createState() =>
+      _DisconnectConfirmDialogState();
 }
 
 class _DisconnectConfirmDialogState extends State<_DisconnectConfirmDialog> {
@@ -63,8 +64,13 @@ class _DisconnectConfirmDialogState extends State<_DisconnectConfirmDialog> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
         child: Dialog(
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          shape: const RoundedRectangleBorder(borderRadius: AppRadius.sheetBorder),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
+          shape: const RoundedRectangleBorder(
+            borderRadius: AppRadius.sheetBorder,
+          ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
@@ -77,7 +83,11 @@ class _DisconnectConfirmDialogState extends State<_DisconnectConfirmDialog> {
                     color: tokens.dangerSoft,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.link_off, color: tokens.revokeText, size: 28),
+                  child: Icon(
+                    Icons.link_off,
+                    color: tokens.revokeText,
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(

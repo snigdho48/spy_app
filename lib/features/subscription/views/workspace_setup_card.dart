@@ -14,34 +14,37 @@ class WorkspaceSetupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<SubscriptionController>(
       builder: (context, subscription, _) {
-      if (!subscription.needsWorkspace) return const SizedBox.shrink();
+        if (!subscription.needsWorkspace) return const SizedBox.shrink();
 
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 16),
-        child: AppCard(
-          color: context.tokens.warningSoft,
-          borderColor: AppColors.warning.withValues(alpha: 0.3),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Workspace required', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Text(
-                'Create a workspace before pairing devices or loading monitoring data. A Free plan is applied automatically.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: context.tokens.secondaryText,
-                    ),
-              ),
-              const SizedBox(height: 12),
-              AppButton(
-                label: 'Create workspace',
-                icon: Icons.business_outlined,
-                onPressed: () => _showDialog(context),
-              ),
-            ],
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: AppCard(
+            color: context.tokens.warningSoft,
+            borderColor: AppColors.warning.withValues(alpha: 0.3),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Workspace required',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Create a workspace before pairing devices or loading monitoring data. A Free plan is applied automatically.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: context.tokens.secondaryText,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                AppButton(
+                  label: 'Create workspace',
+                  icon: Icons.business_outlined,
+                  onPressed: () => _showDialog(context),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
+        );
       },
     );
   }
@@ -63,12 +66,17 @@ class WorkspaceSetupCard extends StatelessWidget {
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () async {
               if (!formKey.currentState!.validate()) return;
               Navigator.pop(ctx);
-              await context.read<SubscriptionController>().createWorkspace(nameController.text.trim());
+              await context.read<SubscriptionController>().createWorkspace(
+                nameController.text.trim(),
+              );
             },
             child: const Text('Create'),
           ),

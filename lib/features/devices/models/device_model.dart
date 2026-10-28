@@ -16,7 +16,9 @@ class SharingState {
     final untilRaw = json['paused_until'];
     return SharingState(
       paused: json['paused'] as bool? ?? false,
-      pausedUntil: untilRaw != null ? DateTime.tryParse(untilRaw.toString()) : null,
+      pausedUntil: untilRaw != null
+          ? DateTime.tryParse(untilRaw.toString())
+          : null,
       resumesInSeconds: (json['resumes_in_s'] as num?)?.toInt(),
     );
   }
@@ -73,9 +75,7 @@ class DeviceModel {
           : null,
       tenantName: json['tenant_name'] as String?,
       photoUrl: json['photo_url'] as String?,
-      sharing: SharingState.fromJson(
-        json['sharing'] as Map<String, dynamic>?,
-      ),
+      sharing: SharingState.fromJson(json['sharing'] as Map<String, dynamic>?),
     );
   }
 
@@ -117,9 +117,7 @@ class OwnedDeviceStatus {
       status: json['status'] as String,
       tenantName: json['tenant_name'] as String? ?? '',
       isLinked: json['is_linked'] as bool? ?? false,
-      sharing: SharingState.fromJson(
-        json['sharing'] as Map<String, dynamic>?,
-      ),
+      sharing: SharingState.fromJson(json['sharing'] as Map<String, dynamic>?),
     );
   }
 }

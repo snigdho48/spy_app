@@ -35,10 +35,18 @@ abstract final class AppRadius {
   static const double sheet = xl;
   static const double chipInner = base;
 
-  static const BorderRadius cardBorder = BorderRadius.all(Radius.circular(card));
-  static const BorderRadius buttonBorder = BorderRadius.all(Radius.circular(button));
-  static const BorderRadius inputBorder = BorderRadius.all(Radius.circular(input));
-  static const BorderRadius sheetBorder = BorderRadius.all(Radius.circular(sheet));
+  static const BorderRadius cardBorder = BorderRadius.all(
+    Radius.circular(card),
+  );
+  static const BorderRadius buttonBorder = BorderRadius.all(
+    Radius.circular(button),
+  );
+  static const BorderRadius inputBorder = BorderRadius.all(
+    Radius.circular(input),
+  );
+  static const BorderRadius sheetBorder = BorderRadius.all(
+    Radius.circular(sheet),
+  );
 }
 
 /// Layout breakpoints from Consent Horizon DESIGN.md.
@@ -117,29 +125,13 @@ class AppTokens extends ThemeExtension<AppTokens> {
   final List<BoxShadow> floatingShadow;
 
   static const List<BoxShadow> _lightCardShadow = [
-    BoxShadow(
-      color: Color(0x0A0F172A),
-      blurRadius: 3,
-      offset: Offset(0, 1),
-    ),
-    BoxShadow(
-      color: Color(0x0A0F172A),
-      blurRadius: 2,
-      offset: Offset(0, 1),
-    ),
+    BoxShadow(color: Color(0x0A0F172A), blurRadius: 3, offset: Offset(0, 1)),
+    BoxShadow(color: Color(0x0A0F172A), blurRadius: 2, offset: Offset(0, 1)),
   ];
 
   static const List<BoxShadow> _lightFloatingShadow = [
-    BoxShadow(
-      color: Color(0x0F0F172A),
-      blurRadius: 6,
-      offset: Offset(0, 4),
-    ),
-    BoxShadow(
-      color: Color(0x0F0F172A),
-      blurRadius: 4,
-      offset: Offset(0, 2),
-    ),
+    BoxShadow(color: Color(0x0F0F172A), blurRadius: 6, offset: Offset(0, 4)),
+    BoxShadow(color: Color(0x0F0F172A), blurRadius: 4, offset: Offset(0, 2)),
   ];
 
   static const AppTokens light = AppTokens(
@@ -269,9 +261,21 @@ class AppTokens extends ThemeExtension<AppTokens> {
     return AppTokens(
       background: Color.lerp(background, other.background, t)!,
       surface: Color.lerp(surface, other.surface, t)!,
-      surfaceContainer: Color.lerp(surfaceContainer, other.surfaceContainer, t)!,
-      surfaceContainerLow: Color.lerp(surfaceContainerLow, other.surfaceContainerLow, t)!,
-      surfaceContainerHigh: Color.lerp(surfaceContainerHigh, other.surfaceContainerHigh, t)!,
+      surfaceContainer: Color.lerp(
+        surfaceContainer,
+        other.surfaceContainer,
+        t,
+      )!,
+      surfaceContainerLow: Color.lerp(
+        surfaceContainerLow,
+        other.surfaceContainerLow,
+        t,
+      )!,
+      surfaceContainerHigh: Color.lerp(
+        surfaceContainerHigh,
+        other.surfaceContainerHigh,
+        t,
+      )!,
       border: Color.lerp(border, other.border, t)!,
       input: Color.lerp(input, other.input, t)!,
       inputBorder: Color.lerp(inputBorder, other.inputBorder, t)!,
@@ -299,7 +303,8 @@ class AppTokens extends ThemeExtension<AppTokens> {
 }
 
 extension AppThemeContext on BuildContext {
-  AppTokens get tokens => Theme.of(this).extension<AppTokens>() ?? AppTokens.light;
+  AppTokens get tokens =>
+      Theme.of(this).extension<AppTokens>() ?? AppTokens.light;
 
   AppLayoutSize get layoutSize {
     final width = MediaQuery.sizeOf(this).width;
@@ -313,7 +318,12 @@ extension AppThemeContext on BuildContext {
       AppLayoutSize.medium => AppSpacing.pageTablet,
       AppLayoutSize.expanded => AppSpacing.pageDesktop,
     };
-    return EdgeInsets.fromLTRB(horizontal, AppSpacing.sm, horizontal, AppSpacing.xl);
+    return EdgeInsets.fromLTRB(
+      horizontal,
+      AppSpacing.sm,
+      horizontal,
+      AppSpacing.xl,
+    );
   }
 
   double get contentMaxWidth => AppBreakpoints.maxContentWidth;

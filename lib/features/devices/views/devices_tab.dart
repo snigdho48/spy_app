@@ -41,28 +41,37 @@ class DevicesTab extends StatelessWidget {
         AppCard(
           color: context.tokens.successSoft,
           elevated: false,
+          semanticLabel: 'Consent status summary',
           child: Row(
             children: [
-              Icon(Icons.verified_user_outlined, color: context.tokens.consented),
+              Icon(
+                Icons.verified_user_outlined,
+                color: context.tokens.consented,
+              ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Consent status', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Consent status',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       '${controller.activeDeviceCount} sharing active • ${controller.attentionCount == 0 ? 'no issues' : '${controller.attentionCount} need review'}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: context.tokens.secondaryText,
-                          ),
+                        color: context.tokens.secondaryText,
+                      ),
                     ),
                   ],
                 ),
               ),
               StatusBadge(
                 label: controller.attentionCount == 0 ? 'Consented' : 'Review',
-                tone: controller.attentionCount == 0 ? StatusTone.success : StatusTone.warning,
+                tone: controller.attentionCount == 0
+                    ? StatusTone.success
+                    : StatusTone.warning,
                 pulse: controller.attentionCount == 0,
               ),
             ],
@@ -80,7 +89,8 @@ class DevicesTab extends StatelessWidget {
           EmptyState(
             icon: Icons.devices_other_outlined,
             title: 'No devices yet',
-            message: 'Pair with a 6-character code or QR. Both sides confirm consent before any data is shared.',
+            message:
+                'Pair with a 6-character code or QR. Both sides confirm consent before any data is shared.',
             actionLabel: 'Pair device',
             onAction: onPair,
           )

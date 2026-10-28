@@ -63,7 +63,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '812706609654',
     projectId: 'spy-app-6225a',
     storageBucket: 'spy-app-6225a.firebasestorage.app',
-    iosClientId: '812706609654-28jsj6c9710omcn9s4qp060snh0i2dos.apps.googleusercontent.com',
+    iosClientId:
+        '812706609654-28jsj6c9710omcn9s4qp060snh0i2dos.apps.googleusercontent.com',
     iosBundleId: 'org.hmg.spyLove',
   );
   static const FirebaseOptions macos = FirebaseOptions(
@@ -72,7 +73,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '812706609654',
     projectId: 'spy-app-6225a',
     storageBucket: 'spy-app-6225a.firebasestorage.app',
-    iosClientId: '812706609654-28jsj6c9710omcn9s4qp060snh0i2dos.apps.googleusercontent.com',
+    iosClientId:
+        '812706609654-28jsj6c9710omcn9s4qp060snh0i2dos.apps.googleusercontent.com',
     iosBundleId: 'org.hmg.spyLove',
   );
 

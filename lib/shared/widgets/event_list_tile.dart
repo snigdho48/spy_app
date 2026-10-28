@@ -38,7 +38,11 @@ class EventListTile extends StatelessWidget {
                   color: tokens.primarySoft,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: leadingColor ?? Theme.of(context).colorScheme.primary, size: 20),
+                child: Icon(
+                  icon,
+                  color: leadingColor ?? Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -52,15 +56,16 @@ class EventListTile extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: tokens.secondaryText,
-                          ),
+                        color: tokens.secondaryText,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     TimestampLabel(timestamp),
                   ],
                 ),
               ),
-              if (onTap != null) Icon(Icons.chevron_right, color: tokens.secondaryText),
+              if (onTap != null)
+                Icon(Icons.chevron_right, color: tokens.secondaryText),
             ],
           ),
         ),

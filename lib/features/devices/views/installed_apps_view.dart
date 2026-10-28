@@ -33,8 +33,9 @@ class _InstalledAppsViewState extends State<InstalledAppsView> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    final apps =
-        await InstalledAppsBridge.getInstalledApps(includeSystem: _includeSystem);
+    final apps = await InstalledAppsBridge.getInstalledApps(
+      includeSystem: _includeSystem,
+    );
     if (!mounted) return;
     setState(() {
       _apps = apps;
@@ -93,31 +94,32 @@ class _InstalledAppsViewState extends State<InstalledAppsView> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : items.isEmpty
-                    ? const EmptyState(
-                        title: 'No apps found',
-                        message:
-                            'Either no apps match, or app visibility is not granted on this platform.',
-                      )
-                    : ListView.separated(
-                        itemCount: items.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, i) {
-                          final app = items[i];
-                          final icon = app['icon'] as String?;
-                          return ListTile(
-                            leading: _AppIcon(base64Png: icon),
-                            title: Text(app['name']?.toString() ?? '—'),
-                            subtitle: Text(
-                              app['package']?.toString() ?? '',
-                              style: theme.textTheme.bodySmall
-                                  ?.copyWith(color: tokens.secondaryText),
-                            ),
-                            trailing: (app['system'] == true)
-                                ? const Chip(label: Text('System'))
-                                : null,
-                          );
-                        },
-                      ),
+                ? const EmptyState(
+                    title: 'No apps found',
+                    message:
+                        'Either no apps match, or app visibility is not granted on this platform.',
+                  )
+                : ListView.separated(
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (context, i) {
+                      final app = items[i];
+                      final icon = app['icon'] as String?;
+                      return ListTile(
+                        leading: _AppIcon(base64Png: icon),
+                        title: Text(app['name']?.toString() ?? '—'),
+                        subtitle: Text(
+                          app['package']?.toString() ?? '',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: tokens.secondaryText,
+                          ),
+                        ),
+                        trailing: (app['system'] == true)
+                            ? const Chip(label: Text('System'))
+                            : null,
+                      );
+                    },
+                  ),
           ),
         ],
       ),

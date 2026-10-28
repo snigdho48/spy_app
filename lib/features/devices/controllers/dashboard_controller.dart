@@ -89,10 +89,7 @@ class DashboardController extends ChangeNotifier {
     notifyListeners();
 
     final result = await _repository.listDevices();
-    result.fold(
-      (list) => devices = list,
-      (error) => errorMessage = error,
-    );
+    result.fold((list) => devices = list, (error) => errorMessage = error);
 
     isLoading = false;
     notifyListeners();
@@ -130,19 +127,16 @@ class DashboardController extends ChangeNotifier {
       pageSize: 1,
       loader: false,
     );
-    battery.fold(
-      (events) {
-        if (events.isEmpty) return;
-        final p = events.first.payload;
-        final level = p['level'] ?? p['percent'];
-        if (level is num) percent = level.round();
-        if (level is String) percent = int.tryParse(level);
-        final c = p['charging'] ?? p['is_charging'];
-        if (c is bool) charging = c;
-        if (c != null) charging = c.toString().toLowerCase() == 'true';
-      },
-      (_) {},
-    );
+    battery.fold((events) {
+      if (events.isEmpty) return;
+      final p = events.first.payload;
+      final level = p['level'] ?? p['percent'];
+      if (level is num) percent = level.round();
+      if (level is String) percent = int.tryParse(level);
+      final c = p['charging'] ?? p['is_charging'];
+      if (c is bool) charging = c;
+      if (c != null) charging = c.toString().toLowerCase() == 'true';
+    }, (_) {});
 
     final location = await _events.listEvents(
       deviceId: deviceId,
@@ -151,33 +145,30 @@ class DashboardController extends ChangeNotifier {
       pageSize: 1,
       loader: false,
     );
-    location.fold(
-      (events) {
-        if (events.isEmpty) return;
-        final e = events.first;
-        final p = e.payload;
-        locationAt = e.eventTimestamp;
-        final label = (
-                p['place_name'] ??
-                p['zone_name'] ??
-                p['place'] ??
-                p['label'] ??
-                p['address'] ??
-                p['name'] ??
-                '')
-            .toString()
-            .trim();
-        if (label.isNotEmpty) {
-          place = label;
-        } else if (p['lat'] != null && p['lng'] != null) {
-          final lat = (p['lat'] as num).toDouble();
-          final lng = (p['lng'] as num).toDouble();
-          place =
-              '${lat.toStringAsFixed(3)}, ${lng.toStringAsFixed(3)} · ${TimestampLabel.relative(e.eventTimestamp)}';
-        }
-      },
-      (_) {},
-    );
+    location.fold((events) {
+      if (events.isEmpty) return;
+      final e = events.first;
+      final p = e.payload;
+      locationAt = e.eventTimestamp;
+      final label =
+          (p['place_name'] ??
+                  p['zone_name'] ??
+                  p['place'] ??
+                  p['label'] ??
+                  p['address'] ??
+                  p['name'] ??
+                  '')
+              .toString()
+              .trim();
+      if (label.isNotEmpty) {
+        place = label;
+      } else if (p['lat'] != null && p['lng'] != null) {
+        final lat = (p['lat'] as num).toDouble();
+        final lng = (p['lng'] as num).toDouble();
+        place =
+            '${lat.toStringAsFixed(3)}, ${lng.toStringAsFixed(3)} · ${TimestampLabel.relative(e.eventTimestamp)}';
+      }
+    }, (_) {});
 
     return DeviceHomeSnapshot(
       batteryPercent: percent,

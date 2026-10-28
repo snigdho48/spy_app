@@ -35,7 +35,8 @@ class AccountTab extends StatelessWidget {
       children: [
         const PageIntro(
           title: 'Account & security',
-          subtitle: 'Workspace identity, linked sign-in, and mutual consent controls',
+          subtitle:
+              'Workspace identity, linked sign-in, and mutual consent controls',
         ),
         if (!network.isConnected) ...[
           OfflineBanner(onRetry: network.refreshStatus),
@@ -55,13 +56,16 @@ class AccountTab extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Consent is up to date', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Consent is up to date',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 2),
                     Text(
                       '${dashboard.devices.length} devices • ${dashboard.attentionCount == 0 ? 'no expired permissions' : '${dashboard.attentionCount} need review'}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: tokens.secondaryText,
-                          ),
+                        color: tokens.secondaryText,
+                      ),
                     ),
                   ],
                 ),
@@ -73,7 +77,10 @@ class AccountTab extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         const SharingPauseCard(),
         const SafeZonesCard(),
-        Text('Transparency ledger', style: Theme.of(context).textTheme.titleLarge),
+        Text(
+          'Transparency ledger',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         const SizedBox(height: 8),
         AppCard(
           child: Column(
@@ -86,20 +93,19 @@ class AccountTab extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(scope.label, style: Theme.of(context).textTheme.titleMedium),
+                          Text(
+                            scope.label,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                           Text(
                             scope.description,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: tokens.secondaryText,
-                                ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: tokens.secondaryText),
                           ),
                         ],
                       ),
                     ),
-                    const StatusBadge(
-                      label: 'Managed',
-                      tone: StatusTone.info,
-                    ),
+                    const StatusBadge(label: 'Managed', tone: StatusTone.info),
                   ],
                 ),
               );
@@ -109,7 +115,9 @@ class AccountTab extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Per-device consent is set during pairing and can be reviewed on each device.',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: tokens.secondaryText),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: tokens.secondaryText),
         ),
         const SizedBox(height: 24),
         if (sub != null) ...[
@@ -126,16 +134,19 @@ class AccountTab extends StatelessWidget {
                       Text(
                         'CURRENT PLAN',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                       const SizedBox(height: 4),
-                      Text(sub.planName, style: Theme.of(context).textTheme.titleLarge),
+                      Text(
+                        sub.planName,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
                       Text(
                         'Up to ${sub.maxDevices} active devices',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: tokens.secondaryText,
-                            ),
+                          color: tokens.secondaryText,
+                        ),
                       ),
                     ],
                   ),
@@ -154,12 +165,15 @@ class AccountTab extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Mutual audit log', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Mutual audit log',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     Text(
                       'Pairing, consent, and who accessed what',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: tokens.secondaryText,
-                          ),
+                        color: tokens.secondaryText,
+                      ),
                     ),
                   ],
                 ),
@@ -170,10 +184,19 @@ class AccountTab extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         if (user != null) ...[
-          Text(user.fullName.isNotEmpty ? user.fullName : user.email, style: Theme.of(context).textTheme.titleMedium),
           Text(
-            [user.email, user.tenantName, user.role].whereType<String>().join(' · '),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+            user.fullName.isNotEmpty ? user.fullName : user.email,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          Text(
+            [
+              user.email,
+              user.tenantName,
+              user.role,
+            ].whereType<String>().join(' · '),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
           ),
           const SizedBox(height: 16),
         ],
@@ -190,18 +213,31 @@ class AccountTab extends StatelessWidget {
                   Text(
                     'Home and device screens follow Consent Horizon light and dark tokens.',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: tokens.secondaryText,
-                        ),
+                      color: tokens.secondaryText,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   SegmentedButton<ThemeMode>(
                     segments: const [
-                      ButtonSegment(value: ThemeMode.system, label: Text('System'), icon: Icon(Icons.brightness_auto)),
-                      ButtonSegment(value: ThemeMode.light, label: Text('Light'), icon: Icon(Icons.light_mode_outlined)),
-                      ButtonSegment(value: ThemeMode.dark, label: Text('Dark'), icon: Icon(Icons.dark_mode_outlined)),
+                      ButtonSegment(
+                        value: ThemeMode.system,
+                        label: Text('System'),
+                        icon: Icon(Icons.brightness_auto),
+                      ),
+                      ButtonSegment(
+                        value: ThemeMode.light,
+                        label: Text('Light'),
+                        icon: Icon(Icons.light_mode_outlined),
+                      ),
+                      ButtonSegment(
+                        value: ThemeMode.dark,
+                        label: Text('Dark'),
+                        icon: Icon(Icons.dark_mode_outlined),
+                      ),
                     ],
                     selected: {themeMode.mode},
-                    onSelectionChanged: (value) => themeMode.setMode(value.first),
+                    onSelectionChanged: (value) =>
+                        themeMode.setMode(value.first),
                   ),
                 ],
               ),

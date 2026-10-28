@@ -58,9 +58,7 @@ class NotificationsTab extends StatelessWidget {
               removed
                   ? Icons.notifications_off_outlined
                   : Icons.notifications_outlined,
-              color: removed
-                  ? tokens.revokeText
-                  : theme.colorScheme.primary,
+              color: removed ? tokens.revokeText : theme.colorScheme.primary,
               size: 20,
             ),
           ),
@@ -73,8 +71,9 @@ class NotificationsTab extends StatelessWidget {
                   text,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(color: tokens.secondaryText),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: tokens.secondaryText,
+                  ),
                 ),
               Text(
                 [
@@ -82,8 +81,9 @@ class NotificationsTab extends StatelessWidget {
                   if (category.isNotEmpty) category,
                   if (removed) 'dismissed',
                 ].join(' · '),
-                style: theme.textTheme.labelSmall
-                    ?.copyWith(color: tokens.secondaryText),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: tokens.secondaryText,
+                ),
               ),
             ],
           ),

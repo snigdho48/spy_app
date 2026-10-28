@@ -38,7 +38,10 @@ class NetworkService extends ChangeNotifier {
     if (isConnected) return true;
 
     if (showMessage) {
-      AppNavigator.snackbar('No connection', 'Check your internet and try again.');
+      AppNavigator.snackbar(
+        'No connection',
+        'Check your internet and try again.',
+      );
     }
     return false;
   }

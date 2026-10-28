@@ -18,8 +18,7 @@ class ScreenCaptureBridge {
   ScreenCaptureBridge._();
 
   static const _channel = MethodChannel('org.hmg.spy_love/monitoring');
-  static const _frameChannel =
-      EventChannel('org.hmg.spy_love/screen_frames');
+  static const _frameChannel = EventChannel('org.hmg.spy_love/screen_frames');
 
   static StreamController<Map<String, dynamic>>? _frames;
   static StreamSubscription<dynamic>? _platformFrames;

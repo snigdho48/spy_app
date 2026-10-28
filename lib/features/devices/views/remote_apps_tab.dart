@@ -47,14 +47,19 @@ class _RemoteAppsTabState extends State<RemoteAppsTab> {
             final pkg = (a['package'] ?? '').toString().toLowerCase();
             return name.contains(q) || pkg.contains(q);
           }).toList();
-    filtered.sort((a, b) =>
-        (a['name'] ?? a['package'] ?? '').toString().toLowerCase().compareTo(
-            (b['name'] ?? b['package'] ?? '').toString().toLowerCase()));
+    filtered.sort(
+      (a, b) =>
+          (a['name'] ?? a['package'] ?? '').toString().toLowerCase().compareTo(
+            (b['name'] ?? b['package'] ?? '').toString().toLowerCase(),
+          ),
+    );
     return filtered;
   }
 
   List<Map<String, dynamic>> get _usageApps {
-    final snapshot = widget.usageEvents.isEmpty ? null : widget.usageEvents.first;
+    final snapshot = widget.usageEvents.isEmpty
+        ? null
+        : widget.usageEvents.first;
     final raw = snapshot?.payload['apps'];
     if (raw is! List) return const [];
     final apps = raw
@@ -154,8 +159,9 @@ class _RemoteAppsTabState extends State<RemoteAppsTab> {
           title: Text(name),
           subtitle: Text(
             version == null || version.isEmpty ? pkg : '$pkg · v$version',
-            style:
-                theme.textTheme.bodySmall?.copyWith(color: tokens.secondaryText),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: tokens.secondaryText,
+            ),
           ),
           trailing: (app['system'] == true)
               ? const Chip(label: Text('System'))
@@ -182,16 +188,19 @@ class _RemoteAppsTabState extends State<RemoteAppsTab> {
         final app = apps[i];
         final pkg = (app['package'] ?? app['package_name'] ?? '—').toString();
         final name = (app['name'] ?? app['app_name'] ?? pkg).toString();
-        final fgMs = _int(app['foreground_ms'] ??
-            app['total_time_foreground_ms'] ??
-            app['usage_ms']);
+        final fgMs = _int(
+          app['foreground_ms'] ??
+              app['total_time_foreground_ms'] ??
+              app['usage_ms'],
+        );
         return ListTile(
           leading: const CircleAvatar(child: Icon(Icons.apps)),
           title: Text(name),
           subtitle: Text(
             pkg,
-            style:
-                theme.textTheme.bodySmall?.copyWith(color: tokens.secondaryText),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: tokens.secondaryText,
+            ),
           ),
           trailing: fgMs > 0 ? Text(_fmt(fgMs)) : null,
         );

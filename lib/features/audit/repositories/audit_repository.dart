@@ -9,7 +9,9 @@ class AuditRepository {
 
   final ApiService _api;
 
-  Future<Either<List<AuditLogModel>, String>> listLogs({int pageSize = 100}) async {
+  Future<Either<List<AuditLogModel>, String>> listLogs({
+    int pageSize = 100,
+  }) async {
     final result = await _api.send<Map<String, dynamic>>(
       url: ApiConstants.audit,
       method: HttpMethod.get,
@@ -21,7 +23,9 @@ class AuditRepository {
     if (result.isLeft) {
       final results = result.left['results'] as List<dynamic>? ?? const [];
       return Left(
-        results.map((e) => AuditLogModel.fromJson(e as Map<String, dynamic>)).toList(),
+        results
+            .map((e) => AuditLogModel.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
     }
     return Right(result.right);

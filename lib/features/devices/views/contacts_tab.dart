@@ -74,8 +74,9 @@ class _ContactsTabState extends State<ContactsTab> {
               alignment: Alignment.centerLeft,
               child: Text(
                 '${_contacts.length} contacts · snapshot $capturedAt',
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: tokens.secondaryText),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: tokens.secondaryText,
+                ),
               ),
             ),
           ),
@@ -95,20 +96,19 @@ class _ContactsTabState extends State<ContactsTab> {
                   itemBuilder: (context, i) {
                     final c = items[i];
                     final name = (c['name'] ?? '').toString();
-                    final phones = (c['phones'] as List?)
+                    final phones =
+                        (c['phones'] as List?)
                             ?.map((e) => e.toString())
                             .where((e) => e.isNotEmpty)
                             .toList() ??
                         const [];
-                    final emails = (c['emails'] as List?)
+                    final emails =
+                        (c['emails'] as List?)
                             ?.map((e) => e.toString())
                             .where((e) => e.isNotEmpty)
                             .toList() ??
                         const [];
-                    final subtitle = [
-                      ...phones,
-                      ...emails,
-                    ].join(' · ');
+                    final subtitle = [...phones, ...emails].join(' · ');
                     return ListTile(
                       leading: CircleAvatar(
                         backgroundColor: tokens.primarySoft,
@@ -125,8 +125,9 @@ class _ContactsTabState extends State<ContactsTab> {
                           ? null
                           : Text(
                               subtitle,
-                              style: theme.textTheme.bodySmall
-                                  ?.copyWith(color: tokens.secondaryText),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: tokens.secondaryText,
+                              ),
                             ),
                     );
                   },

@@ -12,7 +12,9 @@ class CollectorsBridge {
 
   static Future<Map<String, dynamic>?> getBatteryStatus() async {
     try {
-      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>('getBatteryStatus');
+      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'getBatteryStatus',
+      );
       if (result == null) return null;
       return Map<String, dynamic>.from(result);
     } on PlatformException {
@@ -22,7 +24,9 @@ class CollectorsBridge {
 
   static Future<Map<String, dynamic>?> getNetworkStatus() async {
     try {
-      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>('getNetworkStatus');
+      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'getNetworkStatus',
+      );
       if (result == null) return null;
       return Map<String, dynamic>.from(result);
     } on PlatformException {
@@ -32,7 +36,9 @@ class CollectorsBridge {
 
   static Future<Map<String, dynamic>?> getDeviceInfo() async {
     try {
-      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>('getDeviceInfo');
+      final result = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'getDeviceInfo',
+      );
       if (result == null) return null;
       return Map<String, dynamic>.from(result);
     } on PlatformException {
@@ -47,13 +53,14 @@ class CollectorsBridge {
     int limit = 20,
   }) async {
     try {
-      final result = await _channel.invokeMethod<List<dynamic>>(
-        'getAppUsage',
-        {
-          'sinceMs': sinceMs ?? DateTime.now().subtract(const Duration(hours: 24)).millisecondsSinceEpoch,
-          'limit': limit,
-        },
-      );
+      final result = await _channel.invokeMethod<List<dynamic>>('getAppUsage', {
+        'sinceMs':
+            sinceMs ??
+            DateTime.now()
+                .subtract(const Duration(hours: 24))
+                .millisecondsSinceEpoch,
+        'limit': limit,
+      });
       if (result == null) return [];
       return result
           .map((item) => Map<String, dynamic>.from(item as Map))

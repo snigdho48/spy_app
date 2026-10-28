@@ -3,7 +3,12 @@ import 'package:spy_love/features/monitoring/geofence_math.dart';
 
 void main() {
   test('distanceMeters is ~0 for the same point', () {
-    final d = distanceMeters(lat1: 23.81, lng1: 90.41, lat2: 23.81, lng2: 90.41);
+    final d = distanceMeters(
+      lat1: 23.81,
+      lng1: 90.41,
+      lat2: 23.81,
+      lng2: 90.41,
+    );
     expect(d, lessThan(1));
   });
 

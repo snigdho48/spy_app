@@ -54,8 +54,9 @@ class _SafeZonesCardState extends State<SafeZonesCard> {
     final latCtrl = TextEditingController(text: '23.8103');
     final lngCtrl = TextEditingController(text: '90.4125');
     final radiusCtrl = TextEditingController(text: '100');
-    String? deviceId =
-        dashboard.devices.isEmpty ? null : dashboard.devices.first.id;
+    String? deviceId = dashboard.devices.isEmpty
+        ? null
+        : dashboard.devices.first.id;
 
     final created = await showModalBottomSheet<bool>(
       context: context,
@@ -74,7 +75,10 @@ class _SafeZonesCardState extends State<SafeZonesCard> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Add safe zone', style: Theme.of(ctx).textTheme.titleLarge),
+                  Text(
+                    'Add safe zone',
+                    style: Theme.of(ctx).textTheme.titleLarge,
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                   TextField(
                     controller: nameCtrl,
@@ -164,13 +168,13 @@ class _SafeZonesCardState extends State<SafeZonesCard> {
 
     setState(() => _busy = true);
     final result = await context.read<SafeZoneRepository>().create(
-          name: name,
-          lat: lat,
-          lng: lng,
-          radiusM: radius,
-          address: addressCtrl.text.trim(),
-          deviceId: deviceId,
-        );
+      name: name,
+      lat: lat,
+      lng: lng,
+      radiusM: radius,
+      address: addressCtrl.text.trim(),
+      deviceId: deviceId,
+    );
     if (!mounted) return;
     setState(() => _busy = false);
     result.fold((_) => _load(), (_) {});

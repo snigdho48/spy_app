@@ -213,8 +213,8 @@ class EventPresentation {
       final body = redacted
           ? 'Content redacted'
           : (payload['body']?.toString() ??
-              payload['preview']?.toString() ??
-              'Message');
+                payload['preview']?.toString() ??
+                'Message');
       final address =
           contact.contactName ??
           payload['address']?.toString() ??
@@ -226,7 +226,9 @@ class EventPresentation {
         fullBody: body,
         sourceLabel: 'SMS',
         icon: Icons.sms_outlined,
-        disclaimer: redacted ? 'Message body was redacted on the device.' : null,
+        disclaimer: redacted
+            ? 'Message body was redacted on the device.'
+            : null,
       );
     }
     if (type.startsWith('notification.')) {
@@ -259,9 +261,9 @@ class EventPresentation {
       final body = redacted
           ? 'Content redacted'
           : (payload['body']?.toString() ??
-              payload['text']?.toString() ??
-              payload['preview']?.toString() ??
-              'Message');
+                payload['text']?.toString() ??
+                payload['preview']?.toString() ??
+                'Message');
       final title =
           contact.contactName ??
           payload['contact_name']?.toString() ??
@@ -285,8 +287,8 @@ class EventPresentation {
         disclaimer: isNotif
             ? 'Captured from notification access with consent — not a full message archive.'
             : (redacted
-                ? 'Message body was redacted on the device.'
-                : 'Chat message captured with consent (messaging scope).'),
+                  ? 'Message body was redacted on the device.'
+                  : 'Chat message captured with consent (messaging scope).'),
       );
     }
     if (type.contains('location')) {

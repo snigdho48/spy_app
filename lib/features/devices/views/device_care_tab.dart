@@ -45,7 +45,9 @@ class DeviceCareTab extends StatelessWidget {
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Battery, network, app activity, and hardware status from consented scopes.',
-          style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: tokens.secondaryText,
+          ),
         ),
         const SizedBox(height: AppSpacing.md),
         _SafeZoneStrip(location: latestLoc),
@@ -56,10 +58,17 @@ class DeviceCareTab extends StatelessWidget {
           badge: battery == null ? 'No data' : 'Live vital',
           tone: battery == null ? StatusTone.neutral : StatusTone.success,
           lines: battery == null
-              ? const ['Waiting for battery.status events with battery consent.']
+              ? const [
+                  'Waiting for battery.status events with battery consent.',
+                ]
               : [
                   _payloadLine(battery, 'level', 'percent', suffix: '%'),
-                  _payloadLine(battery, 'charging', 'is_charging', prefix: 'Charging: '),
+                  _payloadLine(
+                    battery,
+                    'charging',
+                    'is_charging',
+                    prefix: 'Charging: ',
+                  ),
                   'Updated ${TimestampLabel.format(battery.eventTimestamp)}',
                 ],
         ),
@@ -70,9 +79,16 @@ class DeviceCareTab extends StatelessWidget {
           badge: network == null ? 'No data' : 'SSL guard',
           tone: network == null ? StatusTone.neutral : StatusTone.info,
           lines: network == null
-              ? const ['Waiting for network.status events with network consent.']
+              ? const [
+                  'Waiting for network.status events with network consent.',
+                ]
               : [
-                  _payloadLine(network, 'type', 'connection_type', prefix: 'Type: '),
+                  _payloadLine(
+                    network,
+                    'type',
+                    'connection_type',
+                    prefix: 'Type: ',
+                  ),
                   _payloadLine(network, 'ssid', 'wifi_ssid', prefix: 'SSID: '),
                   'Updated ${TimestampLabel.format(network.eventTimestamp)}',
                 ],
@@ -81,7 +97,9 @@ class DeviceCareTab extends StatelessWidget {
         _CareCard(
           icon: Icons.apps,
           title: 'App activity',
-          badge: controller.appUsageEvents.isEmpty ? 'No data' : 'Daily summary',
+          badge: controller.appUsageEvents.isEmpty
+              ? 'No data'
+              : 'Daily summary',
           tone: controller.appUsageEvents.isEmpty
               ? StatusTone.neutral
               : StatusTone.success,
@@ -108,9 +126,19 @@ class DeviceCareTab extends StatelessWidget {
                   'Waiting for device_info.snapshot events with device info consent.',
                 ]
               : [
-                  _payloadLine(deviceInfo, 'model', 'device_model', prefix: 'Model: '),
+                  _payloadLine(
+                    deviceInfo,
+                    'model',
+                    'device_model',
+                    prefix: 'Model: ',
+                  ),
                   _payloadLine(deviceInfo, 'os', 'os_version', prefix: 'OS: '),
-                  _payloadLine(deviceInfo, 'manufacturer', 'brand', prefix: 'Maker: '),
+                  _payloadLine(
+                    deviceInfo,
+                    'manufacturer',
+                    'brand',
+                    prefix: 'Maker: ',
+                  ),
                   'IMEI: $maskedImei',
                   'Updated ${TimestampLabel.format(deviceInfo.eventTimestamp)}',
                 ],
@@ -123,10 +151,7 @@ class DeviceCareTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Pause sharing',
-                style: theme.textTheme.titleMedium,
-              ),
+              Text('Pause sharing', style: theme.textTheme.titleMedium),
               const SizedBox(height: AppSpacing.xs),
               Text(
                 controller.sharing.paused
@@ -151,7 +176,9 @@ class DeviceCareTab extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Disconnect opens the soft-remove confirm. Check purge for permanent delete.',
-          style: theme.textTheme.bodySmall?.copyWith(color: tokens.secondaryText),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: tokens.secondaryText,
+          ),
         ),
       ],
     );
@@ -159,12 +186,13 @@ class DeviceCareTab extends StatelessWidget {
 
   static String _maskedImei(DeviceEventModel? info) {
     if (info == null) return '———— — —';
-    final raw = (info.payload['imei'] ??
-            info.payload['device_id'] ??
-            info.payload['serial'] ??
-            '')
-        .toString()
-        .replaceAll(RegExp(r'\s'), '');
+    final raw =
+        (info.payload['imei'] ??
+                info.payload['device_id'] ??
+                info.payload['serial'] ??
+                '')
+            .toString()
+            .replaceAll(RegExp(r'\s'), '');
     if (raw.isEmpty) return '———— — —';
     if (raw.length <= 4) return '**** $raw';
     final tail = raw.substring(raw.length - 4);

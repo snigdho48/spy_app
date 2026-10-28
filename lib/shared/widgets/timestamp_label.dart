@@ -11,7 +11,10 @@ class TimestampLabel extends StatelessWidget {
   static String format(DateTime timestamp, {bool compact = true}) {
     final local = timestamp.toLocal();
     final now = DateTime.now();
-    final sameDay = local.year == now.year && local.month == now.month && local.day == now.day;
+    final sameDay =
+        local.year == now.year &&
+        local.month == now.month &&
+        local.day == now.day;
     final time = DateFormat.jm().format(local);
     if (!compact) {
       return DateFormat.yMMMd().add_jms().format(local);
@@ -33,9 +36,9 @@ class TimestampLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       format(timestamp, compact: compact),
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: context.tokens.secondaryText,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.bodySmall?.copyWith(color: context.tokens.secondaryText),
     );
   }
 }

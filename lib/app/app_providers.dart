@@ -40,11 +40,21 @@ class AppProviders extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => PermissionService()),
         Provider(create: (_) => GoogleSignInService()),
         Provider(create: (_) => DeviceFingerprintStorage()),
-        ProxyProvider3<NetworkService, TokenStorage, RequestOverlayController, ApiService>(
+        ProxyProvider3<
+          NetworkService,
+          TokenStorage,
+          RequestOverlayController,
+          ApiService
+        >(
           update: (_, network, tokens, overlay, previous) =>
               previous ?? ApiService(network, tokens, overlay),
         ),
-        ProxyProvider3<ApiService, TokenStorage, GoogleSignInService, AuthRepository>(
+        ProxyProvider3<
+          ApiService,
+          TokenStorage,
+          GoogleSignInService,
+          AuthRepository
+        >(
           update: (_, api, tokens, google, previous) =>
               previous ?? AuthRepository(api, tokens, google),
         ),
@@ -64,7 +74,8 @@ class AppProviders extends StatelessWidget {
           update: (_, api, previous) => previous ?? ScreenShareRepository(api),
         ),
         ProxyProvider<TokenStorage, ScreenStreamClient>(
-          update: (_, tokens, previous) => previous ?? ScreenStreamClient(tokens),
+          update: (_, tokens, previous) =>
+              previous ?? ScreenStreamClient(tokens),
         ),
         ChangeNotifierProxyProvider<ScreenShareRepository, ScreenShareService>(
           create: (context) =>
@@ -78,28 +89,46 @@ class AppProviders extends StatelessWidget {
           update: (_, api, previous) => previous ?? AuditRepository(api),
         ),
         ProxyProvider5<
-            EventRepository,
-            DeviceRepository,
-            SafeZoneRepository,
-            ScreenShareService,
-            ScreenStreamClient,
-            MonitoringService>(
-          update: (_, events, devices, safeZones, screenShare, screenStream,
-                  previous) =>
-              previous ??
-              MonitoringService(
+          EventRepository,
+          DeviceRepository,
+          SafeZoneRepository,
+          ScreenShareService,
+          ScreenStreamClient,
+          MonitoringService
+        >(
+          update:
+              (
+                _,
                 events,
                 devices,
                 safeZones,
                 screenShare,
                 screenStream,
-              ),
+                previous,
+              ) =>
+                  previous ??
+                  MonitoringService(
+                    events,
+                    devices,
+                    safeZones,
+                    screenShare,
+                    screenStream,
+                  ),
         ),
-        ChangeNotifierProxyProvider<SubscriptionRepository, SubscriptionController>(
-          create: (context) => SubscriptionController(context.read<SubscriptionRepository>()),
-          update: (_, repo, controller) => controller ?? SubscriptionController(repo),
+        ChangeNotifierProxyProvider<
+          SubscriptionRepository,
+          SubscriptionController
+        >(
+          create: (context) =>
+              SubscriptionController(context.read<SubscriptionRepository>()),
+          update: (_, repo, controller) =>
+              controller ?? SubscriptionController(repo),
         ),
-        ChangeNotifierProxyProvider2<AuthRepository, MonitoringService, AuthController>(
+        ChangeNotifierProxyProvider2<
+          AuthRepository,
+          MonitoringService,
+          AuthController
+        >(
           create: (context) => AuthController(
             context.read<AuthRepository>(),
             context.read<MonitoringService>(),
@@ -108,11 +137,12 @@ class AppProviders extends StatelessWidget {
               controller ?? AuthController(repo, monitoring),
         ),
         ChangeNotifierProxyProvider4<
-            DeviceRepository,
-            EventRepository,
-            PermissionService,
-            AuthController,
-            DashboardController>(
+          DeviceRepository,
+          EventRepository,
+          PermissionService,
+          AuthController,
+          DashboardController
+        >(
           create: (context) => DashboardController(
             context.read<DeviceRepository>(),
             context.read<EventRepository>(),
@@ -120,14 +150,16 @@ class AppProviders extends StatelessWidget {
             context.read<AuthController>(),
           ),
           update: (_, repo, events, permissions, auth, controller) =>
-              controller ?? DashboardController(repo, events, permissions, auth),
+              controller ??
+              DashboardController(repo, events, permissions, auth),
         ),
         ChangeNotifierProxyProvider4<
-            DeviceRepository,
-            DeviceFingerprintStorage,
-            PermissionService,
-            AuthController,
-            PairingController>(
+          DeviceRepository,
+          DeviceFingerprintStorage,
+          PermissionService,
+          AuthController,
+          PairingController
+        >(
           create: (context) => PairingController(
             context.read<DeviceRepository>(),
             context.read<DeviceFingerprintStorage>(),
