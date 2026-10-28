@@ -29,6 +29,13 @@ class MetricCard extends StatelessWidget {
     final theme = Theme.of(context);
     return AppCard(
       onTap: onTap,
+      semanticLabel: [
+        label,
+        value,
+        caption,
+        ?badge,
+        if (onTap != null) 'Double tap to open',
+      ].join('. '),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

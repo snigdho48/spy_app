@@ -158,6 +158,7 @@ class AccountTab extends StatelessWidget {
           const SizedBox(height: 24),
         ],
         AppCard(
+          semanticLabel: 'Mutual audit log. Pairing, consent, and who accessed what',
           onTap: () => AppNavigator.toNamed(AppRoutes.audit),
           child: Row(
             children: [

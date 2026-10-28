@@ -188,48 +188,56 @@ class _SessionRestoreSplash extends StatelessWidget {
     final tokens = context.tokens;
     return Scaffold(
       backgroundColor: tokens.background,
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 72,
-              height: 72,
-              decoration: BoxDecoration(
-                color: tokens.primarySoft,
-                shape: BoxShape.circle,
+      body: Semantics(
+        liveRegion: true,
+        label: 'Restoring your session',
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ExcludeSemantics(
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: tokens.primarySoft,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.favorite_rounded,
+                    color: AppColors.primary,
+                    size: 36,
+                  ),
+                ),
               ),
-              child: const Icon(
-                Icons.favorite_rounded,
-                color: AppColors.primary,
-                size: 36,
+              const SizedBox(height: 20),
+              Text(
+                AppConfig.appName,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: tokens.primaryText,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              AppConfig.appName,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: tokens.primaryText,
+              const SizedBox(height: 8),
+              Text(
+                'Restoring your session…',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Restoring your session…',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
-            ),
-            const SizedBox(height: 28),
-            const SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: AppColors.primary,
+              const SizedBox(height: 28),
+              const ExcludeSemantics(
+                child: SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: AppColors.primary,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

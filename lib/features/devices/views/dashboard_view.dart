@@ -22,10 +22,16 @@ class _DashboardViewState extends State<DashboardView> {
   /// Wraps a destination icon with an unread badge when [count] > 0.
   Widget _alertsIcon(IconData icon, int count) {
     final child = Icon(icon);
-    if (count <= 0) return child;
-    return Badge(
-      label: Text(count > 99 ? '99+' : '$count'),
-      child: child,
+    if (count <= 0) {
+      return Semantics(label: 'Alerts', child: child);
+    }
+    final unread = count > 99 ? '99+' : '$count';
+    return Semantics(
+      label: 'Alerts, $unread unread',
+      child: Badge(
+        label: Text(unread),
+        child: child,
+      ),
     );
   }
 

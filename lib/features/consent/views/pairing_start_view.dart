@@ -41,11 +41,14 @@ class PairingStartView extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        Text(
-          'Add a Monitored Device',
-          style: theme.textTheme.headlineMedium?.copyWith(
-            letterSpacing: -0.2,
-            height: 1.15,
+        Semantics(
+          header: true,
+          child: Text(
+            'Add a Monitored Device',
+            style: theme.textTheme.headlineMedium?.copyWith(
+              letterSpacing: -0.2,
+              height: 1.15,
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
