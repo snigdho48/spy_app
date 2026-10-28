@@ -22,47 +22,53 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tokens = context.tokens;
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.lg,
-        vertical: AppSpacing.xl,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: tokens.surfaceContainerLow,
-              shape: BoxShape.circle,
+    return Semantics(
+      container: true,
+      label: '$title. $message',
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ExcludeSemantics(
+              child: Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: tokens.surfaceContainerLow,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 34,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
             ),
-            child: Icon(
-              icon,
-              size: 34,
-              color: Theme.of(context).colorScheme.primary,
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.headlineSmall,
+              textAlign: TextAlign.center,
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.headlineSmall,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            message,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: tokens.secondaryText,
-              height: 1.45,
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              message,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: tokens.secondaryText,
+                height: 1.45,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          if (actionLabel != null && onAction != null) ...[
-            const SizedBox(height: AppSpacing.lg),
-            AppButton(label: actionLabel!, onPressed: onAction, expand: false),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: AppSpacing.lg),
+              AppButton(label: actionLabel!, onPressed: onAction, expand: false),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -95,58 +101,65 @@ class OfflineBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     final theme = Theme.of(context);
-    return AppCard(
-      color: tokens.warningSoft,
-      elevated: false,
-      borderColor: tokens.pending.withValues(alpha: 0.35),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: AppSpacing.touchMin,
-            height: AppSpacing.touchMin,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: tokens.surface,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.wifi_off_rounded,
-              color: tokens.pending,
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('You’re offline', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 2),
-                Text(
-                  'Showing last known status. Pairing and live sync need a connection.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: tokens.secondaryText,
-                    height: 1.4,
-                  ),
+    return Semantics(
+      liveRegion: true,
+      label:
+          'You\'re offline. Showing last known status. Pairing and live sync need a connection.',
+      child: AppCard(
+        color: tokens.warningSoft,
+        elevated: false,
+        borderColor: tokens.pending.withValues(alpha: 0.35),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ExcludeSemantics(
+              child: Container(
+                width: AppSpacing.touchMin,
+                height: AppSpacing.touchMin,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: tokens.surface,
+                  shape: BoxShape.circle,
                 ),
-                if (onRetry != null) ...[
-                  const SizedBox(height: AppSpacing.sm),
-                  TextButton.icon(
-                    onPressed: onRetry,
-                    icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text('Retry'),
-                    style: TextButton.styleFrom(
-                      minimumSize: const Size(0, AppSpacing.touchMin),
-                      padding: EdgeInsets.zero,
-                      foregroundColor: theme.colorScheme.primary,
+                child: Icon(
+                  Icons.wifi_off_rounded,
+                  color: tokens.pending,
+                  size: 22,
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('You’re offline', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Showing last known status. Pairing and live sync need a connection.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: tokens.secondaryText,
+                      height: 1.4,
                     ),
                   ),
+                  if (onRetry != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    TextButton.icon(
+                      onPressed: onRetry,
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: const Text('Retry'),
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(0, AppSpacing.touchMin),
+                        padding: EdgeInsets.zero,
+                        foregroundColor: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -89,7 +89,13 @@ class AppButton extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: AppSpacing.touchMin),
       child: button,
     );
-    if (!expand) return sized;
-    return SizedBox(width: double.infinity, child: sized);
+    final labeled = Semantics(
+      button: true,
+      label: label,
+      enabled: enabled,
+      child: sized,
+    );
+    if (!expand) return labeled;
+    return SizedBox(width: double.infinity, child: labeled);
   }
 }

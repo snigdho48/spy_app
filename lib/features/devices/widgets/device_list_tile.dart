@@ -33,7 +33,13 @@ class DeviceListTile extends StatelessWidget {
 
     return AppCard(
       onTap: onTap,
-      semanticLabel: 'Device ${device.name}, $platform. $actionLabel',
+      semanticLabel: [
+        'Device ${device.name}',
+        platform,
+        if (snapshot != null) snapshot!.batteryCaption,
+        if (snapshot != null) snapshot!.geofenceCaption,
+        actionLabel,
+      ].join('. '),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -66,9 +72,7 @@ class DeviceListTile extends StatelessWidget {
               const SizedBox(width: 8),
               Flexible(child: StatusBadge.device(device.status)),
               const SizedBox(width: 4),
-              Semantics(
-                button: true,
-                label: actionLabel,
+              ExcludeSemantics(
                 child: SizedBox(
                   width: AppSpacing.touchMin,
                   height: AppSpacing.touchMin,
@@ -147,28 +151,31 @@ class _SnapshotChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.labelMedium?.copyWith(color: color),
+    return Semantics(
+      label: label,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+        ),
+        child: Row(
+          children: [
+            ExcludeSemantics(child: Icon(icon, size: 18, color: color)),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(color: color),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
