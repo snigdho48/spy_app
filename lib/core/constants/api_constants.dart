@@ -74,6 +74,7 @@ class ApiConstants {
   static const appUsageLatest = '/events/app-usage/latest/';
   static const appUsageRange = '/events/app-usage/';
   static const eventsExport = '/events/export/';
+  static const eventsActivity = '/events/activity/';
 
   static const audit = '/audit/';
 }

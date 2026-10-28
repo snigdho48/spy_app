@@ -10,11 +10,13 @@ import 'package:spy_love/features/devices/views/dashboard_view.dart';
 import 'package:spy_love/features/alerts/repositories/alert_repository.dart';
 import 'package:spy_love/features/devices/controllers/device_detail_controller.dart';
 import 'package:spy_love/features/devices/controllers/fleet_overview_controller.dart';
+import 'package:spy_love/features/devices/controllers/activity_timeline_controller.dart';
 import 'package:spy_love/features/devices/repositories/event_repository.dart';
 import 'package:spy_love/features/devices/repositories/safe_zone_repository.dart';
 import 'package:spy_love/features/devices/views/device_detail_view.dart';
 import 'package:spy_love/features/devices/views/event_detail_view.dart';
 import 'package:spy_love/features/devices/views/fleet_overview_view.dart';
+import 'package:spy_love/features/devices/views/activity_timeline_view.dart';
 import 'package:spy_love/features/devices/views/installed_apps_view.dart';
 import 'package:spy_love/features/devices/views/location_map_fullscreen_view.dart';
 import 'package:spy_love/core/config/app_config.dart';
@@ -40,6 +42,7 @@ abstract final class AppRoutes {
   static const installedApps = '/apps/installed';
   static const locationMapFullscreen = '/devices/location-map';
   static const fleetOverview = '/devices/overview';
+  static const activityTimeline = '/devices/activity';
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -110,6 +113,19 @@ abstract final class AppRoutes {
               ctx.read<AlertRepository>(),
             ),
             child: const FleetOverviewView(),
+          ),
+        );
+      case activityTimeline:
+        final device = settings.arguments as DeviceModel;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (context) => ChangeNotifierProvider(
+            create: (ctx) => ActivityTimelineController(
+              device,
+              ctx.read<EventRepository>(),
+              ctx.read<AlertRepository>(),
+            ),
+            child: const ActivityTimelineView(),
           ),
         );
       case locationMapFullscreen:

@@ -96,6 +96,11 @@ class DeviceDetailView extends StatelessWidget {
                   tooltip: 'Device actions',
                   onSelected: (value) {
                     switch (value) {
+                      case 'timeline':
+                        AppNavigator.toNamed(
+                          AppRoutes.activityTimeline,
+                          arguments: controller.device,
+                        );
                       case 'export':
                         showExportSheet(context);
                       case 'disconnect':
@@ -105,6 +110,10 @@ class DeviceDetailView extends StatelessWidget {
                     }
                   },
                   itemBuilder: (context) => const [
+                    PopupMenuItem(
+                      value: 'timeline',
+                      child: Text('Activity timeline'),
+                    ),
                     PopupMenuItem(
                       value: 'export',
                       child: Text('Export data'),
