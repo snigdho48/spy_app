@@ -160,11 +160,12 @@ class AppProviders extends StatelessWidget {
           update: (_, repo, auth, controller) =>
               controller ?? AlertsController(repo, auth),
         ),
-        ChangeNotifierProxyProvider4<
+        ChangeNotifierProxyProvider5<
           DeviceRepository,
           EventRepository,
           PermissionService,
           AuthController,
+          NetworkService,
           DashboardController
         >(
           create: (context) => DashboardController(
@@ -172,10 +173,11 @@ class AppProviders extends StatelessWidget {
             context.read<EventRepository>(),
             context.read<PermissionService>(),
             context.read<AuthController>(),
+            context.read<NetworkService>(),
           ),
-          update: (_, repo, events, permissions, auth, controller) =>
+          update: (_, repo, events, permissions, auth, network, controller) =>
               controller ??
-              DashboardController(repo, events, permissions, auth),
+              DashboardController(repo, events, permissions, auth, network),
         ),
         ChangeNotifierProxyProvider4<
           DeviceRepository,
