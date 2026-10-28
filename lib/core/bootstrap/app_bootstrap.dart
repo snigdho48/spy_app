@@ -7,6 +7,7 @@ import 'package:spy_love/core/network/certificate_pinning.dart';
 import 'package:spy_love/core/network/one_request_config.dart';
 import 'package:spy_love/core/storage/secure_hive.dart';
 import 'package:spy_love/core/theme/theme_mode_controller.dart';
+import 'package:spy_love/core/onboarding/onboarding_controller.dart';
 import 'package:spy_love/firebase_options.dart';
 
 /// Runs all startup initialization before [runApp].
@@ -16,6 +17,7 @@ abstract final class AppBootstrap {
     await Hive.initFlutter();
     await _dropForeignStoredHosts();
     await ThemeModeController.ensureBox();
+    await OnboardingController.ensureBox();
 
     try {
       await Firebase.initializeApp(
