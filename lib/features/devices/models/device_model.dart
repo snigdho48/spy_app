@@ -24,6 +24,12 @@ class SharingState {
   }
 
   static const inactive = SharingState(paused: false);
+
+  Map<String, dynamic> toJson() => {
+        'paused': paused,
+        if (pausedUntil != null) 'paused_until': pausedUntil!.toIso8601String(),
+        if (resumesInSeconds != null) 'resumes_in_s': resumesInSeconds,
+      };
 }
 
 class DeviceModel {
@@ -78,6 +84,17 @@ class DeviceModel {
       sharing: SharingState.fromJson(json['sharing'] as Map<String, dynamic>?),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'platform': platform,
+        'status': status,
+        if (lastSeenAt != null) 'last_seen_at': lastSeenAt!.toIso8601String(),
+        if (tenantName != null) 'tenant_name': tenantName,
+        if (photoUrl != null) 'photo_url': photoUrl,
+        'sharing': sharing.toJson(),
+      };
 
   DeviceModel copyWith({SharingState? sharing, String? photoUrl}) {
     return DeviceModel(

@@ -9,6 +9,8 @@ import 'package:spy_love/features/devices/models/device_home_snapshot.dart';
 import 'package:spy_love/features/devices/models/device_model.dart';
 import 'package:spy_love/features/devices/repositories/device_repository.dart';
 import 'package:spy_love/features/devices/repositories/event_repository.dart';
+import 'package:spy_love/features/devices/storage/device_list_cache.dart';
+import 'package:spy_love/core/network/network_service.dart';
 
 class DashboardController extends ChangeNotifier {
   DashboardController(
@@ -16,9 +18,11 @@ class DashboardController extends ChangeNotifier {
     this._events,
     this._permissionService,
     this._auth,
+    this._network,
   ) {
     _permissionService.addListener(notifyListeners);
     _auth.addListener(_onAuthChanged);
+    _network.addListener(_onNetworkChanged);
     _permissionService.refreshStatuses();
     _onAuthChanged();
   }
@@ -27,12 +31,16 @@ class DashboardController extends ChangeNotifier {
   final EventRepository _events;
   final PermissionService _permissionService;
   final AuthController _auth;
+  final NetworkService _network;
   bool _wasLoggedIn = false;
+  bool _wasConnected = true;
 
   List<DeviceModel> devices = <DeviceModel>[];
   Map<String, DeviceHomeSnapshot> deviceSnapshots = {};
   bool isLoading = false;
   bool isRequestingPermissions = false;
+  bool showingCachedData = false;
+  DateTime? cacheSavedAt;
   String errorMessage = '';
 
   PermissionService get permissions => _permissionService;
@@ -48,8 +56,19 @@ class DashboardController extends ChangeNotifier {
       deviceSnapshots = {};
       errorMessage = '';
       isLoading = false;
+      showingCachedData = false;
+      cacheSavedAt = null;
       notifyListeners();
+      unawaited(DeviceListCache.clear());
     }
+  }
+
+  void _onNetworkChanged() {
+    final online = _network.isConnected;
+    if (online && !_wasConnected && _auth.isLoggedIn) {
+      unawaited(loadDevices());
+    }
+    _wasConnected = online;
   }
 
   int get activeDeviceCount =>
@@ -89,14 +108,29 @@ class DashboardController extends ChangeNotifier {
     notifyListeners();
 
     final result = await _repository.listDevices();
-    result.fold((list) => devices = list, (error) => errorMessage = error);
+    if (result.isLeft) {
+      devices = result.left;
+      showingCachedData = false;
+      errorMessage = '';
+      isLoading = false;
+      notifyListeners();
+      await _loadHomeSnapshots();
+      unawaited(
+        DeviceListCache.save(devices: devices, snapshots: deviceSnapshots),
+      );
+      return;
+    }
 
+    errorMessage = result.right;
+    final cached = await DeviceListCache.load();
+    if (cached != null && cached.devices.isNotEmpty) {
+      devices = cached.devices;
+      deviceSnapshots = cached.snapshots;
+      showingCachedData = true;
+      cacheSavedAt = cached.savedAt;
+    }
     isLoading = false;
     notifyListeners();
-
-    if (devices.isNotEmpty && errorMessage.isEmpty) {
-      unawaited(_loadHomeSnapshots());
-    }
   }
 
   Future<void> _loadHomeSnapshots() async {
@@ -180,6 +214,7 @@ class DashboardController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _network.removeListener(_onNetworkChanged);
     _auth.removeListener(_onAuthChanged);
     _permissionService.removeListener(notifyListeners);
     super.dispose();

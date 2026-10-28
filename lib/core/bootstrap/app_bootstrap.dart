@@ -6,6 +6,7 @@ import 'package:spy_love/core/debug/app_log.dart';
 import 'package:spy_love/core/network/certificate_pinning.dart';
 import 'package:spy_love/core/network/one_request_config.dart';
 import 'package:spy_love/core/storage/secure_hive.dart';
+import 'package:spy_love/features/devices/storage/device_list_cache.dart';
 import 'package:spy_love/core/theme/theme_mode_controller.dart';
 import 'package:spy_love/firebase_options.dart';
 
@@ -16,6 +17,7 @@ abstract final class AppBootstrap {
     await Hive.initFlutter();
     await _dropForeignStoredHosts();
     await ThemeModeController.ensureBox();
+    await DeviceListCache.ensureBox();
 
     try {
       await Firebase.initializeApp(
@@ -39,7 +41,7 @@ abstract final class AppBootstrap {
   /// Nothing in the app reads a stored host. This still removes a leftover
   /// value so it cannot be picked up later.
   static Future<void> _dropForeignStoredHosts() async {
-    const names = ['settings', 'monitored_device', 'sim_state'];
+    const names = ['settings', 'monitored_device', 'sim_state', 'device_cache'];
     for (final name in names) {
       if (!Hive.isBoxOpen(name)) {
         await SecureHive.openBox(name);

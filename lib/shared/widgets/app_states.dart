@@ -95,7 +95,10 @@ class OfflineBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     final theme = Theme.of(context);
-    return AppCard(
+    return Semantics(
+      liveRegion: true,
+      label: 'You are offline. Showing last known device status.',
+      child: AppCard(
       color: tokens.warningSoft,
       elevated: false,
       borderColor: tokens.pending.withValues(alpha: 0.35),
@@ -148,6 +151,7 @@ class OfflineBanner extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }

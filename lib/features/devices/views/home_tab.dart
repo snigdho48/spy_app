@@ -81,6 +81,14 @@ class HomeTab extends StatelessWidget {
             },
           ),
           const SizedBox(height: AppSpacing.md),
+        ] else if (controller.showingCachedData) ...[
+          Text(
+            'Showing saved device list — pull to refresh when the server is reachable.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: context.tokens.secondaryText,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
         ],
         const WorkspaceSetupCard(),
         const FamilyCircleCard(),
