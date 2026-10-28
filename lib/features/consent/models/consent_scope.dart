@@ -73,9 +73,9 @@ class ConsentScope {
       id: 'screen',
       label: 'Live screen',
       description:
-          'Lets the monitor view this device\'s screen live, only while you '
-          'approve it. Requires an on-screen system prompt each time and shows '
-          'a sharing indicator the whole time. Revoke anytime.',
+          'Lets the monitor view this device\'s screen live while enrolled. '
+          'Android still shows the system screen-capture dialog when capture '
+          'runs. Revoke anytime.',
     ),
   ];
 }

