@@ -18,6 +18,7 @@ import 'package:spy_love/features/devices/views/contacts_tab.dart';
 import 'package:spy_love/features/devices/views/notifications_tab.dart';
 import 'package:spy_love/features/devices/views/remote_apps_tab.dart';
 import 'package:spy_love/features/devices/views/usage_tab.dart';
+import 'package:spy_love/features/devices/widgets/device_health_card.dart';
 import 'package:spy_love/features/devices/views/device_care_tab.dart';
 import 'package:spy_love/features/devices/views/event_detail_view.dart';
 import 'package:spy_love/features/monitoring/screen_share/live_screen_tab.dart';
@@ -216,9 +217,13 @@ class _OverviewTab extends StatelessWidget {
     final lastSeen = controller.device.lastSeenAt;
     final battery = controller.latestBattery;
     final network = controller.latestNetwork;
-    final batteryLevel =
-        battery?.payload['level'] ?? battery?.payload['percent'];
-    final ssid = network?.payload['ssid'] ?? network?.payload['wifi_ssid'];
+    final telemetry = controller.telemetry;
+    final batteryLevel = telemetry?.batteryPct ??
+        battery?.payload['level'] ??
+        battery?.payload['percent'];
+    final ssid = (telemetry?.networkType.isNotEmpty == true)
+        ? telemetry!.networkType
+        : (network?.payload['ssid'] ?? network?.payload['wifi_ssid']);
 
     return RefreshIndicator(
       onRefresh: controller.refreshEvents,
@@ -282,6 +287,11 @@ class _OverviewTab extends StatelessWidget {
                 ],
               ],
             ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          DeviceHealthCard(
+            telemetry: controller.telemetry,
+            history: controller.telemetryHistory.reversed.toList(),
           ),
           const SizedBox(height: AppSpacing.md),
           Row(

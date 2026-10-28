@@ -14,6 +14,7 @@ import 'package:spy_love/features/devices/models/location_point.dart';
 import 'package:spy_love/features/devices/repositories/event_repository.dart';
 import 'package:spy_love/features/devices/models/safe_zone_model.dart';
 import 'package:spy_love/features/devices/models/app_usage_model.dart';
+import 'package:spy_love/features/devices/models/telemetry_model.dart';
 import 'package:spy_love/features/devices/repositories/safe_zone_repository.dart';
 import 'package:spy_love/features/devices/utils/location_map_utils.dart';
 
@@ -68,6 +69,10 @@ class DeviceDetailController extends ChangeNotifier {
   UsageRange usageRange = UsageRange.today;
   DateTime? usageCustomFrom;
   DateTime? usageCustomTo;
+
+  TelemetrySnapshot? telemetry;
+  List<TelemetrySnapshot> telemetryHistory = const [];
+  bool isLoadingTelemetry = false;
   LocationDateFilter locationFilter = LocationDateFilter.week;
 
   final MapController mapController = MapController();
@@ -204,6 +209,7 @@ class DeviceDetailController extends ChangeNotifier {
         refreshLocations(silent: true),
         refreshSimEvents(),
         refreshUsage(silent: true),
+        refreshTelemetry(silent: true),
         _loadPrefix(null, (items) => allEvents = items),
       ]);
       notifyListeners();
@@ -225,6 +231,7 @@ class DeviceDetailController extends ChangeNotifier {
       refreshLocations(),
       refreshSimEvents(),
       refreshUsage(),
+      refreshTelemetry(),
       _loadPrefix(null, (items) => allEvents = items),
     ]);
     isLoadingEvents = false;
@@ -429,6 +436,23 @@ class DeviceDetailController extends ChangeNotifier {
         icon: result.purgeHistory ? Icons.delete_outline : Icons.link_off,
       );
     }, (error) => errorMessage = error);
+    notifyListeners();
+  }
+
+  Future<void> refreshTelemetry({bool silent = false}) async {
+    if (!silent) {
+      isLoadingTelemetry = true;
+      notifyListeners();
+    }
+    final latest = await _events.latestTelemetry(deviceId: device.id);
+    if (latest != null) telemetry = latest;
+    final history = await _events.telemetryHistory(
+      deviceId: device.id,
+      limit: 24,
+      loader: false,
+    );
+    history.fold((items) => telemetryHistory = items, (_) {});
+    isLoadingTelemetry = false;
     notifyListeners();
   }
 
