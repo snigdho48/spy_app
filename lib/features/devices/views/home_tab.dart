@@ -105,6 +105,12 @@ class HomeTab extends StatelessWidget {
               variant: AppButtonVariant.secondary,
               onPressed: () => AppNavigator.toNamed(AppRoutes.audit),
             ),
+            AppButton(
+              label: 'All devices',
+              icon: Icons.dashboard_outlined,
+              variant: AppButtonVariant.secondary,
+              onPressed: () => AppNavigator.toNamed(AppRoutes.fleetOverview),
+            ),
           ],
         ),
         const SizedBox(height: AppSpacing.md),
