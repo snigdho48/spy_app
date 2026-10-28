@@ -60,5 +60,20 @@ class ApiConstants {
   static const eventsContactsLatest = '/events/contacts/latest/';
   static const eventsAppInventoryLatest = '/events/app-inventory/latest/';
 
+  // --- Alerts center ---
+  static const alerts = '/alerts/';
+  static String alertRead(String id) => '/alerts/$id/read/';
+  static const alertsReadAll = '/alerts/read-all/';
+  static String alertDetail(String id) => '/alerts/$id/';
+  static const pushTokens = '/alerts/push-tokens/';
+  static String pushTokenDetail(String id) => '/alerts/push-tokens/$id/';
+
+  // --- Telemetry & app usage feeds ---
+  static const telemetryLatest = '/events/telemetry/latest/';
+  static const telemetryHistory = '/events/telemetry/';
+  static const appUsageLatest = '/events/app-usage/latest/';
+  static const appUsageRange = '/events/app-usage/';
+  static const eventsExport = '/events/export/';
+
   static const audit = '/audit/';
 }

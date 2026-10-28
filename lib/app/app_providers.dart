@@ -11,6 +11,8 @@ import 'package:spy_love/core/permissions/permission_service.dart';
 import 'package:spy_love/core/storage/device_fingerprint_storage.dart';
 import 'package:spy_love/core/storage/token_storage.dart';
 import 'package:spy_love/features/audit/repositories/audit_repository.dart';
+import 'package:spy_love/features/alerts/controllers/alerts_controller.dart';
+import 'package:spy_love/features/alerts/repositories/alert_repository.dart';
 import 'package:spy_love/features/auth/controllers/auth_controller.dart';
 import 'package:spy_love/features/auth/repositories/auth_repository.dart';
 import 'package:spy_love/features/devices/controllers/dashboard_controller.dart';
@@ -63,6 +65,9 @@ class AppProviders extends StatelessWidget {
         ),
         ProxyProvider<ApiService, SafeZoneRepository>(
           update: (_, api, previous) => previous ?? SafeZoneRepository(api),
+        ),
+        ProxyProvider<ApiService, AlertRepository>(
+          update: (_, api, previous) => previous ?? AlertRepository(api),
         ),
         ProxyProvider<ApiService, KeywordRepository>(
           update: (_, api, previous) => previous ?? KeywordRepository(api),
@@ -135,6 +140,18 @@ class AppProviders extends StatelessWidget {
           ),
           update: (_, repo, monitoring, controller) =>
               controller ?? AuthController(repo, monitoring),
+        ),
+        ChangeNotifierProxyProvider2<
+          AlertRepository,
+          AuthController,
+          AlertsController
+        >(
+          create: (context) => AlertsController(
+            context.read<AlertRepository>(),
+            context.read<AuthController>(),
+          ),
+          update: (_, repo, auth, controller) =>
+              controller ?? AlertsController(repo, auth),
         ),
         ChangeNotifierProxyProvider4<
           DeviceRepository,
