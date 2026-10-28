@@ -20,6 +20,7 @@ import 'package:spy_love/features/devices/views/remote_apps_tab.dart';
 import 'package:spy_love/features/devices/views/device_care_tab.dart';
 import 'package:spy_love/features/devices/views/event_detail_view.dart';
 import 'package:spy_love/features/monitoring/screen_share/live_screen_tab.dart';
+import 'package:spy_love/features/monitoring/live_av/live_av_tab.dart';
 import 'package:spy_love/features/devices/views/location_tab_view.dart';
 import 'package:spy_love/features/devices/views/sim_tab_view.dart';
 import 'package:spy_love/features/consent/models/consent_scope.dart';
@@ -37,7 +38,7 @@ class DeviceDetailView extends StatelessWidget {
     final tokens = context.tokens;
 
     return DefaultTabController(
-      length: 11,
+      length: 12,
       child: Scaffold(
         appBar: AppBar(
           toolbarHeight: 72,
@@ -67,6 +68,7 @@ class DeviceDetailView extends StatelessWidget {
               const Tab(text: 'Notifications'),
               const Tab(text: 'Apps'),
               const Tab(text: 'Live screen'),
+              const Tab(text: 'Live AV'),
             ],
           ),
           actions: [
@@ -173,6 +175,7 @@ class DeviceDetailView extends StatelessWidget {
                   isLoading: controller.isLoadingEvents,
                 ),
                 LiveScreenTab(deviceId: controller.device.id),
+                LiveAvTab(deviceId: controller.device.id),
               ],
             );
           },

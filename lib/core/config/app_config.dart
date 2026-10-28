@@ -33,6 +33,9 @@ abstract final class AppConfig {
     return '$origin${screenPath(sessionWsPath)}';
   }
 
+  /// Same host rewrite as [screenWsUrl] for live camera/mic sessions.
+  static String mediaWsUrl(String sessionWsPath) => screenWsUrl(sessionWsPath);
+
   /// Path portion of a screen `ws_url`. Absolute URLs drop their host.
   static String screenPath(String sessionWsPath) {
     final raw = sessionWsPath.trim();
