@@ -6,14 +6,17 @@ The workflow builds four signed release APKs and uploads them to a GitHub Releas
 
 | File | Contents |
 |---|---|
-| `SpyLove-<version>-arm64-v8a.apk` | 64-bit ARM |
-| `SpyLove-<version>-armeabi-v7a.apk` | 32-bit ARM |
-| `SpyLove-<version>-x86_64.apk` | 64-bit x86 |
-| `SpyLove-<version>-universal.apk` | All three ABIs |
+| `SpyLove-arm64-v8a.apk` | 64-bit ARM |
+| `SpyLove-armeabi-v7a.apk` | 32-bit ARM |
+| `SpyLove-x86_64.apk` | 64-bit x86 |
+| `SpyLove-universal.apk` | All three ABIs |
+| `latest.json` | Version + build number for the in-app updater |
+
+Asset names are version-less and stable so `releases/latest/download/SpyLove-arm64-v8a.apk` (and the matching `releases/download/latest/...` path from the moving `latest` tag) always fetch the newest build.
 
 This project does not set `abiFilters`. Flutter's release APK targets are `android-arm`, `android-arm64`, and `android-x64`. 32-bit x86 is not built.
 
-`<version>` is the git tag with the leading `v` removed (`v1.0.0` → `1.0.0`). The APK `versionName` / `versionCode` still come from `pubspec.yaml` (`1.0.0+1` → name `1.0.0`, code `1`). Bump `pubspec.yaml` before you tag so those match.
+The APK `versionName` / `versionCode` come from `pubspec.yaml` (`1.0.1+2` → name `1.0.1`, code `2`). Keep the semantic version when rebuilding the same release and bump only the `+N` build number so Android will install over the previous APK. The workflow also publishes a moving `latest` git tag and GitHub Release that mirrors the same assets.
 
 ## GitHub Release page
 

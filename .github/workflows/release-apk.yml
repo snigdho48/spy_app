@@ -72,9 +72,18 @@ jobs:
             echo "Could not derive a version from tag '${TAG}'."
             exit 1
           fi
+          # Build number (versionCode) is the +N suffix in pubspec. It drives
+          # the in-app updater's "is this newer" check and must increase per
+          # release even when the semantic version is unchanged.
+          PUBSPEC_VERSION="$(awk '/^version:/{print $2; exit}' pubspec.yaml)"
+          BUILD="${PUBSPEC_VERSION##*+}"
+          if [[ -z "$BUILD" || "$BUILD" == "$PUBSPEC_VERSION" ]]; then
+            BUILD="1"
+          fi
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
-          echo "Publishing ${TAG} (filename version ${VERSION})"
+          echo "build=${BUILD}" >> "$GITHUB_OUTPUT"
+          echo "Publishing ${TAG} (version ${VERSION}, build ${BUILD})"
 
       - name: Install Android SDK pieces this project compiles against
         run: |
@@ -200,12 +209,13 @@ jobs:
           flutter build apk --release --split-per-abi \
             --target-platform android-arm,android-arm64,android-x64 \
             "${defines[@]}"
-          VERSION="${{ steps.version.outputs.version }}"
           SRC="build/app/outputs/flutter-apk"
           mkdir -p release-apks
-          cp "$SRC/app-arm64-v8a-release.apk" "release-apks/SpyLove-${VERSION}-arm64-v8a.apk"
-          cp "$SRC/app-armeabi-v7a-release.apk" "release-apks/SpyLove-${VERSION}-armeabi-v7a.apk"
-          cp "$SRC/app-x86_64-release.apk" "release-apks/SpyLove-${VERSION}-x86_64.apk"
+          # Version-less, stable asset names so the releases/latest/download and
+          # releases/download/latest URLs never change between builds.
+          cp "$SRC/app-arm64-v8a-release.apk" "release-apks/SpyLove-arm64-v8a.apk"
+          cp "$SRC/app-armeabi-v7a-release.apk" "release-apks/SpyLove-armeabi-v7a.apk"
+          cp "$SRC/app-x86_64-release.apk" "release-apks/SpyLove-x86_64.apk"
 
       - name: Build universal release APK
         run: |
@@ -220,15 +230,20 @@ jobs:
           flutter build apk --release \
             --target-platform android-arm,android-arm64,android-x64 \
             "${defines[@]}"
-          VERSION="${{ steps.version.outputs.version }}"
           cp build/app/outputs/flutter-apk/app-release.apk \
-            "release-apks/SpyLove-${VERSION}-universal.apk"
+            "release-apks/SpyLove-universal.apk"
+          # latest.json drives the in-app updater. It carries no API host —
+          # only version, build number, and short notes.
+          VERSION="${{ steps.version.outputs.version }}"
+          BUILD="${{ steps.version.outputs.build }}"
+          VERSION="$VERSION" BUILD="$BUILD" python3 -c "import json,pathlib,os; pathlib.Path('release-apks/latest.json').write_text(json.dumps({'version':os.environ['VERSION'],'build':int(os.environ['BUILD']),'notes':'Login fix and stability improvements. Install to update.'}))"
           echo "APKs:"
           ls -lh release-apks
-          test -s "release-apks/SpyLove-${VERSION}-arm64-v8a.apk"
-          test -s "release-apks/SpyLove-${VERSION}-armeabi-v7a.apk"
-          test -s "release-apks/SpyLove-${VERSION}-x86_64.apk"
-          test -s "release-apks/SpyLove-${VERSION}-universal.apk"
+          test -s "release-apks/SpyLove-arm64-v8a.apk"
+          test -s "release-apks/SpyLove-armeabi-v7a.apk"
+          test -s "release-apks/SpyLove-x86_64.apk"
+          test -s "release-apks/SpyLove-universal.apk"
+          test -s "release-apks/latest.json"
 
       # Fixed title and description. generate_release_notes appends the
       # commit list after the "Changes since last release" heading.
@@ -254,10 +269,15 @@ jobs:
 
           | File | Device |
           | --- | --- |
-          | \`SpyLove-${VERSION}-arm64-v8a.apk\` | Current phones (64-bit ARM) |
-          | \`SpyLove-${VERSION}-armeabi-v7a.apk\` | Older 32-bit ARM phones |
-          | \`SpyLove-${VERSION}-x86_64.apk\` | 64-bit x86 phones and emulators |
-          | \`SpyLove-${VERSION}-universal.apk\` | All three ABIs in one larger file |
+          | \`SpyLove-arm64-v8a.apk\` | Current phones (64-bit ARM) |
+          | \`SpyLove-armeabi-v7a.apk\` | Older 32-bit ARM phones |
+          | \`SpyLove-x86_64.apk\` | 64-bit x86 phones and emulators |
+          | \`SpyLove-universal.apk\` | All three ABIs in one larger file |
+
+          Asset names stay the same across builds, so these links always fetch the newest APK:
+
+          - \`.../releases/latest/download/SpyLove-arm64-v8a.apk\`
+          - \`.../releases/download/latest/SpyLove-arm64-v8a.apk\`
 
           ## Install
 
@@ -284,6 +304,25 @@ jobs:
           body_path: release-notes.md
           generate_release_notes: true
           fail_on_unmatched_files: true
-          files: release-apks/*.apk
+          files: |
+            release-apks/*.apk
+            release-apks/latest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish moving "latest" release
+        uses: softprops/action-gh-release@v2
+        with:
+          # Moving tag + release so download links can also use the literal
+          # `latest` tag. action-gh-release points the tag at this run's commit.
+          tag_name: latest
+          name: "Spy Love — Latest"
+          body: "Always-current build. Mirrors the newest versioned release. Stable asset names mean download links never change."
+          prerelease: false
+          make_latest: "true"
+          fail_on_unmatched_files: true
+          files: |
+            release-apks/*.apk
+            release-apks/latest.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

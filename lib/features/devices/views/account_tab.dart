@@ -18,6 +18,8 @@ import 'package:spy_love/features/devices/views/sharing_pause_card.dart';
 import 'package:spy_love/features/consent/models/consent_scope.dart';
 import 'package:spy_love/features/subscription/views/workspace_setup_card.dart';
 import 'package:spy_love/app/routes.dart';
+import 'package:spy_love/features/update/update_service.dart';
+import 'package:spy_love/features/update/views/update_dialog.dart';
 
 class AccountTab extends StatelessWidget {
   const AccountTab({super.key});
@@ -245,6 +247,25 @@ class AccountTab extends StatelessWidget {
           },
         ),
         const SizedBox(height: 24),
+        AppButton(
+          label: 'Check for updates',
+          icon: Icons.system_update,
+          variant: AppButtonVariant.secondary,
+          onPressed: () async {
+            final shown = await UpdateDialog.maybeShow(
+              context,
+              UpdateService(),
+            );
+            if (!shown) {
+              AppNavigator.snackbar(
+                'Up to date',
+                'You already have the latest version.',
+                icon: Icons.check_circle_outline,
+              );
+            }
+          },
+        ),
+        const SizedBox(height: 12),
         AppButton(
           label: 'Sign out',
           icon: Icons.logout,

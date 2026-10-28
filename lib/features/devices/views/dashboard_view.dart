@@ -5,6 +5,8 @@ import 'package:spy_love/features/devices/views/account_tab.dart';
 import 'package:spy_love/features/devices/views/devices_tab.dart';
 import 'package:spy_love/features/devices/views/home_tab.dart';
 import 'package:spy_love/features/consent/views/pairing_start_view.dart';
+import 'package:spy_love/features/update/update_service.dart';
+import 'package:spy_love/features/update/views/update_dialog.dart';
 
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
@@ -15,6 +17,19 @@ class DashboardView extends StatefulWidget {
 
 class _DashboardViewState extends State<DashboardView> {
   int _index = 0;
+  bool _checkedForUpdate = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // One silent update check per dashboard mount. Failures (offline, rate
+    // limit) are swallowed by the service and surface nothing to the user.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _checkedForUpdate) return;
+      _checkedForUpdate = true;
+      UpdateDialog.maybeShow(context, UpdateService());
+    });
+  }
 
   static const _destinations = [
     NavigationDestination(
