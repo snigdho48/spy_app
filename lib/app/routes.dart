@@ -20,6 +20,7 @@ import 'package:spy_love/features/devices/views/all_devices_map_view.dart';
 import 'package:spy_love/features/devices/views/activity_timeline_view.dart';
 import 'package:spy_love/features/devices/views/installed_apps_view.dart';
 import 'package:spy_love/features/devices/views/location_map_fullscreen_view.dart';
+import 'package:spy_love/features/devices/views/location_route_playback_view.dart';
 import 'package:spy_love/core/config/app_config.dart';
 import 'package:spy_love/core/theme/app_colors.dart';
 import 'package:spy_love/core/theme/app_tokens.dart';
@@ -42,6 +43,7 @@ abstract final class AppRoutes {
   static const audit = '/audit';
   static const installedApps = '/apps/installed';
   static const locationMapFullscreen = '/devices/location-map';
+  static const locationRoutePlayback = '/devices/location-playback';
   static const fleetOverview = '/devices/overview';
   static const activityTimeline = '/devices/activity';
   static const allDevicesMap = '/devices/map';
@@ -147,6 +149,12 @@ abstract final class AppRoutes {
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => LocationMapFullscreenView(args: args),
+        );
+      case locationRoutePlayback:
+        final args = settings.arguments as LocationRoutePlaybackArgs;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => LocationRoutePlaybackView(args: args),
         );
       default:
         return MaterialPageRoute(

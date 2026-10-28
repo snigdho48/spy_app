@@ -10,6 +10,7 @@ import 'package:spy_love/features/devices/models/location_point.dart';
 import 'package:spy_love/features/devices/models/safe_zone_model.dart';
 import 'package:spy_love/features/devices/views/geofence_editor_sheet.dart';
 import 'package:spy_love/features/devices/views/location_map_fullscreen_view.dart';
+import 'package:spy_love/features/devices/views/location_route_playback_view.dart';
 import 'package:spy_love/features/devices/widgets/location_history_map.dart';
 import 'package:spy_love/shared/widgets/app_button.dart';
 import 'package:spy_love/shared/widgets/app_card.dart';
@@ -36,6 +37,21 @@ class LocationTabView extends StatelessWidget {
     Navigator.of(context).pushNamed(
       AppRoutes.locationMapFullscreen,
       arguments: LocationMapFullscreenArgs(
+        points: List<LocationPoint>.from(points),
+        deviceName: controller.device.name,
+      ),
+    );
+  }
+
+  void _openPlayback(
+    BuildContext context,
+    DeviceDetailController controller,
+  ) {
+    final points = controller.filteredLocations;
+    if (points.length < 2) return;
+    Navigator.of(context).pushNamed(
+      AppRoutes.locationRoutePlayback,
+      arguments: LocationRoutePlaybackArgs(
         points: List<LocationPoint>.from(points),
         deviceName: controller.device.name,
       ),
@@ -261,6 +277,7 @@ class LocationTabView extends StatelessWidget {
             controller: controller,
             canEdit: canEdit,
             onExpand: () => _openFullscreen(context, controller),
+            onPlayback: () => _openPlayback(context, controller),
             onLongPress: canEdit
                 ? (point) => _addOrEdit(context, controller, center: point)
                 : null,
@@ -480,6 +497,7 @@ class _MapPreviewCard extends StatelessWidget {
     required this.points,
     required this.controller,
     required this.onExpand,
+    required this.onPlayback,
     required this.canEdit,
     this.onLongPress,
   });
@@ -487,6 +505,7 @@ class _MapPreviewCard extends StatelessWidget {
   final List<LocationPoint> points;
   final DeviceDetailController controller;
   final VoidCallback onExpand;
+  final VoidCallback onPlayback;
   final bool canEdit;
   final void Function(LatLng point)? onLongPress;
 
@@ -511,6 +530,11 @@ class _MapPreviewCard extends StatelessWidget {
                         : 'Map preview',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
+                ),
+                TextButton.icon(
+                  onPressed: points.length < 2 ? null : onPlayback,
+                  icon: const Icon(Icons.route_rounded, size: 18),
+                  label: const Text('Play route'),
                 ),
                 TextButton.icon(
                   onPressed: points.isEmpty ? null : onExpand,
