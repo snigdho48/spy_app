@@ -4,6 +4,7 @@ import 'package:spy_love/core/network/http_method.dart';
 import 'package:spy_love/core/types/either.dart';
 import 'package:spy_love/features/devices/models/device_event_model.dart';
 import 'package:spy_love/features/devices/models/app_usage_model.dart';
+import 'package:spy_love/features/devices/models/telemetry_model.dart';
 
 class EventRepository {
   EventRepository(this._api);
@@ -158,6 +159,48 @@ class EventRepository {
     );
     if (result.isLeft) {
       return Left(AppUsageSnapshot.fromJson(result.left));
+    }
+    return Right(result.right);
+  }
+
+  /// GET /events/telemetry/latest/?device_id=
+  Future<TelemetrySnapshot?> latestTelemetry({
+    required String deviceId,
+    bool loader = false,
+  }) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.telemetryLatest,
+      method: HttpMethod.get,
+      queryParameters: {'device_id': deviceId},
+      loader: loader,
+      resultOverlay: false,
+    );
+    return result.isLeft ? TelemetrySnapshot.fromJson(result.left) : null;
+  }
+
+  /// GET /events/telemetry/?device_id=&limit= (1–200). Accepts either a
+  /// paginated `{results:[]}` body or a bare list under `results`.
+  Future<Either<List<TelemetrySnapshot>, String>> telemetryHistory({
+    required String deviceId,
+    int limit = 50,
+    bool loader = false,
+  }) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.telemetryHistory,
+      method: HttpMethod.get,
+      queryParameters: {
+        'device_id': deviceId,
+        'limit': limit.clamp(1, 200),
+      },
+      loader: loader,
+      resultOverlay: false,
+    );
+    if (result.isLeft) {
+      final raw = result.left['results'] as List<dynamic>? ?? const [];
+      return Left([
+        for (final e in raw)
+          TelemetrySnapshot.fromJson(e as Map<String, dynamic>),
+      ]);
     }
     return Right(result.right);
   }
