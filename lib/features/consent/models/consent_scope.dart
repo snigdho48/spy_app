@@ -15,7 +15,8 @@ class ConsentScope {
     ConsentScope(
       id: 'call_log',
       label: 'Call log',
-      description: 'Incoming, outgoing, and missed calls with numbers and duration',
+      description:
+          'Incoming, outgoing, and missed calls with numbers and duration',
     ),
     ConsentScope(
       id: 'sms',
@@ -30,7 +31,8 @@ class ConsentScope {
     ConsentScope(
       id: 'messaging',
       label: 'Messenger & WhatsApp',
-      description: 'Notification alerts from chat apps (title, preview text, app name)',
+      description:
+          'Notification alerts from chat apps (title, preview text, app name)',
     ),
     ConsentScope(
       id: 'sim',

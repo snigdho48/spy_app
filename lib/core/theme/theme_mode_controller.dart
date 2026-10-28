@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:spy_love/core/storage/secure_hive.dart';
 
 /// Persists light / dark / system preference for Consent Horizon screens.
 class ThemeModeController extends ChangeNotifier {
@@ -17,7 +18,7 @@ class ThemeModeController extends ChangeNotifier {
 
   static Future<void> ensureBox() async {
     if (!Hive.isBoxOpen(_boxName)) {
-      await Hive.openBox(_boxName);
+      await SecureHive.openBox(_boxName);
     }
   }
 
@@ -28,14 +29,11 @@ class ThemeModeController extends ChangeNotifier {
 
   Future<void> setMode(ThemeMode mode) async {
     _mode = mode;
-    await _box.put(
-      _key,
-      switch (mode) {
-        ThemeMode.light => 'light',
-        ThemeMode.dark => 'dark',
-        ThemeMode.system => 'system',
-      },
-    );
+    await _box.put(_key, switch (mode) {
+      ThemeMode.light => 'light',
+      ThemeMode.dark => 'dark',
+      ThemeMode.system => 'system',
+    });
     notifyListeners();
   }
 }

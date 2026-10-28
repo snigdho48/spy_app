@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:one_request/one_request.dart';
 import 'package:spy_love/core/config/app_config.dart';
@@ -33,7 +34,10 @@ abstract final class OneRequestConfig {
           color: AppConfig.primaryColor,
         ),
       ),
-      success: const Icon(Icons.check_circle_outline, color: AppConfig.successColor),
+      success: const Icon(
+        Icons.check_circle_outline,
+        color: AppConfig.successColor,
+      ),
       error: const Icon(Icons.error_outline, color: AppConfig.dangerColor),
       info: const Icon(Icons.info_outline, color: AppConfig.infoColor),
     );
@@ -43,8 +47,8 @@ abstract final class OneRequestConfig {
     OneRequest.configure(
       baseUrl: AppConfig.apiBaseUrl,
       headers: AppConfig.defaultHeaders,
-      enableErrorLogger: true,
-      enableResponseLogger: true,
+      enableErrorLogger: kDebugMode,
+      enableResponseLogger: kDebugMode,
       enableLoader: false,
       enableErrorOverlay: false,
       enableSuccessOverlay: false,
@@ -102,10 +106,8 @@ abstract final class OneRequestConfig {
           backgroundColor: AppConfig.surface(context),
         ),
       ),
-      errorBuilder: (context, message) => Icon(
-        Icons.error_outline,
-        color: AppConfig.dangerColor,
-      ),
+      errorBuilder: (context, message) =>
+          Icon(Icons.error_outline, color: AppConfig.dangerColor),
     );
   }
 }

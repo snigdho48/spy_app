@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:spy_love/core/storage/secure_hive.dart';
 
 /// Persists the monitored device id for background sync on the device-owner account.
 ///
@@ -27,7 +28,7 @@ class MonitoredDeviceStorage {
     return previous.then((_) => action()).whenComplete(gate.complete);
   }
 
-  static Future<Box<dynamic>> _box() => Hive.openBox(_boxName);
+  static Future<Box<dynamic>> _box() => SecureHive.openBox(_boxName);
 
   static Future<void> saveDeviceId(String deviceId) {
     final generation = _generation;

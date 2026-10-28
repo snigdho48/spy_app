@@ -26,10 +26,9 @@ class SystemSettingsBridge {
 
   static Future<void> open(SystemSettingsPage page) async {
     try {
-      final handled = await _channel.invokeMethod<bool>(
-        'openSettingsPage',
-        {'page': page.name},
-      );
+      final handled = await _channel.invokeMethod<bool>('openSettingsPage', {
+        'page': page.name,
+      });
       if (handled == true) return;
     } on PlatformException {
       // fall through to app settings

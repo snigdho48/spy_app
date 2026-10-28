@@ -32,8 +32,8 @@ class PairingInitiateView extends StatelessWidget {
             Text(
               'MUTUAL TRANSPARENCY PROTOCOL',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ],
         ),
@@ -67,9 +67,9 @@ class PairingInitiateView extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Generate a code. Someone with a workspace confirms consent scopes before any data is shared.',
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: tokens.secondaryText,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyLarge?.copyWith(color: tokens.secondaryText),
         ),
         const SizedBox(height: AppSpacing.lg),
         AppTextField(
@@ -131,14 +131,13 @@ class PairingInitiateView extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.md),
-        Text(
-          'Connect to Family Circle',
-          style: theme.textTheme.headlineMedium,
-        ),
+        Text('Connect to Family Circle', style: theme.textTheme.headlineMedium),
         const SizedBox(height: AppSpacing.xs),
         Text(
           'Scanning or entering this code lets your guardian confirm selected diagnostics with mutual visibility.',
-          style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: tokens.secondaryText,
+          ),
         ),
         const SizedBox(height: AppSpacing.lg),
         if (expired)
@@ -147,14 +146,23 @@ class PairingInitiateView extends StatelessWidget {
             elevated: false,
             child: Column(
               children: [
-                Icon(Icons.timer_off_outlined, size: 40, color: tokens.revokeText),
+                Icon(
+                  Icons.timer_off_outlined,
+                  size: 40,
+                  color: tokens.revokeText,
+                ),
                 const SizedBox(height: AppSpacing.sm),
-                Text('Pairing code expired', style: theme.textTheme.headlineSmall),
+                Text(
+                  'Pairing code expired',
+                  style: theme.textTheme.headlineSmall,
+                ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   'Generate a new code to continue. Expired codes cannot be scanned or entered.',
                   textAlign: TextAlign.center,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: tokens.secondaryText,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 AppButton(
@@ -231,7 +239,10 @@ class PairingInitiateView extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.handshake_outlined, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.handshake_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: Text(
@@ -274,7 +285,9 @@ class PairingInitiateView extends StatelessWidget {
                     const Spacer(),
                     TextButton.icon(
                       onPressed: () {
-                        Clipboard.setData(ClipboardData(text: pairing.pairingCode));
+                        Clipboard.setData(
+                          ClipboardData(text: pairing.pairingCode),
+                        );
                         AppNavigator.snackbar('Copied', 'Pairing code copied');
                       },
                       icon: const Icon(Icons.copy, size: 16),
@@ -300,7 +313,9 @@ class PairingInitiateView extends StatelessWidget {
                       variant: AppButtonVariant.secondary,
                       expand: false,
                       onPressed: () {
-                        Clipboard.setData(ClipboardData(text: pairing.pairingCode));
+                        Clipboard.setData(
+                          ClipboardData(text: pairing.pairingCode),
+                        );
                         AppNavigator.snackbar('Copied', 'Pairing code copied');
                       },
                     ),
@@ -434,13 +449,19 @@ class _ExpiryCountdownState extends State<_ExpiryCountdown> {
     if (remaining.isNegative) {
       return Text(
         'Expired',
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: context.tokens.revokeText,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(color: context.tokens.revokeText),
       );
     }
-    final minutes = remaining.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = remaining.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final minutes = remaining.inMinutes
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
+    final seconds = remaining.inSeconds
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
     final hours = remaining.inHours;
     final label = hours > 0 ? '$hours:$minutes:$seconds' : '$minutes:$seconds';
     return Row(
@@ -449,9 +470,9 @@ class _ExpiryCountdownState extends State<_ExpiryCountdown> {
         const SizedBox(width: 6),
         Text(
           'Code expires in $label',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: context.tokens.secondaryText,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: context.tokens.secondaryText),
         ),
       ],
     );

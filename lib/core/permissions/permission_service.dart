@@ -7,8 +7,9 @@ import 'package:spy_love/core/permissions/app_permission.dart';
 class PermissionService extends ChangeNotifier {
   final Map<String, PermissionStatus> statuses = <String, PermissionStatus>{};
 
-  bool get allGranted =>
-      AppPermission.monitoring.every((item) => _isGranted(statuses[item.scope]));
+  bool get allGranted => AppPermission.monitoring.every(
+    (item) => _isGranted(statuses[item.scope]),
+  );
 
   List<AppPermission> get missingPermissions => AppPermission.monitoring
       .where((item) => !_isGranted(statuses[item.scope]))

@@ -27,10 +27,8 @@ class ApiService {
     OneRequest.setAuth(
       getAccessToken: _tokenStorage.getAccessToken,
       getRefreshToken: _tokenStorage.getRefreshToken,
-      saveTokens: (access, refresh) => _tokenStorage.saveTokens(
-        access: access,
-        refresh: refresh,
-      ),
+      saveTokens: (access, refresh) =>
+          _tokenStorage.saveTokens(access: access, refresh: refresh),
       // Auth refresh posts this path on Dio directly, so it must already be absolute.
       refreshPath: _absolute(ApiConstants.authRefresh),
       skipPathContains: const [
@@ -77,7 +75,7 @@ class ApiService {
         resultOverlay: false,
       );
 
-      return result.fold(
+      final mapped = result.fold(
         ifRight: (data) => Left<T, String>(data),
         ifLeft: (error) {
           if (resultOverlay) {
@@ -90,16 +88,17 @@ class ApiService {
           return Right<T, String>(error);
         },
       );
+      return mapped;
     } finally {
       if (loader) _overlay.end();
     }
   }
 
   RequestType _toRequestType(HttpMethod method) => switch (method) {
-        HttpMethod.get => RequestType.GET,
-        HttpMethod.post => RequestType.POST,
-        HttpMethod.put => RequestType.PUT,
-        HttpMethod.delete => RequestType.DELETE,
-        HttpMethod.patch => RequestType.PATCH,
-      };
+    HttpMethod.get => RequestType.GET,
+    HttpMethod.post => RequestType.POST,
+    HttpMethod.put => RequestType.PUT,
+    HttpMethod.delete => RequestType.DELETE,
+    HttpMethod.patch => RequestType.PATCH,
+  };
 }

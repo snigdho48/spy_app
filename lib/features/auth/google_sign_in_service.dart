@@ -33,7 +33,9 @@ class GoogleSignInService {
     await ensureInitialized();
 
     if (!GoogleSignIn.instance.supportsAuthenticate()) {
-      throw UnsupportedError('Google Sign-In is not supported on this platform');
+      throw UnsupportedError(
+        'Google Sign-In is not supported on this platform',
+      );
     }
 
     try {

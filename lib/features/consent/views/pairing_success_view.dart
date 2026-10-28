@@ -31,7 +31,9 @@ class PairingSuccessView extends StatelessWidget {
             const Text('Pairing complete'),
             Text(
               '● CONSENTED LINK',
-              style: theme.textTheme.labelSmall?.copyWith(color: tokens.consented),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: tokens.consented,
+              ),
             ),
           ],
         ),
@@ -50,7 +52,11 @@ class PairingSuccessView extends StatelessWidget {
                     color: tokens.surface,
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.check_circle, size: 40, color: tokens.consented),
+                  child: Icon(
+                    Icons.check_circle,
+                    size: 40,
+                    color: tokens.consented,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
@@ -61,7 +67,9 @@ class PairingSuccessView extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   '$deviceName is now sharing with your Family Circle.',
-                  style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: tokens.secondaryText,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -79,7 +87,9 @@ class PairingSuccessView extends StatelessWidget {
             elevated: false,
             child: Text(
               'Both devices keep a persistent status notification so sharing stays visible. Either person can revoke scopes from Account or Device detail anytime.',
-              style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: tokens.secondaryText,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.lg),

@@ -10,13 +10,14 @@ class SharingPausedBanner extends StatelessWidget {
   final SharingState sharing;
 
   String _countdown() {
-    final seconds = sharing.resumesInSeconds ??
+    final seconds =
+        sharing.resumesInSeconds ??
         (sharing.pausedUntil == null
             ? 0
             : sharing.pausedUntil!
-                .toUtc()
-                .difference(DateTime.now().toUtc())
-                .inSeconds);
+                  .toUtc()
+                  .difference(DateTime.now().toUtc())
+                  .inSeconds);
     final safe = seconds < 0 ? 0 : seconds;
     final h = safe ~/ 3600;
     final m = (safe % 3600) ~/ 60;

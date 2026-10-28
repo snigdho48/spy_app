@@ -3,6 +3,12 @@ import 'package:spy_love/core/theme/app_colors.dart';
 
 /// Central app configuration — env vars, API, network, and UI constants.
 /// Colors come from Consent Horizon [AppColors] — do not hard-code elsewhere.
+///
+/// Build-time defines (do not commit production values in workflows/PRs):
+/// - `API_BASE_URL` / `WS_BASE_URL` — see [apiBaseUrl] / [wsBaseUrl]
+/// - `ENABLE_CERT_PINNING` (bool, default false) + `CERT_PINS` (comma-separated
+///   SHA-256 hex of leaf certs) — see `certificate_pinning.dart`
+/// - `GOOGLE_WEB_CLIENT_ID` — Android Google Sign-In ID token audience
 abstract final class AppConfig {
   static const String appName = 'Spy Love';
 

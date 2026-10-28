@@ -41,13 +41,17 @@ class DeviceRepository {
     if (result.isLeft) {
       final results = result.left['results'] as List<dynamic>? ?? const [];
       return Left(
-        results.map((e) => DeviceModel.fromJson(e as Map<String, dynamic>)).toList(),
+        results
+            .map((e) => DeviceModel.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
     }
     return Right(result.right);
   }
 
-  Future<Either<OwnedDeviceStatus, String>> getOwnedDeviceStatus(String id) async {
+  Future<Either<OwnedDeviceStatus, String>> getOwnedDeviceStatus(
+    String id,
+  ) async {
     final result = await _api.send<Map<String, dynamic>>(
       url: ApiConstants.deviceOwnedStatus(id),
       method: HttpMethod.get,

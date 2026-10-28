@@ -53,28 +53,22 @@ class SubscriptionController extends ChangeNotifier {
     errorMessage = '';
     notifyListeners();
     final result = await _repository.listPlans();
-    result.fold(
-      (list) => plans = list,
-      (error) => errorMessage = error,
-    );
+    result.fold((list) => plans = list, (error) => errorMessage = error);
     isLoading = false;
     notifyListeners();
   }
 
   Future<void> loadCurrent() async {
     final result = await _repository.getCurrent();
-    result.fold(
-      (data) {
-        needsWorkspace = data['needs_workspace'] as bool? ?? false;
-        final sub = data['subscription'];
-        if (sub is Map<String, dynamic>) {
-          current = SubscriptionInfo.fromJson(sub);
-        } else {
-          current = null;
-        }
-      },
-      (error) => errorMessage = error,
-    );
+    result.fold((data) {
+      needsWorkspace = data['needs_workspace'] as bool? ?? false;
+      final sub = data['subscription'];
+      if (sub is Map<String, dynamic>) {
+        current = SubscriptionInfo.fromJson(sub);
+      } else {
+        current = null;
+      }
+    }, (error) => errorMessage = error);
     notifyListeners();
   }
 
@@ -86,7 +80,10 @@ class SubscriptionController extends ChangeNotifier {
       (info) {
         current = info;
         _syncAuthUser(info);
-        AppNavigator.snackbar('Plan updated', 'You are now on ${info.planName}');
+        AppNavigator.snackbar(
+          'Plan updated',
+          'You are now on ${info.planName}',
+        );
         notifyListeners();
         return true;
       },
@@ -122,7 +119,10 @@ class SubscriptionController extends ChangeNotifier {
             ),
           );
         }
-        AppNavigator.snackbar('Workspace ready', 'You can now pair devices and monitor.');
+        AppNavigator.snackbar(
+          'Workspace ready',
+          'You can now pair devices and monitor.',
+        );
         notifyListeners();
         return true;
       },

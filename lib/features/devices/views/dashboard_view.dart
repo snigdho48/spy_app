@@ -66,7 +66,10 @@ class _DashboardViewState extends State<DashboardView> {
   Widget build(BuildContext context) {
     final useRail = context.layoutSize != AppLayoutSize.compact;
     final pages = [
-      HomeTab(onSeeDevices: () => setState(() => _index = 1), onPair: () => setState(() => _index = 2)),
+      HomeTab(
+        onSeeDevices: () => setState(() => _index = 1),
+        onPair: () => setState(() => _index = 2),
+      ),
       DevicesTab(onPair: () => setState(() => _index = 2)),
       const PairingStartView(embedded: true),
       const AccountTab(),
@@ -83,7 +86,8 @@ class _DashboardViewState extends State<DashboardView> {
             children: [
               NavigationRail(
                 selectedIndex: _index,
-                onDestinationSelected: (value) => setState(() => _index = value),
+                onDestinationSelected: (value) =>
+                    setState(() => _index = value),
                 labelType: NavigationRailLabelType.all,
                 destinations: _rail,
               ),

@@ -42,13 +42,12 @@ class HomeTab extends StatelessWidget {
     if (controller.isLoading && controller.devices.isEmpty) {
       return AppPage(
         children: [
-          Text(
-            'Spy Love · Home',
-            style: theme.textTheme.headlineSmall,
-          ),
+          Text('Spy Love · Home', style: theme.textTheme.headlineSmall),
           Text(
             '● MUTUAL TRANSPARENCY ACTIVE',
-            style: theme.textTheme.labelSmall?.copyWith(color: tokens.consented),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: tokens.consented,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           const HomeSkeleton(),
@@ -68,15 +67,19 @@ class HomeTab extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Text(
             'Hi $name',
-            style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: tokens.secondaryText,
+            ),
           ),
         ],
         const SizedBox(height: AppSpacing.md),
         if (!network.isConnected) ...[
-          OfflineBanner(onRetry: () async {
-            await network.refreshStatus();
-            await controller.loadDevices();
-          }),
+          OfflineBanner(
+            onRetry: () async {
+              await network.refreshStatus();
+              await controller.loadDevices();
+            },
+          ),
           const SizedBox(height: AppSpacing.md),
         ],
         const WorkspaceSetupCard(),
@@ -161,7 +164,8 @@ class _MetricGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final consentPct = controller.devices.isEmpty
         ? 0
-        : ((controller.activeDeviceCount / controller.devices.length) * 100).round();
+        : ((controller.activeDeviceCount / controller.devices.length) * 100)
+              .round();
     return Column(
       children: [
         AdaptiveMetricRow(
@@ -180,7 +184,9 @@ class _MetricGrid extends StatelessWidget {
             MetricCard(
               label: 'Consent status',
               value: controller.devices.isEmpty ? '—' : '$consentPct%',
-              caption: controller.attentionCount == 0 ? 'Healthy' : 'Needs review',
+              caption: controller.attentionCount == 0
+                  ? 'Healthy'
+                  : 'Needs review',
               icon: Icons.verified_user_outlined,
               badge: controller.attentionCount == 0 ? 'Healthy' : 'Review',
               badgeTone: controller.attentionCount == 0
@@ -194,7 +200,9 @@ class _MetricGrid extends StatelessWidget {
           children: [
             MetricCard(
               label: 'Battery alerts',
-              value: controller.attentionCount > 0 ? '${controller.attentionCount}' : '0',
+              value: controller.attentionCount > 0
+                  ? '${controller.attentionCount}'
+                  : '0',
               caption: controller.attentionCount == 0
                   ? 'No low-power flags'
                   : 'Devices need attention',
@@ -248,10 +256,10 @@ class _HeroCard extends StatelessWidget {
             needsWorkspace
                 ? 'CREATE A WORKSPACE'
                 : healthy
-                    ? 'MUTUAL CONSENT LEDGER HEALTHY'
-                    : online
-                        ? 'CONSENT REVIEW NEEDED'
-                        : 'OFFLINE',
+                ? 'MUTUAL CONSENT LEDGER HEALTHY'
+                : online
+                ? 'CONSENT REVIEW NEEDED'
+                : 'OFFLINE',
             style: theme.textTheme.labelSmall?.copyWith(
               color: healthy ? tokens.consentedLabel : AppColors.white,
               fontWeight: FontWeight.w800,
@@ -273,10 +281,10 @@ class _HeroCard extends StatelessWidget {
             needsWorkspace
                 ? 'Set up a family or team workspace to start pairing.'
                 : healthy
-                    ? 'Monitored members can audit shared logs, revoke telemetry, or view active pings in real time.'
-                    : online
-                        ? 'Review devices that need re-consent or attention.'
-                        : 'Showing last known device status',
+                ? 'Monitored members can audit shared logs, revoke telemetry, or view active pings in real time.'
+                : online
+                ? 'Review devices that need re-consent or attention.'
+                : 'Showing last known device status',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: healthy
                   ? tokens.secondaryText
@@ -312,9 +320,9 @@ class _PermissionBanner extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Grant Usage Access and Notification Listener so pairing and care telemetry work on this device.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: tokens.secondaryText,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
           ),
           const SizedBox(height: 8),
           ...missing.map(
@@ -358,7 +366,8 @@ class _DevicePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     if (controller.errorMessage.isNotEmpty) {
       final msg = controller.errorMessage;
-      final networkish = offline ||
+      final networkish =
+          offline ||
           msg.toLowerCase().contains('socket') ||
           msg.toLowerCase().contains('network') ||
           msg.toLowerCase().contains('connection');
@@ -383,7 +392,9 @@ class _DevicePreview extends StatelessWidget {
 
     return Column(
       children: [
-        ...controller.devices.take(4).map(
+        ...controller.devices
+            .take(4)
+            .map(
               (device) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: DeviceListTile(

@@ -37,7 +37,11 @@ class EmptyState extends StatelessWidget {
               color: tokens.surfaceContainerLow,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 34, color: Theme.of(context).colorScheme.primary),
+            child: Icon(
+              icon,
+              size: 34,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
@@ -49,9 +53,9 @@ class EmptyState extends StatelessWidget {
           Text(
             message,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: tokens.secondaryText,
-                  height: 1.45,
-                ),
+              color: tokens.secondaryText,
+              height: 1.45,
+            ),
             textAlign: TextAlign.center,
           ),
           if (actionLabel != null && onAction != null) ...[
@@ -65,11 +69,7 @@ class EmptyState extends StatelessWidget {
 }
 
 class ErrorState extends StatelessWidget {
-  const ErrorState({
-    super.key,
-    required this.message,
-    this.onRetry,
-  });
+  const ErrorState({super.key, required this.message, this.onRetry});
 
   final String message;
   final VoidCallback? onRetry;
@@ -110,17 +110,18 @@ class OfflineBanner extends StatelessWidget {
               color: tokens.surface,
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.wifi_off_rounded, color: tokens.pending, size: 22),
+            child: Icon(
+              Icons.wifi_off_rounded,
+              color: tokens.pending,
+              size: 22,
+            ),
           ),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'You’re offline',
-                  style: theme.textTheme.titleMedium,
-                ),
+                Text('You’re offline', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 2),
                 Text(
                   'Showing last known status. Pairing and live sync need a connection.',
@@ -189,9 +190,9 @@ class ConnectionErrorState extends StatelessWidget {
             Text(
               'Check your connection, then try again. Consent and device history stay on-device until sync resumes.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: tokens.secondaryText,
-                    height: 1.45,
-                  ),
+                color: tokens.secondaryText,
+                height: 1.45,
+              ),
               textAlign: TextAlign.center,
             ),
             if (onRetry != null) ...[
@@ -241,13 +242,13 @@ class HomeSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     Widget block({double height = 88}) => Container(
-          height: height,
-          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: tokens.input,
-            borderRadius: AppRadius.cardBorder,
-          ),
-        );
+      height: height,
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: tokens.input,
+        borderRadius: AppRadius.cardBorder,
+      ),
+    );
     return Column(
       children: [
         block(height: 72),

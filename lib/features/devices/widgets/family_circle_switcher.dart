@@ -45,10 +45,17 @@ class FamilyCircleCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: theme.textTheme.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    Text(
+                      name,
+                      style: theme.textTheme.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     Text(
                       'Family Care Plan · $used device${used == 1 ? '' : 's'}',
-                      style: theme.textTheme.labelMedium?.copyWith(color: tokens.secondaryText),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: tokens.secondaryText,
+                      ),
                     ),
                   ],
                 ),
@@ -68,7 +75,11 @@ class FamilyCircleCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [
-                Icon(Icons.lock_outline, size: 14, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.lock_outline,
+                  size: 14,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -175,11 +186,16 @@ Future<void> showFamilyCircleSheet(BuildContext context) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Family Circle workspace', style: theme.textTheme.headlineSmall),
+            Text(
+              'Family Circle workspace',
+              style: theme.textTheme.headlineSmall,
+            ),
             const SizedBox(height: AppSpacing.xs),
             Text(
               'Switching circles requires a workspace membership API. This build shows your active workspace only.',
-              style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: tokens.secondaryText,
+              ),
             ),
             const SizedBox(height: AppSpacing.md),
             AppCard(
@@ -187,7 +203,10 @@ Future<void> showFamilyCircleSheet(BuildContext context) {
               elevated: false,
               child: Row(
                 children: [
-                  Icon(Icons.home_work_outlined, color: theme.colorScheme.primary),
+                  Icon(
+                    Icons.home_work_outlined,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Column(
@@ -201,7 +220,11 @@ Future<void> showFamilyCircleSheet(BuildContext context) {
                       ],
                     ),
                   ),
-                  const StatusBadge(label: 'Active', tone: StatusTone.success, pulse: true),
+                  const StatusBadge(
+                    label: 'Active',
+                    tone: StatusTone.success,
+                    pulse: true,
+                  ),
                 ],
               ),
             ),

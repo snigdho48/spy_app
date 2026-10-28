@@ -52,7 +52,9 @@ class TransparencyLedgerTile extends StatelessWidget {
                 Text(scopeLabel, style: theme.textTheme.bodyMedium),
                 Text(
                   consumerLabel,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: tokens.secondaryText,
+                  ),
                 ),
               ],
             ),

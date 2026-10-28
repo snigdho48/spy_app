@@ -58,18 +58,23 @@ base64 -w 0 your-keystore.jks
 
 Paste the single line into the secret. PKCS12 keystores need `KEYSTORE_PASSWORD` and `KEY_PASSWORD` to be the same value. Passwords must not contain newlines.
 
-Local debug builds do not need these secrets. If `android/key.properties` is missing, debug uses the default debug keystore. A release build on GitHub Actions fails when the secrets are missing, so a debug-signed APK is not published. When `key.properties` is present locally, debug and release both use that keystore so the Google Sign-In certificate stays the same.
+Local debug builds do not need these secrets. If `android/key.properties` is missing, debug uses the default debug keystore. Any release assemble (local or CI) fails when the keystore is missing, so a debug-signed release APK is never produced. When `key.properties` is present locally, debug and release both use that keystore so the Google Sign-In certificate stays the same.
 
 ## API host baked into the APK
 
-The workflow passes:
+The workflow reads repository **variables** `API_BASE_URL` and `WS_BASE_URL` (Settings → Secrets and variables → Actions → Variables) and passes them as `--dart-define`. There is no committed host default in the workflow. If either variable is missing, the release job fails.
+
+The same names are read in Dart via `String.fromEnvironment` in `lib/core/config/app_config.dart`. Local debug builds without `--dart-define` use that file's compiled default. Do not put production hosts in the workflow YAML, PR descriptions, or release notes.
+
+Optional certificate pinning (Dio / HTTP only):
 
 ```text
---dart-define=API_BASE_URL=https://spy.way2points.com/api/v1
---dart-define=WS_BASE_URL=wss://spy.way2points.com/ws/v1/events/
+--dart-define=ENABLE_CERT_PINNING=true
+--dart-define=CERT_PINS=<comma-separated SHA-256 hex fingerprints>
 ```
 
-Override either URL with a repository **variable** of the same name (`API_BASE_URL`, `WS_BASE_URL`). Those are not secrets. The same hosts are the defaults in `lib/core/config/app_config.dart`, so a local build without `--dart-define` uses that compiled default. A release build ignores a variable that still points at a tunnel host and uses the compiled default instead. The GitHub Release description does not include the API host.
+Pins are not committed. Wire them the same way as the API variables when you want pinning in a release build.
+
 
 ## Toolchain
 
@@ -77,4 +82,5 @@ Override either URL with a repository **variable** of the same name (`API_BASE_U
 - Flutter 3.47.8 (Dart 3.13.7), which satisfies `pubspec.yaml` `sdk: ^3.12.1`
 - `compileSdk` 37 with `compileSdkMinor` 0, which resolves the published SDK directory `platforms/android-37.0` (`permission_handler_android` 14 requires API 37). `targetSdk` stays on the Flutter default (36)
 - NDK `28.2.13676358` (`flutter.ndkVersion` on Flutter 3.47.8)
-- R8 minify and resource shrinking stay off, matching `android/app/build.gradle.kts`
+- R8 minify and resource shrinking are **on** for release (`isMinifyEnabled` / `isShrinkResources`), with `android/app/proguard-rules.pro`
+- Release builds **refuse** the debug keystore — `android/key.properties` (or CI secrets) is required

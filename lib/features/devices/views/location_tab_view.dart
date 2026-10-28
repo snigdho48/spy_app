@@ -289,21 +289,25 @@ class _MapPreviewCard extends StatelessWidget {
                       child: Material(
                         color: tokens.surface.withValues(alpha: 0.94),
                         borderRadius: BorderRadius.circular(20),
-                        child: InkWell(
-                          onTap: onExpand,
-                          borderRadius: BorderRadius.circular(20),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.open_in_full_rounded, size: 16),
-                                SizedBox(width: 6),
-                                Text('Expand'),
-                              ],
+                        child: Semantics(
+                          button: true,
+                          label: 'Expand location map',
+                          child: InkWell(
+                            onTap: onExpand,
+                            borderRadius: BorderRadius.circular(20),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.open_in_full_rounded, size: 16),
+                                  SizedBox(width: 6),
+                                  Text('Expand'),
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -342,82 +346,91 @@ class _LocationHistoryTile extends StatelessWidget {
       if (point.accuracyM != null) '±${point.accuracyM!.toStringAsFixed(0)} m',
     ].join(' · ');
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    margin: const EdgeInsets.only(top: 4),
-                    decoration: BoxDecoration(
-                      color: isLatest
-                          ? AppColors.danger
-                          : Theme.of(context).colorScheme.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              (isLatest
-                                      ? AppColors.danger
-                                      : Theme.of(context).colorScheme.primary)
-                                  .withValues(alpha: 0.35),
-                          blurRadius: 6,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return Semantics(
+      button: true,
+      label:
+          '${isLatest ? "Latest location" : "Location history point"}: ${point.displayLabel}',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            point.displayLabel,
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w600),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
+                    Container(
+                      width: 12,
+                      height: 12,
+                      margin: const EdgeInsets.only(top: 4),
+                      decoration: BoxDecoration(
+                        color: isLatest
+                            ? AppColors.danger
+                            : Theme.of(context).colorScheme.primary,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                (isLatest
+                                        ? AppColors.danger
+                                        : Theme.of(context).colorScheme.primary)
+                                    .withValues(alpha: 0.35),
+                            blurRadius: 6,
                           ),
-                        ),
-                        if (isLatest)
-                          const Padding(
-                            padding: EdgeInsets.only(left: 8),
-                            child: StatusBadge(
-                              label: 'Latest',
-                              tone: StatusTone.info,
-                              showDot: false,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: tokens.secondaryText,
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    TimestampLabel(point.timestamp),
                   ],
                 ),
-              ),
-              Icon(Icons.chevron_right, color: tokens.secondaryText, size: 20),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              point.displayLabel,
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (isLatest)
+                            const Padding(
+                              padding: EdgeInsets.only(left: 8),
+                              child: StatusBadge(
+                                label: 'Latest',
+                                tone: StatusTone.info,
+                                showDot: false,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: tokens.secondaryText,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TimestampLabel(point.timestamp),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: tokens.secondaryText,
+                  size: 20,
+                ),
+              ],
+            ),
           ),
         ),
       ),

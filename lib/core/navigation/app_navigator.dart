@@ -7,7 +7,10 @@ abstract final class AppNavigator {
 
   static BuildContext? get context => key.currentContext;
 
-  static Future<T?> toNamed<T extends Object?>(String name, {Object? arguments}) {
+  static Future<T?> toNamed<T extends Object?>(
+    String name, {
+    Object? arguments,
+  }) {
     return key.currentState!.pushNamed<T>(name, arguments: arguments);
   }
 
@@ -39,11 +42,7 @@ abstract final class AppNavigator {
               Icon(icon, color: Colors.white, size: 20),
               const SizedBox(width: 12),
             ],
-            Expanded(
-              child: Text(
-                message.isEmpty ? title : '$title\n$message',
-              ),
-            ),
+            Expanded(child: Text(message.isEmpty ? title : '$title\n$message')),
           ],
         ),
         action: action,

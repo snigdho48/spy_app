@@ -11,8 +11,8 @@ class SimBridge {
 
   static Stream<Map<String, dynamic>> get simEventStream {
     _stream ??= _eventChannel.receiveBroadcastStream().map(
-          (event) => Map<String, dynamic>.from(event as Map),
-        );
+      (event) => Map<String, dynamic>.from(event as Map),
+    );
     return _stream!;
   }
 

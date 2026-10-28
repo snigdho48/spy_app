@@ -58,7 +58,9 @@ class AuthUser {
       role: data['role'] as String?,
       needsWorkspace: data['needs_workspace'] as bool? ?? tenant == null,
       subscription: sub != null ? SubscriptionInfo.fromJson(sub) : null,
-      authMethods: AuthMethods.fromJson(data['auth_methods'] as Map<String, dynamic>?),
+      authMethods: AuthMethods.fromJson(
+        data['auth_methods'] as Map<String, dynamic>?,
+      ),
     );
   }
 
@@ -74,7 +76,9 @@ class AuthUser {
       role: data['role'] as String?,
       needsWorkspace: data['needs_workspace'] as bool? ?? tenant == null,
       subscription: sub != null ? SubscriptionInfo.fromJson(sub) : null,
-      authMethods: AuthMethods.fromJson(data['auth_methods'] as Map<String, dynamic>?),
+      authMethods: AuthMethods.fromJson(
+        data['auth_methods'] as Map<String, dynamic>?,
+      ),
     );
   }
 }

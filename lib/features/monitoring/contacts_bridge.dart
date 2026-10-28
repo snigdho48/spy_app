@@ -17,10 +17,9 @@ class ContactsBridge {
     int limit = 2000,
   }) async {
     try {
-      final raw = await _channel.invokeMethod<List<dynamic>>(
-        'getContacts',
-        {'limit': limit},
-      );
+      final raw = await _channel.invokeMethod<List<dynamic>>('getContacts', {
+        'limit': limit,
+      });
       if (raw == null) return const [];
       return raw
           .whereType<Map>()

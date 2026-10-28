@@ -14,9 +14,9 @@ class EventStreamClient {
     final token = await _tokens.getAccessToken();
     if (token == null || token.isEmpty) return;
 
-    final uri = Uri.parse(AppConfig.wsBaseUrl).replace(
-      queryParameters: {'token': token},
-    );
+    final uri = Uri.parse(
+      AppConfig.wsBaseUrl,
+    ).replace(queryParameters: {'token': token});
 
     _socket = OneRequest.socket(
       url: uri.toString(),

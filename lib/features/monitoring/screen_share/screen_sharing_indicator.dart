@@ -29,7 +29,11 @@ class ScreenSharingIndicator extends StatelessWidget {
               color: Colors.red.shade700,
               borderRadius: BorderRadius.circular(24),
               boxShadow: const [
-                BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 2)),
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
               ],
             ),
             child: Row(
@@ -40,7 +44,10 @@ class ScreenSharingIndicator extends StatelessWidget {
                 const Flexible(
                   child: Text(
                     'Your screen is being shared live',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),

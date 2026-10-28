@@ -26,18 +26,18 @@ class SectionHeader extends StatelessWidget {
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      letterSpacing: -0.15,
-                      height: 1.2,
-                    ),
+                  letterSpacing: -0.15,
+                  height: 1.2,
+                ),
               ),
               if (subtitle != null) ...[
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   subtitle!,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: tokens.secondaryText,
-                        height: 1.4,
-                      ),
+                    color: tokens.secondaryText,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ],

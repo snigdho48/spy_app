@@ -1,8 +1,5 @@
 class AuthMethods {
-  const AuthMethods({
-    required this.hasPassword,
-    required this.hasGoogle,
-  });
+  const AuthMethods({required this.hasPassword, required this.hasGoogle});
 
   final bool hasPassword;
   final bool hasGoogle;

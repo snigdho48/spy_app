@@ -43,9 +43,9 @@ class ScreenStreamClient {
     final token = await _tokens.getAccessToken();
     if (token == null || token.isEmpty) return false;
 
-    final uri = Uri.parse(AppConfig.screenWsUrl(sessionWsPath)).replace(
-      queryParameters: {'token': token},
-    );
+    final uri = Uri.parse(
+      AppConfig.screenWsUrl(sessionWsPath),
+    ).replace(queryParameters: {'token': token});
 
     final socket = OneRequest.socket(
       url: uri.toString(),
@@ -67,10 +67,7 @@ class ScreenStreamClient {
             // with a reason instead of only noticing the raw socket close.
             onSignal?.call({
               'type': 'screen.signal',
-              'data': {
-                'signal': 'ended',
-                'reason': map['reason'] ?? 'closed',
-              },
+              'data': {'signal': 'ended', 'reason': map['reason'] ?? 'closed'},
             });
             break;
           // 'screen.ready' is an informational handshake ack — no action.
@@ -99,7 +96,11 @@ class ScreenStreamClient {
   }
 
   /// Publisher-only: push one JPEG frame (base64) with its dimensions.
-  void sendFrame({required String jpegBase64, required int width, required int height}) {
+  void sendFrame({
+    required String jpegBase64,
+    required int width,
+    required int height,
+  }) {
     _socket?.send({
       'type': 'screen.frame',
       'data': {

@@ -10,6 +10,7 @@ class AppCard extends StatelessWidget {
     this.color,
     this.borderColor,
     this.elevated = true,
+    this.semanticLabel,
   });
 
   final Widget child;
@@ -18,6 +19,10 @@ class AppCard extends StatelessWidget {
   final Color? color;
   final Color? borderColor;
   final bool elevated;
+
+  /// Spoken label for screen readers. When [onTap] is set the card is exposed
+  /// as a button.
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -31,20 +36,24 @@ class AppCard extends StatelessWidget {
 
     final content = Padding(padding: padding, child: child);
 
+    late final Widget built;
     if (onTap == null) {
-      return DecoratedBox(decoration: decoration, child: content);
+      built = DecoratedBox(decoration: decoration, child: content);
+    } else {
+      built = Material(
+        color: Colors.transparent,
+        child: Ink(
+          decoration: decoration,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: AppRadius.cardBorder,
+            child: content,
+          ),
+        ),
+      );
     }
 
-    return Material(
-      color: Colors.transparent,
-      child: Ink(
-        decoration: decoration,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: AppRadius.cardBorder,
-          child: content,
-        ),
-      ),
-    );
+    if (semanticLabel == null) return built;
+    return Semantics(button: onTap != null, label: semanticLabel, child: built);
   }
 }

@@ -33,6 +33,7 @@ class DeviceListTile extends StatelessWidget {
 
     return AppCard(
       onTap: onTap,
+      semanticLabel: 'Device ${device.name}, $platform. $actionLabel',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -63,9 +64,7 @@ class DeviceListTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Flexible(
-                child: StatusBadge.device(device.status),
-              ),
+              Flexible(child: StatusBadge.device(device.status)),
               const SizedBox(width: 4),
               Semantics(
                 button: true,
@@ -88,8 +87,9 @@ class DeviceListTile extends StatelessWidget {
                     : Icons.battery_std_outlined,
                 label: snapshot?.batteryCaption ?? 'Battery syncing…',
                 color: lowBattery ? tokens.revokeText : tokens.consented,
-                background:
-                    lowBattery ? tokens.dangerSoft : tokens.surfaceContainerLow,
+                background: lowBattery
+                    ? tokens.dangerSoft
+                    : tokens.surfaceContainerLow,
               );
               final location = _SnapshotChip(
                 icon: Icons.location_on_outlined,
@@ -163,9 +163,9 @@ class _SnapshotChip extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: color,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(color: color),
             ),
           ),
         ],

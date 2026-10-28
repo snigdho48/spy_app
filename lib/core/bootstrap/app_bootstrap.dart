@@ -2,7 +2,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:spy_love/core/config/app_config.dart';
+import 'package:spy_love/core/debug/app_log.dart';
+import 'package:spy_love/core/network/certificate_pinning.dart';
 import 'package:spy_love/core/network/one_request_config.dart';
+import 'package:spy_love/core/storage/secure_hive.dart';
 import 'package:spy_love/core/theme/theme_mode_controller.dart';
 import 'package:spy_love/firebase_options.dart';
 
@@ -19,13 +22,14 @@ abstract final class AppBootstrap {
         options: DefaultFirebaseOptions.currentPlatform,
       );
     } catch (e, stack) {
-      debugPrint('Firebase init failed: $e\n$stack');
+      AppLog.e('Firebase init failed', e, stack);
     }
 
     try {
       OneRequestConfig.setup();
+      CertificatePinning.applyToSharedClient();
     } catch (e, stack) {
-      debugPrint('OneRequest setup failed: $e\n$stack');
+      AppLog.e('OneRequest setup failed', e, stack);
     }
   }
 
@@ -38,7 +42,7 @@ abstract final class AppBootstrap {
     const names = ['settings', 'monitored_device', 'sim_state'];
     for (final name in names) {
       if (!Hive.isBoxOpen(name)) {
-        await Hive.openBox<dynamic>(name);
+        await SecureHive.openBox(name);
       }
       final box = Hive.box<dynamic>(name);
       final drop = <dynamic>[

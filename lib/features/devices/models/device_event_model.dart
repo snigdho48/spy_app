@@ -16,7 +16,10 @@ class ContactPayload {
   String get initials {
     final name = (contactName ?? '').trim();
     if (name.isEmpty) return '?';
-    final parts = name.split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    final parts = name
+        .split(RegExp(r'\s+'))
+        .where((p) => p.isNotEmpty)
+        .toList();
     if (parts.length == 1) {
       final p = parts.first;
       return p.length >= 2 ? p.substring(0, 2).toUpperCase() : p.toUpperCase();
@@ -67,7 +70,9 @@ class DeviceEventModel {
 
     final photo = str('contact_photo_url');
     final httpsPhoto =
-        photo != null && photo.toLowerCase().startsWith('https://') ? photo : null;
+        photo != null && photo.toLowerCase().startsWith('https://')
+        ? photo
+        : null;
 
     return ContactPayload(
       contactName: str('contact_name') ?? str('name') ?? str('sender_name'),

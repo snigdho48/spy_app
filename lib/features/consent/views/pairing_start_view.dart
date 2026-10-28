@@ -24,7 +24,11 @@ class PairingStartView extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.verified_user_outlined, color: theme.colorScheme.primary, size: 20),
+            Icon(
+              Icons.verified_user_outlined,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
             const SizedBox(width: AppSpacing.xs),
             Text(
               'CONSENT VERIFICATION HUB',
@@ -68,7 +72,11 @@ class PairingStartView extends StatelessWidget {
                       color: tokens.successSoft,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(Icons.handshake_outlined, color: tokens.consented, size: 20),
+                    child: Icon(
+                      Icons.handshake_outlined,
+                      color: tokens.consented,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
@@ -93,7 +101,11 @@ class PairingStartView extends StatelessWidget {
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
-                  Icon(Icons.check_circle_outline, size: 16, color: tokens.consented),
+                  Icon(
+                    Icons.check_circle_outline,
+                    size: 16,
+                    color: tokens.consented,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -181,7 +193,9 @@ class PairingStartView extends StatelessWidget {
             const Text('Spy Love · Pair'),
             Text(
               '● MUTUAL TRANSPARENCY ACTIVE',
-              style: theme.textTheme.labelSmall?.copyWith(color: tokens.consented),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: tokens.consented,
+              ),
             ),
           ],
         ),
@@ -207,9 +221,7 @@ class _PairingSteps extends StatelessWidget {
       children: [
         for (var i = 0; i < steps.length; i++) ...[
           if (i > 0)
-            Expanded(
-              child: Container(height: 1, color: tokens.border),
-            ),
+            Expanded(child: Container(height: 1, color: tokens.border)),
           Expanded(
             flex: 2,
             child: Column(
@@ -297,9 +309,7 @@ class _RoleCard extends StatelessWidget {
                 child: Icon(icon, color: theme.colorScheme.primary),
               ),
               const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(title, style: theme.textTheme.titleMedium),
-              ),
+              Expanded(child: Text(title, style: theme.textTheme.titleMedium)),
               StatusBadge(label: badge, tone: badgeTone, showDot: false),
             ],
           ),

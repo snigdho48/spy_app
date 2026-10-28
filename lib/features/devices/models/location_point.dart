@@ -60,16 +60,20 @@ enum LocationDateFilter { today, week, month, all }
 
 extension LocationDateFilterX on LocationDateFilter {
   String get label => switch (this) {
-        LocationDateFilter.today => 'Today',
-        LocationDateFilter.week => '7 days',
-        LocationDateFilter.month => '30 days',
-        LocationDateFilter.all => 'All',
-      };
+    LocationDateFilter.today => 'Today',
+    LocationDateFilter.week => '7 days',
+    LocationDateFilter.month => '30 days',
+    LocationDateFilter.all => 'All',
+  };
 
   DateTime? get since => switch (this) {
-        LocationDateFilter.today => DateTime.now().subtract(const Duration(days: 1)),
-        LocationDateFilter.week => DateTime.now().subtract(const Duration(days: 7)),
-        LocationDateFilter.month => DateTime.now().subtract(const Duration(days: 30)),
-        LocationDateFilter.all => null,
-      };
+    LocationDateFilter.today => DateTime.now().subtract(
+      const Duration(days: 1),
+    ),
+    LocationDateFilter.week => DateTime.now().subtract(const Duration(days: 7)),
+    LocationDateFilter.month => DateTime.now().subtract(
+      const Duration(days: 30),
+    ),
+    LocationDateFilter.all => null,
+  };
 }
