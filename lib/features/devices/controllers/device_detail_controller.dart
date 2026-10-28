@@ -13,6 +13,7 @@ import 'package:spy_love/features/devices/models/device_event_model.dart';
 import 'package:spy_love/features/devices/models/location_point.dart';
 import 'package:spy_love/features/devices/repositories/event_repository.dart';
 import 'package:spy_love/features/devices/models/safe_zone_model.dart';
+import 'package:spy_love/features/devices/models/app_usage_model.dart';
 import 'package:spy_love/features/devices/repositories/safe_zone_repository.dart';
 import 'package:spy_love/features/devices/utils/location_map_utils.dart';
 
@@ -60,6 +61,13 @@ class DeviceDetailController extends ChangeNotifier {
   List<LocationPoint> locations = <LocationPoint>[];
   List<SafeZoneModel> safeZones = <SafeZoneModel>[];
   bool isLoadingSafeZones = false;
+
+  AppUsageSnapshot? usageSnapshot;
+  bool isLoadingUsage = false;
+  String usageError = '';
+  UsageRange usageRange = UsageRange.today;
+  DateTime? usageCustomFrom;
+  DateTime? usageCustomTo;
   LocationDateFilter locationFilter = LocationDateFilter.week;
 
   final MapController mapController = MapController();
@@ -195,6 +203,7 @@ class DeviceDetailController extends ChangeNotifier {
         _loadAppInventorySnapshot(),
         refreshLocations(silent: true),
         refreshSimEvents(),
+        refreshUsage(silent: true),
         _loadPrefix(null, (items) => allEvents = items),
       ]);
       notifyListeners();
@@ -215,6 +224,7 @@ class DeviceDetailController extends ChangeNotifier {
       _loadAppInventorySnapshot(),
       refreshLocations(),
       refreshSimEvents(),
+      refreshUsage(),
       _loadPrefix(null, (items) => allEvents = items),
     ]);
     isLoadingEvents = false;
@@ -420,6 +430,67 @@ class DeviceDetailController extends ChangeNotifier {
       );
     }, (error) => errorMessage = error);
     notifyListeners();
+  }
+
+  Future<void> refreshUsage({bool silent = false}) async {
+    if (!silent) {
+      isLoadingUsage = true;
+      usageError = '';
+      notifyListeners();
+    }
+    final now = DateTime.now();
+    late final DateTime from;
+    late final DateTime to;
+    switch (usageRange) {
+      case UsageRange.today:
+        from = DateTime(now.year, now.month, now.day);
+        to = now;
+      case UsageRange.week:
+        from = now.subtract(const Duration(days: 7));
+        to = now;
+      case UsageRange.custom:
+        from = usageCustomFrom ?? now.subtract(const Duration(days: 7));
+        to = usageCustomTo ?? now;
+    }
+    final result = await _events.appUsageRange(
+      deviceId: device.id,
+      from: from,
+      to: to,
+      loader: false,
+    );
+    result.fold(
+      (snap) {
+        usageSnapshot = snap;
+        usageError = '';
+      },
+      (error) {
+        usageError = error;
+      },
+    );
+    if (usageSnapshot == null && usageError.isNotEmpty) {
+      final latest = await _events.latestAppUsage(deviceId: device.id);
+      if (latest != null) {
+        usageSnapshot = latest;
+        usageError = '';
+      }
+    }
+    isLoadingUsage = false;
+    notifyListeners();
+  }
+
+  void setUsageRange(UsageRange range) {
+    usageRange = range;
+    notifyListeners();
+    // ignore: discarded_futures
+    refreshUsage();
+  }
+
+  Future<void> setUsageCustomRange(DateTime from, DateTime to) async {
+    usageRange = UsageRange.custom;
+    usageCustomFrom = from;
+    usageCustomTo = to;
+    notifyListeners();
+    await refreshUsage();
   }
 
   Future<void> refreshSafeZones() async {

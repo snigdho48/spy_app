@@ -3,6 +3,7 @@ import 'package:spy_love/core/network/api_service.dart';
 import 'package:spy_love/core/network/http_method.dart';
 import 'package:spy_love/core/types/either.dart';
 import 'package:spy_love/features/devices/models/device_event_model.dart';
+import 'package:spy_love/features/devices/models/app_usage_model.dart';
 
 class EventRepository {
   EventRepository(this._api);
@@ -120,5 +121,44 @@ class EventRepository {
       resultOverlay: false,
     );
     return result.isLeft ? result.left : null;
+  }
+
+  /// GET /events/app-usage/latest/?device_id=
+  Future<AppUsageSnapshot?> latestAppUsage({
+    required String deviceId,
+    bool loader = false,
+  }) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.appUsageLatest,
+      method: HttpMethod.get,
+      queryParameters: {'device_id': deviceId},
+      loader: loader,
+      resultOverlay: false,
+    );
+    return result.isLeft ? AppUsageSnapshot.fromJson(result.left) : null;
+  }
+
+  /// GET /events/app-usage/?device_id=&from=&to=
+  Future<Either<AppUsageSnapshot, String>> appUsageRange({
+    required String deviceId,
+    required DateTime from,
+    required DateTime to,
+    bool loader = false,
+  }) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.appUsageRange,
+      method: HttpMethod.get,
+      queryParameters: {
+        'device_id': deviceId,
+        'from': from.toUtc().toIso8601String(),
+        'to': to.toUtc().toIso8601String(),
+      },
+      loader: loader,
+      resultOverlay: false,
+    );
+    if (result.isLeft) {
+      return Left(AppUsageSnapshot.fromJson(result.left));
+    }
+    return Right(result.right);
   }
 }
