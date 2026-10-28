@@ -14,6 +14,7 @@ import 'package:spy_love/features/auth/models/auth_methods.dart';
 import 'package:spy_love/features/auth/models/auth_user.dart';
 import 'package:spy_love/features/auth/models/login_result.dart';
 import 'package:spy_love/features/auth/models/totp_models.dart';
+import 'package:spy_love/features/auth/models/session_models.dart';
 
 class AuthRepository {
   AuthRepository(this._api, this._tokenStorage, this._googleSignIn);
@@ -338,7 +339,58 @@ class AuthRepository {
         (lower.contains('refresh') && lower.contains('expired'));
   }
 
-  Future<void> logout() async {
+  Future<Either<List<AuthSession>, String>> listSessions() async {
+    final refresh = await _tokenStorage.getRefreshToken();
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.authSessions,
+      method: HttpMethod.get,
+      queryParameters: refresh != null && refresh.isNotEmpty
+          ? {'refresh': refresh}
+          : null,
+      header: refresh != null && refresh.isNotEmpty
+          ? {'X-Refresh-Token': refresh}
+          : null,
+      loader: false,
+      resultOverlay: false,
+    );
+    if (result.isLeft) {
+      final raw = result.left['sessions'] as List<dynamic>? ?? const [];
+      return Left(
+        raw
+            .map((e) => AuthSession.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+    }
+    return Right(result.right);
+  }
+
+  Future<Either<bool, String>> revokeSession(String id) async {
+    final result = await _api.send<dynamic>(
+      url: ApiConstants.authSessionDetail(id),
+      method: HttpMethod.delete,
+      loader: true,
+      resultOverlay: true,
+    );
+    if (result.isLeft) return const Left(true);
+    return Right(result.right);
+  }
+
+  Future<Either<int, String>> revokeOtherSessions() async {
+    final refresh = await _tokenStorage.getRefreshToken();
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.authSessionsRevokeOthers,
+      method: HttpMethod.post,
+      body: {'refresh': refresh},
+      loader: true,
+      resultOverlay: true,
+    );
+    if (result.isLeft) {
+      return Left((result.left['revoked'] as num?)?.toInt() ?? 0);
+    }
+    return Right(result.right);
+  }
+
+    Future<void> logout() async {
     final refresh = await _tokenStorage.getRefreshToken();
 
     if (refresh != null) {

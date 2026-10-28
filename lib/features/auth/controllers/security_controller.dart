@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spy_love/features/auth/controllers/auth_controller.dart';
 import 'package:spy_love/features/auth/models/totp_models.dart';
+import 'package:spy_love/features/auth/models/session_models.dart';
 import 'package:spy_love/features/auth/repositories/auth_repository.dart';
 import 'package:spy_love/core/navigation/app_navigator.dart';
 
@@ -13,7 +14,9 @@ class SecurityController extends ChangeNotifier {
   TotpStatus? status;
   TotpEnrollment? enrollment;
   List<String> recoveryCodes = const [];
+  List<AuthSession> sessions = const [];
   bool isLoading = false;
+  bool sessionsLoading = false;
   String errorMessage = '';
 
   Future<void> load() async {
@@ -25,6 +28,42 @@ class SecurityController extends ChangeNotifier {
       status = value;
     }, (error) => errorMessage = error);
     isLoading = false;
+    notifyListeners();
+    await loadSessions();
+  }
+
+  Future<void> loadSessions() async {
+    sessionsLoading = true;
+    notifyListeners();
+    final result = await _repository.listSessions();
+    result.fold((value) {
+      sessions = value;
+    }, (error) {
+      // Soft-fail: keep prior list, surface message
+      errorMessage = error;
+    });
+    sessionsLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> revokeSession(String id) async {
+    final result = await _repository.revokeSession(id);
+    result.fold((_) {
+      sessions = sessions.where((s) => s.id != id).toList();
+      AppNavigator.snackbar('Session revoked', 'That device is signed out');
+    }, (error) => errorMessage = error);
+    notifyListeners();
+  }
+
+  Future<void> revokeOtherSessions() async {
+    final result = await _repository.revokeOtherSessions();
+    result.fold((count) {
+      sessions = sessions.where((s) => s.isCurrent).toList();
+      AppNavigator.snackbar(
+        'Signed out elsewhere',
+        count == 1 ? '1 other session revoked' : '$count other sessions revoked',
+      );
+    }, (error) => errorMessage = error);
     notifyListeners();
   }
 
