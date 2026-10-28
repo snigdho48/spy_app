@@ -128,6 +128,105 @@ class _SecuritySettingsViewState extends State<SecuritySettingsView> {
             const SizedBox(height: AppSpacing.md),
             _RecoveryCodesCard(codes: security.recoveryCodes),
           ],
+          const SizedBox(height: AppSpacing.lg),
+          Text('Active sessions', style: theme.textTheme.titleLarge),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Devices signed in with your account. Revoke any you do not recognize.',
+            style: theme.textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (security.sessionsLoading)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.lg),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (security.sessions.isEmpty)
+            AppCard(
+              child: Text(
+                'No active sessions reported yet. Sign in again after the sessions API is available to populate this list.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: tokens.secondaryText,
+                ),
+              ),
+            )
+          else ...[
+            ...security.sessions.map((s) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: AppCard(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.devices_other_outlined,
+                          color: tokens.secondaryText,
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      s.deviceLabel,
+                                      style: theme.textTheme.titleMedium,
+                                    ),
+                                  ),
+                                  if (s.isCurrent)
+                                    const StatusBadge(
+                                      label: 'This device',
+                                      tone: StatusTone.info,
+                                      pulse: false,
+                                    ),
+                                ],
+                              ),
+                              if (s.ipAddress != null && s.ipAddress!.isNotEmpty)
+                                Text(
+                                  s.ipAddress!,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: tokens.secondaryText,
+                                  ),
+                                ),
+                              if (s.lastUsedAt != null)
+                                Text(
+                                  'Last used ${s.lastUsedAt!.toLocal()}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: tokens.secondaryText,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        if (!s.isCurrent)
+                          Semantics(
+                            button: true,
+                            label: 'Revoke session ${s.deviceLabel}',
+                            child: IconButton(
+                              icon: const Icon(Icons.logout),
+                              tooltip: 'Revoke',
+                              onPressed: () => security.revokeSession(s.id),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                )),
+            const SizedBox(height: AppSpacing.sm),
+            Semantics(
+              button: true,
+              label: 'Sign out of all other devices',
+              child: AppButton(
+                label: 'Sign out everywhere else',
+                icon: Icons.phonelink_erase_outlined,
+                variant: AppButtonVariant.secondary,
+                onPressed: security.sessions.any((s) => !s.isCurrent)
+                    ? () => security.revokeOtherSessions()
+                    : null,
+              ),
+            ),
+          ],
         ],
       ),
     );
