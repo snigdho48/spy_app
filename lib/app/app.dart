@@ -10,6 +10,8 @@ import 'package:spy_love/core/theme/app_theme.dart';
 import 'package:spy_love/core/theme/theme_mode_controller.dart';
 import 'package:spy_love/shared/widgets/responsive_scaffold.dart';
 import 'package:spy_love/app/routes.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:spy_love/l10n/app_localizations.dart';
 
 class SpyLoveApp extends StatelessWidget {
   const SpyLoveApp({super.key});
@@ -27,6 +29,13 @@ class SpyLoveApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             navigatorKey: AppNavigator.key,
             scaffoldMessengerKey: AppNavigator.messengerKey,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
             builder: OneRequest.wrap((context, child) {
               return ScaledTextScope(
                 child: Stack(

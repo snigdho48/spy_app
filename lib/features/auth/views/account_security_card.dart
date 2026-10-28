@@ -6,6 +6,7 @@ import 'package:spy_love/shared/widgets/app_card.dart';
 import 'package:spy_love/shared/widgets/app_text_field.dart';
 import 'package:spy_love/shared/widgets/status_badge.dart';
 import 'package:spy_love/features/auth/controllers/auth_controller.dart';
+import 'package:spy_love/l10n/app_localizations.dart';
 
 class AccountSecurityCard extends StatelessWidget {
   const AccountSecurityCard({super.key});
@@ -22,15 +23,16 @@ class AccountSecurityCard extends StatelessWidget {
         final canSetPassword = !methods.hasPassword;
         final tokens = context.tokens;
         final theme = Theme.of(context);
+        final l10n = AppLocalizations.of(context);
 
         return AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Sign-in & security', style: theme.textTheme.titleMedium),
+              Text(l10n.signInSecurityTitle, style: theme.textTheme.titleMedium),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Link Google or set a password so you can recover access without losing consent history.',
+                l10n.signInSecurityBody,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: tokens.secondaryText,
                 ),

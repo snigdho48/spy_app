@@ -18,6 +18,7 @@ import 'package:spy_love/features/devices/views/sharing_pause_card.dart';
 import 'package:spy_love/features/consent/models/consent_scope.dart';
 import 'package:spy_love/features/subscription/views/workspace_setup_card.dart';
 import 'package:spy_love/app/routes.dart';
+import 'package:spy_love/l10n/app_localizations.dart';
 
 class AccountTab extends StatelessWidget {
   const AccountTab({super.key});
@@ -28,15 +29,15 @@ class AccountTab extends StatelessWidget {
     final dashboard = context.watch<DashboardController>();
     final network = context.watch<NetworkService>();
     final tokens = context.tokens;
+    final l10n = AppLocalizations.of(context);
     final user = auth.user;
     final sub = user?.subscription;
 
     return AppPage(
       children: [
-        const PageIntro(
-          title: 'Account & security',
-          subtitle:
-              'Workspace identity, linked sign-in, and mutual consent controls',
+        PageIntro(
+          title: l10n.accountSecurityTitle,
+          subtitle: l10n.accountSecuritySubtitle,
         ),
         if (!network.isConnected) ...[
           OfflineBanner(onRetry: network.refreshStatus),
@@ -202,7 +203,7 @@ class AccountTab extends StatelessWidget {
         ],
         const AccountSecurityCard(),
         const SizedBox(height: AppSpacing.lg),
-        Text('Appearance', style: Theme.of(context).textTheme.titleLarge),
+        Text(l10n.appearanceTitle, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: AppSpacing.sm),
         Consumer<ThemeModeController>(
           builder: (context, themeMode, _) {
@@ -211,28 +212,28 @@ class AccountTab extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Home and device screens follow Consent Horizon light and dark tokens.',
+                    l10n.appearanceHint,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: tokens.secondaryText,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   SegmentedButton<ThemeMode>(
-                    segments: const [
+                    segments: [
                       ButtonSegment(
                         value: ThemeMode.system,
-                        label: Text('System'),
-                        icon: Icon(Icons.brightness_auto),
+                        label: Text(l10n.themeSystem),
+                        icon: const Icon(Icons.brightness_auto),
                       ),
                       ButtonSegment(
                         value: ThemeMode.light,
-                        label: Text('Light'),
-                        icon: Icon(Icons.light_mode_outlined),
+                        label: Text(l10n.themeLight),
+                        icon: const Icon(Icons.light_mode_outlined),
                       ),
                       ButtonSegment(
                         value: ThemeMode.dark,
-                        label: Text('Dark'),
-                        icon: Icon(Icons.dark_mode_outlined),
+                        label: Text(l10n.themeDark),
+                        icon: const Icon(Icons.dark_mode_outlined),
                       ),
                     ],
                     selected: {themeMode.mode},
