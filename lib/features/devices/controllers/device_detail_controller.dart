@@ -12,16 +12,20 @@ import 'package:spy_love/features/devices/repositories/device_repository.dart';
 import 'package:spy_love/features/devices/models/device_event_model.dart';
 import 'package:spy_love/features/devices/models/location_point.dart';
 import 'package:spy_love/features/devices/repositories/event_repository.dart';
+import 'package:spy_love/features/devices/models/safe_zone_model.dart';
+import 'package:spy_love/features/devices/repositories/safe_zone_repository.dart';
 import 'package:spy_love/features/devices/utils/location_map_utils.dart';
 
 class DeviceDetailController extends ChangeNotifier {
   DeviceDetailController(
     this._devices,
     this._events,
+    this._safeZones,
     this.device,
     TokenStorage tokens,
   ) : _eventsStream = EventStreamClient(tokens) {
     loadDetail();
+    unawaited(refreshSafeZones());
     unawaited(_eventsStream.listen(_onLiveEvent));
     // Poll quietly — never trip the global RequestOverlay.
     _locationRefreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
@@ -31,6 +35,7 @@ class DeviceDetailController extends ChangeNotifier {
 
   final DeviceRepository _devices;
   final EventRepository _events;
+  final SafeZoneRepository _safeZones;
   final EventStreamClient _eventsStream;
   final DeviceModel device;
 
@@ -53,6 +58,8 @@ class DeviceDetailController extends ChangeNotifier {
   List<Map<String, dynamic>> currentSims = <Map<String, dynamic>>[];
   List<DeviceEventModel> allEvents = <DeviceEventModel>[];
   List<LocationPoint> locations = <LocationPoint>[];
+  List<SafeZoneModel> safeZones = <SafeZoneModel>[];
+  bool isLoadingSafeZones = false;
   LocationDateFilter locationFilter = LocationDateFilter.week;
 
   final MapController mapController = MapController();
@@ -413,6 +420,68 @@ class DeviceDetailController extends ChangeNotifier {
       );
     }, (error) => errorMessage = error);
     notifyListeners();
+  }
+
+  Future<void> refreshSafeZones() async {
+    isLoadingSafeZones = true;
+    notifyListeners();
+    final result = await _safeZones.list(deviceId: device.id);
+    result.fold((zones) => safeZones = zones, (_) {});
+    isLoadingSafeZones = false;
+    notifyListeners();
+  }
+
+  /// Returns an error message on failure (e.g. 403 for VIEWER), else null.
+  Future<String?> createSafeZone({
+    required String name,
+    required double lat,
+    required double lng,
+    required int radiusM,
+    String address = '',
+    bool enabled = true,
+  }) async {
+    final result = await _safeZones.create(
+      name: name,
+      lat: lat,
+      lng: lng,
+      radiusM: radiusM,
+      address: address,
+      deviceId: device.id,
+      enabled: enabled,
+    );
+    if (result.isRight) return result.right;
+    await refreshSafeZones();
+    return null;
+  }
+
+  Future<String?> updateSafeZone({
+    required String id,
+    String? name,
+    double? lat,
+    double? lng,
+    int? radiusM,
+    String? address,
+    bool? enabled,
+  }) async {
+    final result = await _safeZones.update(
+      id: id,
+      name: name,
+      lat: lat,
+      lng: lng,
+      radiusM: radiusM,
+      address: address,
+      enabled: enabled,
+    );
+    if (result.isRight) return result.right;
+    await refreshSafeZones();
+    return null;
+  }
+
+  Future<String?> deleteSafeZone(String id) async {
+    final result = await _safeZones.delete(id);
+    if (result.isRight) return result.right;
+    await refreshSafeZones();
+    return null;
   }
 
   @override

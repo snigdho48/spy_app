@@ -8,6 +8,7 @@ class SafeZoneModel {
     this.address = '',
     this.deviceId,
     this.displayLabel,
+    this.enabled = true,
   });
 
   final String id;
@@ -18,10 +19,32 @@ class SafeZoneModel {
   final int radiusM;
   final String? deviceId;
   final String? displayLabel;
+  final bool enabled;
 
   String get label => (displayLabel != null && displayLabel!.isNotEmpty)
       ? displayLabel!
       : 'Safe Zone: $name';
+
+  SafeZoneModel copyWith({
+    String? name,
+    double? lat,
+    double? lng,
+    int? radiusM,
+    String? address,
+    bool? enabled,
+  }) {
+    return SafeZoneModel(
+      id: id,
+      name: name ?? this.name,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+      radiusM: radiusM ?? this.radiusM,
+      address: address ?? this.address,
+      deviceId: deviceId,
+      displayLabel: displayLabel,
+      enabled: enabled ?? this.enabled,
+    );
+  }
 
   factory SafeZoneModel.fromJson(Map<String, dynamic> json) {
     return SafeZoneModel(
@@ -33,6 +56,7 @@ class SafeZoneModel {
       radiusM: (json['radius_m'] as num?)?.toInt() ?? 100,
       deviceId: json['device_id']?.toString(),
       displayLabel: json['display_label'] as String?,
+      enabled: json['enabled'] as bool? ?? true,
     );
   }
 }
