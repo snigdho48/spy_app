@@ -13,6 +13,14 @@ class ApiConstants {
   static const subscriptionSubscribe = '/subscriptions/subscribe/';
   static const workspaceCreate = '/subscriptions/workspaces/';
 
+  // --- Team / members ---
+  static const tenantMembers = '/tenants/members/';
+  static String tenantMemberDetail(String id) => '/tenants/members/$id/';
+  static const tenantInvites = '/tenants/invites/';
+  static String tenantInviteDetail(String id) => '/tenants/invites/$id/';
+  static const tenantInviteAccept = '/tenants/invites/accept/';
+  static const tenantInviteDecline = '/tenants/invites/decline/';
+
   /// Returned as [Either.right] when Google sign-up needs an organization name.
   static const tenantRequiredError = 'tenant_required';
 
