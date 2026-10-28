@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:spy_love/l10n/app_localizations.dart';
 import 'package:spy_love/core/theme/app_tokens.dart';
 import 'package:spy_love/shared/widgets/app_button.dart';
 import 'package:spy_love/shared/widgets/app_card.dart';
@@ -95,6 +96,7 @@ class OfflineBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final tokens = context.tokens;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return AppCard(
       color: tokens.warningSoft,
       elevated: false,
@@ -121,10 +123,10 @@ class OfflineBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('You’re offline', style: theme.textTheme.titleMedium),
+                Text(l10n.offlineTitle, style: theme.textTheme.titleMedium),
                 const SizedBox(height: 2),
                 Text(
-                  'Showing last known status. Pairing and live sync need a connection.',
+                  l10n.offlineBody,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: tokens.secondaryText,
                     height: 1.4,
@@ -135,7 +137,7 @@ class OfflineBanner extends StatelessWidget {
                   TextButton.icon(
                     onPressed: onRetry,
                     icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text('Retry'),
+                    label: Text(l10n.retry),
                     style: TextButton.styleFrom(
                       minimumSize: const Size(0, AppSpacing.touchMin),
                       padding: EdgeInsets.zero,

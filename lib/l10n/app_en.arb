@@ -1,0 +1,18 @@
+{
+  "@@locale": "en",
+  "appTitle": "Spy Love",
+  "@appTitle": { "description": "Application display name" },
+  "accountSecurityTitle": "Account & security",
+  "accountSecuritySubtitle": "Workspace identity, linked sign-in, and mutual consent controls",
+  "appearanceTitle": "Appearance",
+  "appearanceHint": "Home and device screens follow Consent Horizon light and dark tokens.",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "offlineTitle": "You're offline",
+  "offlineBody": "Showing last known status. Pairing and live sync need a connection.",
+  "retry": "Retry",
+  "signInSecurityTitle": "Sign-in & security",
+  "signInSecurityBody": "Link Google or set a password so you can recover access without losing consent history.",
+  "l10nRemainingNote": "Localization scaffold is active; most screens still use English literals."
+}
