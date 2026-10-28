@@ -7,13 +7,12 @@ import io.flutter.embedding.engine.FlutterEngine
 class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        MonitoringPlugin.register(flutterEngine, applicationContext)
+        // ActivityAware plugin receives activity-result callbacks reliably.
+        flutterEngine.plugins.add(MonitoringFlutterPlugin())
     }
 
     override fun onResume() {
         super.onResume()
-        // Needed so consent-scoped screen capture can launch the OS
-        // MediaProjection permission dialog from a live Activity.
         ScreenCaptureController.attachActivity(this)
     }
 
@@ -25,6 +24,7 @@ class MainActivity : FlutterActivity() {
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        // Belt-and-suspenders alongside ActivityAware listener.
         ScreenCaptureController.onActivityResult(applicationContext, requestCode, resultCode, data)
     }
 }

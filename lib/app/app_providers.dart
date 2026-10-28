@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:spy_love/features/auth/google_sign_in_service.dart';
 import 'package:spy_love/features/monitoring/monitoring_service.dart';
 import 'package:spy_love/features/monitoring/screen_share/screen_share_service.dart';
+import 'package:spy_love/features/monitoring/live_av/live_av_publisher_service.dart';
+import 'package:spy_love/features/monitoring/live_av/live_media_repository.dart';
+import 'package:spy_love/core/network/media_stream_client.dart';
 import 'package:spy_love/core/network/api_service.dart';
 import 'package:spy_love/core/network/network_service.dart';
 import 'package:spy_love/core/network/screen_stream_client.dart';
@@ -82,38 +85,44 @@ class AppProviders extends StatelessWidget {
               ScreenShareService(context.read<ScreenShareRepository>()),
           update: (_, repo, previous) => previous ?? ScreenShareService(repo),
         ),
+        ProxyProvider<ApiService, LiveMediaRepository>(
+          update: (_, api, previous) => previous ?? LiveMediaRepository(api),
+        ),
+        ProxyProvider<TokenStorage, MediaStreamClient>(
+          update: (_, tokens, previous) =>
+              previous ?? MediaStreamClient(tokens),
+        ),
+        ChangeNotifierProxyProvider<
+          LiveMediaRepository,
+          LiveAvPublisherService
+        >(
+          create: (context) =>
+              LiveAvPublisherService(context.read<LiveMediaRepository>()),
+          update: (_, repo, previous) =>
+              previous ?? LiveAvPublisherService(repo),
+        ),
         ProxyProvider<ApiService, SubscriptionRepository>(
           update: (_, api, previous) => previous ?? SubscriptionRepository(api),
         ),
         ProxyProvider<ApiService, AuditRepository>(
           update: (_, api, previous) => previous ?? AuditRepository(api),
         ),
-        ProxyProvider5<
+        ProxyProvider<
+          // Built via nested reads so we don't need ProxyProvider7.
           EventRepository,
-          DeviceRepository,
-          SafeZoneRepository,
-          ScreenShareService,
-          ScreenStreamClient,
           MonitoringService
         >(
-          update:
-              (
-                _,
+          update: (context, events, previous) =>
+              previous ??
+              MonitoringService(
                 events,
-                devices,
-                safeZones,
-                screenShare,
-                screenStream,
-                previous,
-              ) =>
-                  previous ??
-                  MonitoringService(
-                    events,
-                    devices,
-                    safeZones,
-                    screenShare,
-                    screenStream,
-                  ),
+                context.read<DeviceRepository>(),
+                context.read<SafeZoneRepository>(),
+                context.read<ScreenShareService>(),
+                context.read<ScreenStreamClient>(),
+                context.read<LiveAvPublisherService>(),
+                context.read<MediaStreamClient>(),
+              ),
         ),
         ChangeNotifierProxyProvider<
           SubscriptionRepository,
