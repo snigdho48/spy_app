@@ -31,3 +31,11 @@
 # Don't strip Flutter JNI
 -keep class * implements io.flutter.embedding.engine.plugins.FlutterPlugin { *; }
 -keep class * implements io.flutter.plugin.common.PluginRegistry$Registrar { *; }
+
+# Play Core split/deferred APIs are referenced by Flutter's embedding
+# (FlutterPlayStoreSplitApplication / PlayStoreDeferredComponentManager) but
+# are not on the classpath unless deferred components are used. R8 fails the
+# release minify without these dontwarn rules.
+-dontwarn com.google.android.play.core.splitcompat.**
+-dontwarn com.google.android.play.core.splitinstall.**
+-dontwarn com.google.android.play.core.tasks.**

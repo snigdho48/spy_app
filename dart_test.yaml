@@ -1,0 +1,3 @@
+tags:
+  golden:
+    description: Pixel goldens; platform/font sensitive. Run locally, not in CI.
