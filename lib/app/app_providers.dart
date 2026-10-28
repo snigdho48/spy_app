@@ -78,8 +78,9 @@ class AppProviders extends StatelessWidget {
         ProxyProvider<ApiService, KeywordRepository>(
           update: (_, api, previous) => previous ?? KeywordRepository(api),
         ),
-        ProxyProvider<ApiService, EventRepository>(
-          update: (_, api, previous) => previous ?? EventRepository(api),
+        ProxyProvider2<ApiService, TokenStorage, EventRepository>(
+          update: (_, api, tokens, previous) =>
+              previous ?? EventRepository(api, tokens),
         ),
         ProxyProvider<ApiService, ScreenShareRepository>(
           update: (_, api, previous) => previous ?? ScreenShareRepository(api),

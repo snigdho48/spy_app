@@ -1,15 +1,21 @@
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
+import 'package:one_request/one_request.dart' hide Either, Left, Right, ResponseType;
+import 'package:spy_love/core/config/app_config.dart';
 import 'package:spy_love/core/constants/api_constants.dart';
 import 'package:spy_love/core/network/api_service.dart';
 import 'package:spy_love/core/network/http_method.dart';
+import 'package:spy_love/core/storage/token_storage.dart';
 import 'package:spy_love/core/types/either.dart';
 import 'package:spy_love/features/devices/models/device_event_model.dart';
 import 'package:spy_love/features/devices/models/app_usage_model.dart';
 import 'package:spy_love/features/devices/models/telemetry_model.dart';
 
 class EventRepository {
-  EventRepository(this._api);
+  EventRepository(this._api, this._tokens);
 
   final ApiService _api;
+  final TokenStorage _tokens;
 
   Future<Either<List<DeviceEventModel>, String>> listEvents({
     required String deviceId,
@@ -203,5 +209,51 @@ class EventRepository {
       ]);
     }
     return Right(result.right);
+  }
+
+  /// GET /events/export/?device_id=&from=&to=&feeds=&export_format=
+  /// Returns raw bytes (CSV stream or PDF). Uses Dio directly so binary
+  /// responses are not forced through the JSON overlay path.
+  Future<Either<Uint8List, String>> export({
+    required String deviceId,
+    required DateTime from,
+    required DateTime to,
+    required List<String> feeds,
+    required String exportFormat, // csv | pdf
+  }) async {
+    try {
+      final token = await _tokens.getAccessToken();
+      final response = await OneRequest.client.get<List<int>>(
+        '${AppConfig.apiBaseUrl.replaceAll(RegExp(r"/+$"), "")}'
+        '${ApiConstants.eventsExport}',
+        queryParameters: {
+          'device_id': deviceId,
+          'from': from.toUtc().toIso8601String(),
+          'to': to.toUtc().toIso8601String(),
+          'feeds': feeds.join(','),
+          'export_format': exportFormat,
+        },
+        options: Options(
+          responseType: ResponseType.bytes,
+          headers: {
+            if (token != null && token.isNotEmpty)
+              'Authorization': 'Bearer $token',
+          },
+          validateStatus: (s) => s != null && s < 500,
+        ),
+      );
+      final status = response.statusCode ?? 0;
+      if (status == 403) {
+        return const Right('You do not have permission to export this device');
+      }
+      if (status >= 400 || response.data == null) {
+        return Right('Export failed (HTTP $status)');
+      }
+      return Left(Uint8List.fromList(response.data!));
+    } on DioException catch (e) {
+      return Right(e.message ?? 'Export failed');
+    } catch (e) {
+      return Right(e.toString());
+    }
   }
 }
