@@ -19,6 +19,10 @@ class AuthController extends ChangeNotifier {
 
   AuthUser? user;
   bool isLoading = false;
+
+  /// True until the first [restoreSession] finishes. AuthGate shows a splash
+  /// instead of the login form so a cold start does not flash "please log in".
+  bool isRestoring = true;
   bool isGoogleLoading = false;
   String errorMessage = '';
 
@@ -29,32 +33,34 @@ class AuthController extends ChangeNotifier {
   }
 
   Future<void> restoreSession() async {
+    isRestoring = true;
     isLoading = true;
+    errorMessage = '';
     notifyListeners();
-    final result = await _repository.getCurrentUser();
-    result.fold(
-      (value) {
+    try {
+      final result = await _repository.getCurrentUser();
+      result.fold((value) {
         user = value;
         _syncSubscription(value);
         if (value != null) {
           _bootstrapMonitoring();
         }
-      },
-      (error) => errorMessage = error,
-    );
-    isLoading = false;
-    notifyListeners();
+      }, (error) => errorMessage = error);
+    } catch (e) {
+      errorMessage = e.toString();
+    } finally {
+      isRestoring = false;
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> refreshUser() async {
     final result = await _repository.getCurrentUser();
-    result.fold(
-      (value) {
-        user = value;
-        _syncSubscription(value);
-      },
-      (error) => errorMessage = error,
-    );
+    result.fold((value) {
+      user = value;
+      _syncSubscription(value);
+    }, (error) => errorMessage = error);
     notifyListeners();
   }
 
@@ -75,15 +81,12 @@ class AuthController extends ChangeNotifier {
     errorMessage = '';
     notifyListeners();
     final result = await _repository.login(email: email, password: password);
-    result.fold(
-      (value) {
-        user = value;
-        _syncSubscription(value);
-        _bootstrapMonitoring();
-        AppNavigator.popUntilHome();
-      },
-      (error) => errorMessage = error,
-    );
+    result.fold((value) {
+      user = value;
+      _syncSubscription(value);
+      _bootstrapMonitoring();
+      AppNavigator.popUntilHome();
+    }, (error) => errorMessage = error);
     notifyListeners();
   }
 
@@ -101,15 +104,12 @@ class AuthController extends ChangeNotifier {
       fullName: fullName,
       tenantName: tenantName,
     );
-    result.fold(
-      (value) {
-        user = value;
-        _syncSubscription(value);
-        _bootstrapMonitoring();
-        AppNavigator.popUntilHome();
-      },
-      (error) => errorMessage = error,
-    );
+    result.fold((value) {
+      user = value;
+      _syncSubscription(value);
+      _bootstrapMonitoring();
+      AppNavigator.popUntilHome();
+    }, (error) => errorMessage = error);
     notifyListeners();
   }
 
@@ -129,7 +129,9 @@ class AuthController extends ChangeNotifier {
       var result = await _repository.signInWithGoogle(idToken: idToken);
 
       if (result.isRight && result.right == ApiConstants.tenantRequiredError) {
-        final tenantName = await _promptTenantName(context ?? AppNavigator.context);
+        final tenantName = await _promptTenantName(
+          context ?? AppNavigator.context,
+        );
         if (tenantName == null || tenantName.isEmpty) {
           isGoogleLoading = false;
           notifyListeners();
@@ -141,15 +143,12 @@ class AuthController extends ChangeNotifier {
         );
       }
 
-      result.fold(
-        (value) {
-          user = value;
-          _syncSubscription(value);
-          _bootstrapMonitoring();
-          AppNavigator.popUntilHome();
-        },
-        (error) => errorMessage = error,
-      );
+      result.fold((value) {
+        user = value;
+        _syncSubscription(value);
+        _bootstrapMonitoring();
+        AppNavigator.popUntilHome();
+      }, (error) => errorMessage = error);
     } on GoogleSignInException catch (e) {
       if (e.code != GoogleSignInExceptionCode.canceled) {
         errorMessage = e.description ?? 'Google sign-in failed';
@@ -176,16 +175,16 @@ class AuthController extends ChangeNotifier {
       }
 
       final result = await _repository.linkGoogle(idToken: idToken);
-      result.fold(
-        (methods) {
-          final current = user;
-          if (current != null) {
-            user = current.copyWith(authMethods: methods);
-          }
-          AppNavigator.snackbar('Account linked', 'Google sign-in is now enabled for this account');
-        },
-        (error) => errorMessage = error,
-      );
+      result.fold((methods) {
+        final current = user;
+        if (current != null) {
+          user = current.copyWith(authMethods: methods);
+        }
+        AppNavigator.snackbar(
+          'Account linked',
+          'Google sign-in is now enabled for this account',
+        );
+      }, (error) => errorMessage = error);
     } on GoogleSignInException catch (e) {
       if (e.code != GoogleSignInExceptionCode.canceled) {
         errorMessage = e.description ?? 'Google linking failed';
@@ -202,16 +201,16 @@ class AuthController extends ChangeNotifier {
     errorMessage = '';
     notifyListeners();
     final result = await _repository.setPassword(password: password);
-    result.fold(
-      (methods) {
-        final current = user;
-        if (current != null) {
-          user = current.copyWith(authMethods: methods);
-        }
-        AppNavigator.snackbar('Password set', 'You can now sign in with email and password');
-      },
-      (error) => errorMessage = error,
-    );
+    result.fold((methods) {
+      final current = user;
+      if (current != null) {
+        user = current.copyWith(authMethods: methods);
+      }
+      AppNavigator.snackbar(
+        'Password set',
+        'You can now sign in with email and password',
+      );
+    }, (error) => errorMessage = error);
     notifyListeners();
   }
 

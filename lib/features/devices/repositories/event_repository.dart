@@ -48,6 +48,10 @@ class EventRepository {
     String? eventPrefix,
     int maxPages = 5,
     int pageSize = 100,
+
+    /// Background / poll fetches must keep this false so the global overlay
+    /// does not block the UI every few seconds.
+    bool loader = false,
   }) async {
     final all = <DeviceEventModel>[];
     for (var page = 1; page <= maxPages; page++) {
@@ -56,7 +60,7 @@ class EventRepository {
         eventPrefix: eventPrefix,
         page: page,
         pageSize: pageSize,
-        loader: page == 1,
+        loader: loader && page == 1,
       );
       if (result.isRight) return Right(result.right);
 
@@ -75,10 +79,7 @@ class EventRepository {
     final result = await _api.send<Map<String, dynamic>>(
       url: ApiConstants.eventsBatch,
       method: HttpMethod.post,
-      body: {
-        'device_id': deviceId,
-        'events': events,
-      },
+      body: {'device_id': deviceId, 'events': events},
       loader: false,
       resultOverlay: false,
     );

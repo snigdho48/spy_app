@@ -12,6 +12,10 @@ import 'package:spy_love/features/devices/repositories/event_repository.dart';
 import 'package:spy_love/features/devices/views/device_detail_view.dart';
 import 'package:spy_love/features/devices/views/event_detail_view.dart';
 import 'package:spy_love/features/devices/views/installed_apps_view.dart';
+import 'package:spy_love/features/devices/views/location_map_fullscreen_view.dart';
+import 'package:spy_love/core/config/app_config.dart';
+import 'package:spy_love/core/theme/app_colors.dart';
+import 'package:spy_love/core/theme/app_tokens.dart';
 import 'package:spy_love/features/consent/views/pairing_complete_view.dart';
 import 'package:spy_love/features/consent/views/pairing_initiate_view.dart';
 import 'package:spy_love/features/consent/views/pairing_start_view.dart';
@@ -30,6 +34,7 @@ abstract final class AppRoutes {
   static const eventDetail = '/events/detail';
   static const audit = '/audit';
   static const installedApps = '/apps/installed';
+  static const locationMapFullscreen = '/devices/location-map';
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -85,7 +90,15 @@ abstract final class AppRoutes {
       case eventDetail:
         return MaterialPageRoute(
           settings: settings,
-          builder: (_) => EventDetailView(args: settings.arguments as Map<String, dynamic>? ?? {}),
+          builder: (_) => EventDetailView(
+            args: settings.arguments as Map<String, dynamic>? ?? {},
+          ),
+        );
+      case locationMapFullscreen:
+        final args = settings.arguments as LocationMapFullscreenArgs;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => LocationMapFullscreenView(args: args),
         );
       default:
         return MaterialPageRoute(
@@ -103,9 +116,66 @@ class AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthController>(
       builder: (context, auth, _) {
+        if (auth.isRestoring) return const _SessionRestoreSplash();
         if (!auth.isLoggedIn) return const AuthView();
         return const DashboardView();
       },
+    );
+  }
+}
+
+class _SessionRestoreSplash extends StatelessWidget {
+  const _SessionRestoreSplash();
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.tokens;
+    return Scaffold(
+      backgroundColor: tokens.background,
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: tokens.primarySoft,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.favorite_rounded,
+                color: AppColors.primary,
+                size: 36,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              AppConfig.appName,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: tokens.primaryText,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Restoring your session…',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: tokens.secondaryText),
+            ),
+            const SizedBox(height: 28),
+            const SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: AppColors.primary,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
