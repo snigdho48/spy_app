@@ -158,6 +158,32 @@ class AccountTab extends StatelessWidget {
           const SizedBox(height: 24),
         ],
         AppCard(
+          onTap: () => AppNavigator.toNamed(AppRoutes.teamMembers),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Team & invites',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    Text(
+                      'Members, roles, and pending invitations',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: tokens.secondaryText,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: tokens.secondaryText),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        AppCard(
           onTap: () => AppNavigator.toNamed(AppRoutes.audit),
           child: Row(
             children: [

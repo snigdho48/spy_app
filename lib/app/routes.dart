@@ -1,3 +1,4 @@
+import 'package:spy_love/features/team/views/team_members_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:spy_love/core/storage/token_storage.dart';
@@ -47,6 +48,8 @@ abstract final class AppRoutes {
   static const fleetOverview = '/devices/overview';
   static const activityTimeline = '/devices/activity';
   static const allDevicesMap = '/devices/map';
+  static const teamMembers = '/team';
+  static const acceptInvite = '/invite';
 
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -155,6 +158,16 @@ abstract final class AppRoutes {
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => LocationRoutePlaybackView(args: args),
+        );
+      case teamMembers:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const TeamMembersView(),
+        );
+      case acceptInvite:
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const TeamMembersView(),
         );
       default:
         return MaterialPageRoute(

@@ -28,6 +28,8 @@ import 'package:spy_love/features/consent/controllers/pairing_controller.dart';
 import 'package:spy_love/features/subscription/controllers/subscription_controller.dart';
 import 'package:spy_love/features/subscription/repositories/subscription_repository.dart';
 import 'package:spy_love/core/theme/theme_mode_controller.dart';
+import 'package:spy_love/features/team/controllers/team_controller.dart';
+import 'package:spy_love/features/team/repositories/team_repository.dart';
 
 class AppProviders extends StatelessWidget {
   const AppProviders({super.key, required this.child});
@@ -77,6 +79,9 @@ class AppProviders extends StatelessWidget {
         ),
         ProxyProvider<ApiService, KeywordRepository>(
           update: (_, api, previous) => previous ?? KeywordRepository(api),
+        ),
+        ProxyProvider<ApiService, TeamRepository>(
+          update: (_, api, previous) => previous ?? TeamRepository(api),
         ),
         ProxyProvider2<ApiService, TokenStorage, EventRepository>(
           update: (_, api, tokens, previous) =>
@@ -147,6 +152,14 @@ class AppProviders extends StatelessWidget {
           ),
           update: (_, repo, monitoring, controller) =>
               controller ?? AuthController(repo, monitoring),
+        ),
+        ChangeNotifierProxyProvider2<TeamRepository, AuthController, TeamController>(
+          create: (ctx) => TeamController(
+            ctx.read<TeamRepository>(),
+            ctx.read<AuthController>(),
+          ),
+          update: (_, repo, auth, previous) =>
+              previous ?? TeamController(repo, auth),
         ),
         ChangeNotifierProxyProvider2<
           AlertRepository,
