@@ -29,7 +29,16 @@ class FleetOverviewView extends StatelessWidget {
 
     if (controller.isLoading && controller.overviews.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('All devices')),
+        appBar: AppBar(
+        title: const Text('All devices'),
+        actions: [
+          IconButton(
+            tooltip: 'Devices map',
+            icon: const Icon(Icons.map_outlined),
+            onPressed: () => AppNavigator.toNamed(AppRoutes.allDevicesMap),
+          ),
+        ],
+      ),
         body: const Padding(
           padding: EdgeInsets.all(AppSpacing.md),
           child: LoadingSkeleton(lines: 6),
@@ -38,7 +47,16 @@ class FleetOverviewView extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('All devices')),
+      appBar: AppBar(
+        title: const Text('All devices'),
+        actions: [
+          IconButton(
+            tooltip: 'Devices map',
+            icon: const Icon(Icons.map_outlined),
+            onPressed: () => AppNavigator.toNamed(AppRoutes.allDevicesMap),
+          ),
+        ],
+      ),
       body: AppPage(
         onRefresh: controller.refresh,
         children: [

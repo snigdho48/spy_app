@@ -93,6 +93,7 @@ class _LocationMapFullscreenViewState extends State<LocationMapFullscreenView> {
               points: points,
               mapController: _mapController,
               interactive: true,
+              clusterHistory: true,
             ),
           ),
           if (_selected != null)

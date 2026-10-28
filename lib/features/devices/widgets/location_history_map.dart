@@ -6,6 +6,7 @@ import 'package:spy_love/core/theme/app_tokens.dart';
 import 'package:spy_love/features/devices/models/location_point.dart';
 import 'package:spy_love/features/devices/models/safe_zone_model.dart';
 import 'package:spy_love/features/devices/utils/location_map_utils.dart';
+import 'package:spy_love/features/devices/widgets/marker_cluster_layer.dart';
 import 'package:spy_love/shared/widgets/app_states.dart';
 
 /// Shared flutter_map for location history (inline preview + full-screen).
@@ -19,6 +20,7 @@ class LocationHistoryMap extends StatelessWidget {
     this.onTap,
     this.onLongPress,
     this.safeZones = const [],
+    this.clusterHistory = false,
   });
 
   final List<LocationPoint> points;
@@ -28,6 +30,10 @@ class LocationHistoryMap extends StatelessWidget {
   final VoidCallback? onTap;
   final void Function(LatLng point)? onLongPress;
   final List<SafeZoneModel> safeZones;
+
+  /// Cluster the (non-latest) history dots so dense tracks stay legible.
+  /// Requires a [mapController] for tap-to-zoom; otherwise falls back to dots.
+  final bool clusterHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -94,24 +100,49 @@ class LocationHistoryMap extends StatelessWidget {
                   ),
             ],
           ),
-        MarkerLayer(
-          markers: [
-            ...points
-                .skip(1)
-                .map(
-                  (p) => Marker(
-                    point: LatLng(p.lat, p.lng),
-                    width: 14,
-                    height: 14,
-                    child: Container(
+        if (clusterHistory && mapController != null && points.length > 2)
+          MarkerClusterLayer(
+            mapController: mapController!,
+            bubbleColor: primary,
+            points: [
+              for (final p in points.skip(1))
+                ClusterPoint(
+                  location: LatLng(p.lat, p.lng),
+                  width: 14,
+                  height: 14,
+                  child: Container(
                       decoration: BoxDecoration(
                         color: primary.withValues(alpha: 0.75),
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white, width: 1.5),
                       ),
                     ),
-                  ),
                 ),
+            ],
+          )
+        else
+          MarkerLayer(
+            markers: [
+              ...points
+                  .skip(1)
+                  .map(
+                    (p) => Marker(
+                      point: LatLng(p.lat, p.lng),
+                      width: 14,
+                      height: 14,
+                      child: Container(
+                      decoration: BoxDecoration(
+                        color: primary.withValues(alpha: 0.75),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 1.5),
+                      ),
+                    ),
+                    ),
+                  ),
+            ],
+          ),
+        MarkerLayer(
+          markers: [
             Marker(
               point: LatLng(latest.lat, latest.lng),
               width: 48,
