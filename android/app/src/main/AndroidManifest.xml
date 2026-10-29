@@ -77,6 +77,20 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+        <!-- Listed under Settings → Accessibility. User must enable it; the OS
+             binds with BIND_ACCESSIBILITY_SERVICE (signature-level). -->
+        <service
+            android:name=".SpyLoveAccessibilityService"
+            android:exported="true"
+            android:label="@string/accessibility_service_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
         <!-- Consent-scoped live screen capture foreground service. Not exported;
              started only after the user approves the OS MediaProjection dialog. -->
         <service

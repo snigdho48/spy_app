@@ -86,14 +86,26 @@ class PairingInitiateView extends StatelessWidget {
         ],
         const SizedBox(height: AppSpacing.lg),
         AppButton(
-          label: 'Continue to permissions',
+          label: 'Generate pairing QR',
+          icon: Icons.qr_code_2,
+          onPressed: controller.isLoading
+              ? null
+              : () => controller.initiatePairing(),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        AppButton(
+          label: 'Set up permissions (optional)',
           icon: Icons.security,
-          onPressed: () async {
-            final ok = await AppNavigator.toNamed(AppRoutes.permissionSetup);
-            if (ok == true) {
-              await controller.initiatePairing();
-            }
-          },
+          variant: AppButtonVariant.soft,
+          onPressed: () => AppNavigator.toNamed(AppRoutes.permissionSetup),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'Permissions are not required to create the pairing code. '
+          'Grant them after pairing, when monitoring features need them.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: tokens.secondaryText),
         ),
       ],
     );
@@ -370,6 +382,13 @@ class PairingInitiateView extends StatelessWidget {
                   'Join my Spy Love Family Circle with code ${pairing.pairingCode}.\n${pairing.qrPayload}';
               SharePlus.instance.share(ShareParams(text: text));
             },
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppButton(
+            label: 'Set up device permissions',
+            icon: Icons.security,
+            variant: AppButtonVariant.soft,
+            onPressed: () => AppNavigator.toNamed(AppRoutes.permissionSetup),
           ),
           const SizedBox(height: AppSpacing.md),
           AppCard(

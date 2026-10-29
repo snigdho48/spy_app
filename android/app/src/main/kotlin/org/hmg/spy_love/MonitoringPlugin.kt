@@ -549,7 +549,14 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
             context.contentResolver,
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
         ) ?: return false
-        return enabled.contains(context.packageName)
+        val component = ComponentName(context, SpyLoveAccessibilityService::class.java)
+        val flat = component.flattenToString()
+        return enabled.split(':').any { entry ->
+            val e = entry.trim()
+            e.equals(flat, ignoreCase = true) ||
+                e.endsWith("/.SpyLoveAccessibilityService") ||
+                e.endsWith("/SpyLoveAccessibilityService")
+        }
     }
 
     /**

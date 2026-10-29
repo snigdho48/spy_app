@@ -1,7 +1,7 @@
 name: spy_love
 description: Consent-based device monitoring platform.
 publish_to: 'none'
-version: 1.0.1+4
+version: 1.0.1+5
 
 environment:
   sdk: ^3.12.1
