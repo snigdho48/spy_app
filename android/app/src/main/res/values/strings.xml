@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Spy Love</string>
+    <string name="accessibility_service_label">Spy Love monitoring</string>
+    <string name="accessibility_service_description">Allows Spy Love to observe on-screen context for consented safety features (app activity and accessibility-assisted monitoring). You can turn this off anytime in Settings → Accessibility.</string>
+</resources>

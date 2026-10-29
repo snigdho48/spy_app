@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:spy_love/core/permissions/system_settings_bridge.dart';
+import 'package:spy_love/core/storage/secure_hive.dart';
+import 'package:spy_love/features/monitoring/screen_share/screen_capture_bridge.dart';
 import 'package:spy_love/core/theme/app_tokens.dart';
 import 'package:spy_love/shared/widgets/app_button.dart';
 import 'package:spy_love/shared/widgets/app_card.dart';
@@ -192,8 +194,9 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
         icon: Icons.screen_share_outlined,
         title: 'Screen capture',
         description:
-            'Live screen view asks for the system MediaProjection grant each '
-            'session — there is nothing to pre-enable here.',
+            'Tap Enable to show the Android screen-recording system dialog now. '
+            'Allow it so Spy Love can verify capture works. Live sessions may '
+            'ask again (OS requirement).',
         kind: _GrantKind.settingsOnly,
         settingsPage: SystemSettingsPage.appDetails,
         androidOnly: true,
@@ -246,10 +249,23 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
       if (item.kind == _GrantKind.runtime && item.permission != null) {
         _runtime[item.key] = await item.permission!.status;
       } else if (item.kind == _GrantKind.settingsOnly) {
-        _settings[item.key] = await _querySettingsState(item.key);
+        if (item.key == 'screen_capture') {
+          _settings[item.key] = await _screenCaptureOptIn();
+        } else {
+          _settings[item.key] = await _querySettingsState(item.key);
+        }
       }
     }
     if (mounted) setState(() {});
+  }
+
+  Future<bool?> _screenCaptureOptIn() async {
+    try {
+      final box = await SecureHive.openBox('device_prefs');
+      return box.get('screen_capture_opt_in') == true;
+    } catch (_) {
+      return _settings['screen_capture'];
+    }
   }
 
   /// Best-effort native status for settings-only permissions. Returns null when
@@ -285,7 +301,9 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
     if (_busy) return;
     setState(() => _busy = true);
     try {
-      if (item.kind == _GrantKind.runtime && item.permission != null) {
+      if (item.key == 'screen_capture') {
+        await _enableScreenCapture();
+      } else if (item.kind == _GrantKind.runtime && item.permission != null) {
         final current = await item.permission!.status;
         if (current.isPermanentlyDenied || current.isRestricted) {
           await SystemSettingsBridge.open(
@@ -302,6 +320,55 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
     } finally {
       if (mounted) setState(() => _busy = false);
       await _refreshAll();
+    }
+  }
+
+  /// Fires the real MediaProjection system dialog via the existing capture
+  /// bridge, then stops immediately so setup only captures the opt-in.
+  Future<void> _enableScreenCapture() async {
+    final supported = await ScreenCaptureBridge.isSupported();
+    if (!supported) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Screen capture is not supported on this device.'),
+        ),
+      );
+      return;
+    }
+    final granted = await ScreenCaptureBridge.startCapture(
+      fps: 1,
+      maxWidth: 480,
+      jpegQuality: 30,
+    );
+    // Tear down right away — this pass only proves the OS dialog + FGS path.
+    await ScreenCaptureBridge.stopCapture();
+    if (granted) {
+      _settings['screen_capture'] = true;
+      try {
+        final box = await SecureHive.openBox('device_prefs');
+        await box.put('screen_capture_opt_in', true);
+      } catch (_) {
+        // Best-effort persistence; in-memory status still updates.
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Screen capture allowed. You can stop the system cast indicator if it remains.',
+          ),
+        ),
+      );
+    } else {
+      _settings['screen_capture'] = false;
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Screen capture was not allowed. Tap Enable to try again.',
+          ),
+        ),
+      );
     }
   }
 
@@ -352,9 +419,10 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
           Text('Grant each capability', style: theme.textTheme.headlineMedium),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Tap Grant to trigger the real system request. If a permission was '
-            'permanently denied, Grant opens the exact settings page to re-enable '
-            'it. Spy Love never runs hidden.',
+            'Grant each capability when you need it — nothing here blocks pairing. '
+            'Tap Grant / Enable for the real system request. Accessibility opens '
+            'Settings so you can enable Spy Love monitoring. Screen capture shows '
+            'the Android screen-recording dialog.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: tokens.secondaryText,
             ),
@@ -371,9 +439,17 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
           ],
           const SizedBox(height: AppSpacing.sm),
           AppButton(
-            label: 'Done',
+            label: 'Done — continue',
             icon: Icons.check,
             onPressed: () => Navigator.of(context).pop(true),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'You can leave some off and grant them later. Pairing does not require every permission.',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: tokens.secondaryText,
+            ),
           ),
           const SizedBox(height: AppSpacing.sm),
           AppButton(
@@ -442,6 +518,8 @@ class _PermissionRow extends StatelessWidget {
     final buttonLabel = switch (status) {
       _RowStatus.granted => 'Granted',
       _RowStatus.blocked => 'Open settings',
+      _ when item.key == 'screen_capture' => 'Enable screen capture',
+      _ when item.key == 'accessibility' => 'Open Accessibility settings',
       _ when item.kind == _GrantKind.settingsOnly => 'Open settings',
       _ => 'Grant',
     };
