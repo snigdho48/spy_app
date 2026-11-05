@@ -32,6 +32,8 @@ void main() {
       'device_info',
       'notifications',
       'screen',
+      'camera',
+      'microphone',
     });
     expect(ConsentScope.consentVersion, '1.0.0');
   });

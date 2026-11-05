@@ -14,6 +14,11 @@ class ScreenShareSession {
     this.startedAt,
     this.endedAt,
     this.consentScopes = const [],
+    this.controlStatus = 'none',
+    this.controlRequestedAt,
+    this.controlStartedAt,
+    this.controlEndedAt,
+    this.controlEndedReason,
   });
 
   final String id;
@@ -30,14 +35,52 @@ class ScreenShareSession {
   /// before capture (the server also enforces this on request/start/WS).
   final List<String> consentScopes;
 
+  /// Per-session remote-control grant: none | requested | approved | denied.
+  /// View stays scope-based; injecting input requires an explicit approve.
+  final String controlStatus;
+  final DateTime? controlRequestedAt;
+  final DateTime? controlStartedAt;
+  final DateTime? controlEndedAt;
+  final String? controlEndedReason;
+
   bool get isActive => status == 'active';
   bool get isOpen => status == 'requested' || status == 'active';
+
+  bool get controlApproved => controlStatus == 'approved';
+  bool get controlRequested => controlStatus == 'requested';
+  bool get controlDenied => controlStatus == 'denied';
 
   /// Whether the payload carried the device's active consent scopes at all.
   bool get hasConsentInfo => consentScopes.isNotEmpty;
 
   /// Whether `screen` is among the reported active consent scopes.
   bool get localScreenConsentActive => consentScopes.contains('screen');
+
+  ScreenShareSession copyWith({
+    String? status,
+    String? controlStatus,
+    DateTime? controlRequestedAt,
+    DateTime? controlStartedAt,
+    DateTime? controlEndedAt,
+    String? controlEndedReason,
+  }) {
+    return ScreenShareSession(
+      id: id,
+      deviceId: deviceId,
+      status: status ?? this.status,
+      wsPath: wsPath,
+      deviceName: deviceName,
+      requestedByEmail: requestedByEmail,
+      startedAt: startedAt,
+      endedAt: endedAt,
+      consentScopes: consentScopes,
+      controlStatus: controlStatus ?? this.controlStatus,
+      controlRequestedAt: controlRequestedAt ?? this.controlRequestedAt,
+      controlStartedAt: controlStartedAt ?? this.controlStartedAt,
+      controlEndedAt: controlEndedAt ?? this.controlEndedAt,
+      controlEndedReason: controlEndedReason ?? this.controlEndedReason,
+    );
+  }
 
   factory ScreenShareSession.fromJson(Map<String, dynamic> json) {
     final rawScopes = json['consent_scopes'] ?? json['scopes'];
@@ -58,6 +101,33 @@ class ScreenShareSession {
           ? DateTime.tryParse(json['ended_at'].toString())
           : null,
       consentScopes: scopes,
+      controlStatus: json['control_status'] as String? ?? 'none',
+      controlRequestedAt: json['control_requested_at'] != null
+          ? DateTime.tryParse(json['control_requested_at'].toString())
+          : null,
+      controlStartedAt: json['control_started_at'] != null
+          ? DateTime.tryParse(json['control_started_at'].toString())
+          : null,
+      controlEndedAt: json['control_ended_at'] != null
+          ? DateTime.tryParse(json['control_ended_at'].toString())
+          : null,
+      controlEndedReason: json['control_ended_reason'] as String?,
     );
+  }
+
+  /// Pending poll may be a single session object or `{results: [...]}`.
+  static ScreenShareSession? fromPendingResponse(Map<String, dynamic> json) {
+    if (json['id'] != null) {
+      return ScreenShareSession.fromJson(json);
+    }
+    final raw = json['results'];
+    if (raw is List) {
+      for (final item in raw) {
+        if (item is Map) {
+          return ScreenShareSession.fromJson(Map<String, dynamic>.from(item));
+        }
+      }
+    }
+    return null;
   }
 }
