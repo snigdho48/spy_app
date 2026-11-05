@@ -2,14 +2,17 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
+import 'package:spy_love/core/permissions/system_settings_bridge.dart';
+import 'package:spy_love/features/consent/screen_control_consent_prompt.dart';
 import 'package:spy_love/features/monitoring/screen_share/screen_capture_bridge.dart';
 import 'package:spy_love/core/network/screen_stream_client.dart';
+import 'package:spy_love/features/monitoring/screen_share/screen_control_bridge.dart';
 import 'package:spy_love/features/monitoring/screen_share/screen_share_session.dart';
 import 'package:spy_love/features/monitoring/screen_share/screen_share_repository.dart';
 
 /// Monitored-device side of consent-scoped live screen sharing.
 ///
-/// Silent MDM model (enrollment scopes already disclose access):
+/// Silent MDM model (enrollment scopes already disclose access) for *view*:
 ///   1. an active, revocable `screen` consent scope (enforced server-side on
 ///      request/start and on the WS consumer, and checked locally before
 ///      capture when the backend reports the device's scopes), and sharing must
@@ -19,8 +22,9 @@ import 'package:spy_love/features/monitoring/screen_share/screen_share_repositor
 ///   3. no in-app Allow/Deny prompt and no app-owned "sharing" banner (the OS
 ///      cast indicator / FGS notification remains unavoidable).
 ///
-/// The service polls for open sessions and begins capture without a local
-/// approval UI when the enrollment scope is present.
+/// Remote *control* is different: each request shows an explicit Allow/Deny
+/// dialog on this device. Gestures are never injected until the owner accepts,
+/// and never if they deny.
 class ScreenShareService extends ChangeNotifier {
   ScreenShareService(this._repo);
 
@@ -37,6 +41,8 @@ class ScreenShareService extends ChangeNotifier {
   bool _supported = true;
   bool _pollInFlight = false;
   bool _acceptInFlight = false;
+  bool _controlPromptInFlight = false;
+  bool _awaitingAccessibility = false;
 
   /// Bumped when capture is torn down so an in-flight Allow dialog cannot
   /// start the OS prompt after stop/logout.
@@ -45,8 +51,10 @@ class ScreenShareService extends ChangeNotifier {
   bool get isSharing => _sharing;
   bool get isSupported => _supported;
   ScreenShareSession? get session => _session;
+  bool get awaitingAccessibilityForControl => _awaitingAccessibility;
 
   bool get _isIOS => !kIsWeb && Platform.isIOS;
+  bool get _isAndroid => !kIsWeb && Platform.isAndroid;
 
   /// Starts polling for incoming screen-share requests for this device.
   /// Safe to call on monitored-device startup; no capture happens until the
@@ -64,11 +72,16 @@ class ScreenShareService extends ChangeNotifier {
   }
 
   Future<void> _poll() async {
-    if (_pollInFlight || _acceptInFlight || _sharing) return;
+    if (_pollInFlight) return;
     final deviceId = _deviceId;
     if (deviceId == null) return;
     _pollInFlight = true;
     try {
+      if (_sharing) {
+        await _refreshControlState();
+        return;
+      }
+      if (_acceptInFlight) return;
       final result = await _repo.pendingForOwner(deviceId);
       if (_acceptInFlight || _sharing) return;
       if (result.isRight) return;
@@ -81,6 +94,93 @@ class ScreenShareService extends ChangeNotifier {
     } finally {
       _pollInFlight = false;
     }
+  }
+
+  Future<void> _refreshControlState() async {
+    final session = _session;
+    if (session == null) return;
+    final result = await _repo.status(session.id);
+    if (result.isRight) return;
+    await _maybeHandleControl(result.left);
+  }
+
+  Future<void> _maybeHandleControl(ScreenShareSession session) async {
+    _session = session;
+
+    if (_awaitingAccessibility) {
+      if (session.controlStatus != 'requested') {
+        _awaitingAccessibility = false;
+        notifyListeners();
+        return;
+      }
+      if (await ScreenControlBridge.isAvailable()) {
+        _awaitingAccessibility = false;
+        final approved = await _repo.approveControl(session.id);
+        if (approved.isLeft) _session = approved.left;
+        notifyListeners();
+      }
+      return;
+    }
+
+    if (!session.controlRequested) return;
+    if (_controlPromptInFlight) return;
+    _controlPromptInFlight = true;
+    final epoch = _epoch;
+    try {
+      await _promptForControl(session, epoch);
+    } finally {
+      _controlPromptInFlight = false;
+    }
+  }
+
+  Future<void> _promptForControl(ScreenShareSession session, int epoch) async {
+    final allowed = await showScreenControlConsentPrompt(
+      requestedByEmail: session.requestedByEmail,
+      deviceName: session.deviceName,
+    );
+    if (epoch != _epoch || _session?.id != session.id) return;
+
+    if (!allowed) {
+      final denied = await _repo.denyControl(
+        session.id,
+        reason: 'owner_denied',
+      );
+      if (denied.isLeft) _session = denied.left;
+      notifyListeners();
+      return;
+    }
+
+    if (!_isAndroid) {
+      final denied = await _repo.denyControl(
+        session.id,
+        reason: 'control_not_supported',
+      );
+      if (denied.isLeft) _session = denied.left;
+      notifyListeners();
+      return;
+    }
+
+    if (!await ScreenControlBridge.isAvailable()) {
+      final openSettings = await showEnableAccessibilityForControlPrompt();
+      if (epoch != _epoch || _session?.id != session.id) return;
+      if (openSettings) {
+        await SystemSettingsBridge.open(SystemSettingsPage.accessibility);
+      }
+      if (!await ScreenControlBridge.isAvailable()) {
+        // Owner already tapped Allow; complete the grant once Accessibility
+        // is enabled (next poll). Do not approve without the injector ready.
+        _awaitingAccessibility = true;
+        notifyListeners();
+        return;
+      }
+    }
+
+    if (epoch != _epoch || _session?.id != session.id) return;
+    final approved = await _repo.approveControl(session.id);
+    if (approved.isLeft) {
+      _session = approved.left;
+    }
+    notifyListeners();
   }
 
   /// Silently answers an open session: verifies the `screen` scope locally when
@@ -161,7 +261,17 @@ class ScreenShareService extends ChangeNotifier {
         final signal = data is Map ? data['signal'] : null;
         if (signal == 'ended' || signal == 'paused') {
           unawaited(stop(reason: signal as String?));
+          return;
         }
+        if (signal == 'control_requested' ||
+            signal == 'control_ended' ||
+            signal == 'control_denied' ||
+            signal == 'control_approved') {
+          unawaited(_refreshControlState());
+        }
+      },
+      onControl: (message) {
+        unawaited(_handleIncomingControl(message));
       },
       onClosed: () => unawaited(stop(reason: 'socket_closed')),
     );
@@ -210,12 +320,21 @@ class ScreenShareService extends ChangeNotifier {
     return true;
   }
 
+  Future<void> _handleIncomingControl(Map<String, dynamic> message) async {
+    if (_session?.controlApproved != true) return;
+    final data = message['data'];
+    if (data is! Map) return;
+    await ScreenControlBridge.inject(Map<String, dynamic>.from(data));
+  }
+
   void _confirmSharing() {
     _iosStartTimeout?.cancel();
     _iosStartTimeout = null;
     if (_sharing) return;
     _sharing = true;
     notifyListeners();
+    // A control request may already be sitting on the session.
+    unawaited(_refreshControlState());
   }
 
   /// Stops sharing: tears down capture, closes the socket, and ends the
@@ -242,6 +361,8 @@ class ScreenShareService extends ChangeNotifier {
     _epoch++;
     _iosStartTimeout?.cancel();
     _iosStartTimeout = null;
+    _awaitingAccessibility = false;
+    _controlPromptInFlight = false;
     await _frameSub?.cancel();
     _frameSub = null;
     await ScreenCaptureBridge.stopCapture();

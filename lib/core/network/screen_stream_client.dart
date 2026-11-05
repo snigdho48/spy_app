@@ -37,6 +37,8 @@ class ScreenStreamClient {
     String sessionWsPath, {
     void Function(Map<String, dynamic> frame)? onFrame,
     void Function(Map<String, dynamic> signal)? onSignal,
+    void Function(Map<String, dynamic> control)? onControl,
+    void Function(Map<String, dynamic> nack)? onControlNack,
     void Function()? onClosed,
   }) async {
     await close();
@@ -60,6 +62,12 @@ class ScreenStreamClient {
             break;
           case 'screen.signal':
             onSignal?.call(map);
+            break;
+          case 'screen.control':
+            onControl?.call(map);
+            break;
+          case 'screen.control_nack':
+            onControlNack?.call(map);
             break;
           case 'screen.closed':
             // Server-side kick (REST end / consent revoke / pause / expire).
@@ -119,6 +127,15 @@ class ScreenStreamClient {
     _socket?.send({
       'type': 'screen.signal',
       'data': {'signal': signal, ...?extra},
+    });
+  }
+
+  /// Viewer-only: send a sanitized control intent. The backend relays this to
+  /// the publisher only when a per-session control grant is approved.
+  void sendControl(Map<String, dynamic> intent) {
+    _socket?.send({
+      'type': 'screen.control',
+      'data': intent,
     });
   }
 

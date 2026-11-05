@@ -55,6 +55,22 @@ class ApiConstants {
   static String screenShareStatus(String sessionId) =>
       '/devices/screen/$sessionId/';
 
+  /// Monitor asks the paired device to approve remote input (POST).
+  static String screenShareControlRequest(String sessionId) =>
+      '/devices/screen/$sessionId/control/request/';
+
+  /// Paired device owner accepts a pending control grant (POST).
+  static String screenShareControlApprove(String sessionId) =>
+      '/devices/screen/$sessionId/control/approve/';
+
+  /// Paired device owner declines a pending control grant (POST).
+  static String screenShareControlDeny(String sessionId) =>
+      '/devices/screen/$sessionId/control/deny/';
+
+  /// Either side ends an approved or pending control grant (POST).
+  static String screenShareControlEnd(String sessionId) =>
+      '/devices/screen/$sessionId/control/end/';
+
   static const events = '/events/';
   static const eventsBatch = '/events/batch/';
   static const eventsContactsLatest = '/events/contacts/latest/';

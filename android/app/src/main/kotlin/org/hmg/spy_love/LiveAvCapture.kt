@@ -142,6 +142,8 @@ class LiveAvService : Service() {
     private var imageReader: ImageReader? = null
     private var currentFacing: String = "back"
     private var lastFrameAt = 0L
+    private var cameraGeneration = 0
+    private val switchHandler = Handler(Looper.getMainLooper())
 
     private var micThread: Thread? = null
     @Volatile
@@ -177,12 +179,19 @@ class LiveAvService : Service() {
     }
 
     fun switchCamera(facing: String) {
-        if (!isCameraRunning) return
+        val generation = ++cameraGeneration
         stopCameraInternal()
-        startCameraInternal(facing)
+        // Camera2 close() is async; opening immediately often races and drops
+        // the next session. Restart after a short pause, cancelled if another
+        // switch or stop happens first.
+        switchHandler.postDelayed({
+            if (generation != cameraGeneration) return@postDelayed
+            startCameraInternal(facing)
+        }, 280L)
     }
 
     fun stopCameraOnly() {
+        cameraGeneration++
         stopCameraInternal()
         maybeStopService()
     }
@@ -213,6 +222,9 @@ class LiveAvService : Service() {
             != PackageManager.PERMISSION_GRANTED
         ) {
             return
+        }
+        if (cameraDevice != null || imageReader != null) {
+            stopCameraInternal()
         }
         currentFacing = facing
         cameraThread = HandlerThread("live-av-camera").also { it.start() }

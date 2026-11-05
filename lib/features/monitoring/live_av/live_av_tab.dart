@@ -21,6 +21,7 @@ class _LiveAvTabState extends State<LiveAvTab> {
   late final LiveAvController _controller;
   bool _wantCamera = true;
   bool _wantMic = true;
+  String _wantFacing = 'back';
 
   @override
   void initState() {
@@ -67,15 +68,73 @@ class _LiveAvTabState extends State<LiveAvTab> {
   }
 
   Widget _stage(LiveAvController c) {
-    if (c.frame != null && c.status == LiveAvStatus.live && c.cameraEnabled) {
-      return Container(
-        color: Colors.black,
-        alignment: Alignment.center,
-        child: Image.memory(
-          c.frame!,
-          gaplessPlayback: true,
-          fit: BoxFit.contain,
-        ),
+    if (c.frame != null &&
+        (c.status == LiveAvStatus.live || c.status == LiveAvStatus.waiting) &&
+        c.cameraEnabled) {
+      return Stack(
+        children: [
+          Positioned.fill(
+            child: Container(
+              color: Colors.black,
+              alignment: Alignment.center,
+              child: Image.memory(
+                c.frame!,
+                gaplessPlayback: true,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          Positioned(
+            top: 12,
+            left: 12,
+            child: Material(
+              color: Colors.black54,
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                child: Text(
+                  '${c.facing} camera',
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+          if (c.isSwitching)
+            Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black45,
+                child: Center(
+                  child: Text(
+                    'Switching to ${c.facing} camera\u2026',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+          if (c.isStale)
+            const Positioned(
+              top: 12,
+              right: 12,
+              left: 12,
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Material(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: Text(
+                      'Waiting for a new frame\u2026',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       );
     }
 
@@ -85,15 +144,23 @@ class _LiveAvTabState extends State<LiveAvTab> {
         'View the paired device camera and/or listen to its microphone.\n'
             'Requires camera / microphone consent on that device.',
       ),
-      LiveAvStatus.requesting => (Icons.hourglass_empty, 'Starting…'),
+      LiveAvStatus.requesting => (Icons.hourglass_empty, 'Starting\u2026'),
       LiveAvStatus.connecting => (
         Icons.hourglass_top,
-        'Connecting… If this hangs, the paired device may be offline.',
+        'Opening the live connection\u2026',
+      ),
+      LiveAvStatus.waiting => (
+        Icons.hourglass_top,
+        c.slowWait
+            ? 'Still waiting. The paired device may be offline, or camera/mic '
+                'permission may have been denied on that phone.'
+            : 'Connected. Waiting for the paired device to start the camera '
+                'or microphone\u2026',
       ),
       LiveAvStatus.live => (
         Icons.hearing,
         c.micEnabled && !c.cameraEnabled
-            ? 'Listening… ${c.audioChunks} chunks'
+            ? 'Listening\u2026 ${c.audioChunks} chunks'
             : 'Live',
       ),
       LiveAvStatus.ended => (Icons.videocam_off_outlined, 'Session ended.'),
@@ -133,7 +200,8 @@ class _LiveAvTabState extends State<LiveAvTab> {
         if (!streaming)
           Wrap(
             spacing: 8,
-            runSpacing: 4,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               FilterChip(
                 label: const Text('Camera'),
@@ -145,16 +213,39 @@ class _LiveAvTabState extends State<LiveAvTab> {
                 selected: _wantMic,
                 onSelected: (v) => setState(() => _wantMic = v || _wantCamera),
               ),
+              if (_wantCamera)
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(
+                      value: 'back',
+                      label: Text('Back'),
+                      icon: Icon(Icons.camera_rear),
+                    ),
+                    ButtonSegment(
+                      value: 'front',
+                      label: Text('Front'),
+                      icon: Icon(Icons.camera_front),
+                    ),
+                  ],
+                  selected: {_wantFacing},
+                  onSelectionChanged: (selected) {
+                    setState(() => _wantFacing = selected.first);
+                  },
+                ),
             ],
           ),
         const SizedBox(height: 8),
         Row(
           children: [
-            if (streaming && c.cameraEnabled)
+            if (streaming)
               Expanded(
                 child: Text(
-                  'Live • ${c.frameCount} frames'
-                  '${c.micEnabled ? ' • ${c.audioChunks} audio' : ''}',
+                  c.status == LiveAvStatus.waiting
+                      ? 'Waiting for media\u2026'
+                      : c.cameraEnabled
+                      ? 'Live \u2022 ${c.facing} \u2022 ${c.frameCount} frames'
+                          '${c.micEnabled ? ' \u2022 ${c.audioChunks} audio' : ''}'
+                      : 'Live \u2022 ${c.audioChunks} audio',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               )
@@ -162,8 +253,10 @@ class _LiveAvTabState extends State<LiveAvTab> {
               const Spacer(),
             if (streaming && c.cameraEnabled) ...[
               IconButton(
-                tooltip: 'Switch camera',
-                onPressed: c.switchFacing,
+                tooltip: c.isSwitching
+                    ? 'Switching camera\u2026'
+                    : 'Switch camera',
+                onPressed: c.isSwitching ? null : c.switchFacing,
                 icon: Icon(
                   c.facing == 'front' ? Icons.camera_front : Icons.camera_rear,
                 ),
@@ -186,10 +279,15 @@ class _LiveAvTabState extends State<LiveAvTab> {
                         widget.deviceId,
                         camera: _wantCamera,
                         mic: _wantMic,
-                        facing: 'back',
+                        facing: _wantFacing,
                       ),
                 icon: const Icon(Icons.videocam),
-                label: const Text('Start live AV'),
+                label: Text(
+                  c.status == LiveAvStatus.ended ||
+                          c.status == LiveAvStatus.error
+                      ? 'Start again'
+                      : 'Start live AV',
+                ),
               ),
           ],
         ),

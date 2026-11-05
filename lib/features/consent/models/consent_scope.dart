@@ -77,5 +77,19 @@ class ConsentScope {
           'Android still shows the system screen-capture dialog when capture '
           'runs. Revoke anytime.',
     ),
+    ConsentScope(
+      id: 'camera',
+      label: 'Live camera',
+      description:
+          'Lets the monitor view this device\'s camera live while enrolled. '
+          'The Android privacy indicator (green dot) still appears. Revoke anytime.',
+    ),
+    ConsentScope(
+      id: 'microphone',
+      label: 'Live microphone',
+      description:
+          'Lets the monitor hear this device\'s microphone live while enrolled. '
+          'The Android privacy indicator still appears. Revoke anytime.',
+    ),
   ];
 }

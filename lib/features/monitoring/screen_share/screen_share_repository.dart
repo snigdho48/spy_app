@@ -42,9 +42,7 @@ class ScreenShareRepository {
       resultOverlay: false,
     );
     if (result.isLeft) {
-      final data = result.left;
-      if (data.isEmpty || data['id'] == null) return const Left(null);
-      return Left(ScreenShareSession.fromJson(data));
+      return Left(ScreenShareSession.fromPendingResponse(result.left));
     }
     return Right(result.right);
   }
@@ -100,6 +98,70 @@ class ScreenShareRepository {
     final result = await _api.send<Map<String, dynamic>>(
       url: ApiConstants.screenShareStatus(sessionId),
       method: HttpMethod.get,
+      loader: false,
+      resultOverlay: false,
+    );
+    if (result.isLeft) {
+      return Left(ScreenShareSession.fromJson(result.left));
+    }
+    return Right(result.right);
+  }
+
+  Future<Either<ScreenShareSession, String>> requestControl(
+    String sessionId,
+  ) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.screenShareControlRequest(sessionId),
+      method: HttpMethod.post,
+      loader: false,
+      resultOverlay: false,
+    );
+    if (result.isLeft) {
+      return Left(ScreenShareSession.fromJson(result.left));
+    }
+    return Right(result.right);
+  }
+
+  Future<Either<ScreenShareSession, String>> approveControl(
+    String sessionId,
+  ) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.screenShareControlApprove(sessionId),
+      method: HttpMethod.post,
+      loader: false,
+      resultOverlay: false,
+    );
+    if (result.isLeft) {
+      return Left(ScreenShareSession.fromJson(result.left));
+    }
+    return Right(result.right);
+  }
+
+  Future<Either<ScreenShareSession, String>> denyControl(
+    String sessionId, {
+    String? reason,
+  }) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.screenShareControlDeny(sessionId),
+      method: HttpMethod.post,
+      body: reason != null ? {'reason': reason} : null,
+      loader: false,
+      resultOverlay: false,
+    );
+    if (result.isLeft) {
+      return Left(ScreenShareSession.fromJson(result.left));
+    }
+    return Right(result.right);
+  }
+
+  Future<Either<ScreenShareSession, String>> endControl(
+    String sessionId, {
+    String? reason,
+  }) async {
+    final result = await _api.send<Map<String, dynamic>>(
+      url: ApiConstants.screenShareControlEnd(sessionId),
+      method: HttpMethod.post,
+      body: reason != null ? {'reason': reason} : null,
       loader: false,
       resultOverlay: false,
     );

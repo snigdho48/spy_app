@@ -154,7 +154,8 @@ class _PermissionSetupViewState extends State<PermissionSetupView>
         icon: Icons.accessibility_new_outlined,
         title: 'Accessibility service',
         description:
-            'Enables richer on-screen context for consented safety features.',
+            'Enables richer on-screen context and, only after you approve each '
+            'request, taps and gestures for consented remote assistance.',
         kind: _GrantKind.settingsOnly,
         settingsPage: SystemSettingsPage.accessibility,
         androidOnly: true,
